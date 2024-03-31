@@ -1,3 +1,5 @@
+import { redirect } from '@sveltejs/kit';
+
 /** @type {import('./$types').Actions} */
 export const actions = {
     login: async ({ cookies, request }) => {
@@ -14,8 +16,12 @@ export const actions = {
             {
                 path: '/',
                 maxAge: data.expires_in,
-                httpOnly: true
+                httpOnly: true,
+                sameSite: 'lax',
+                secure: false //TODO: Change to secure when using HTTPS
             }
         );
+        let next = formData.get('next')?.toString() || '/';
+        redirect(302, next);
     }
 }
