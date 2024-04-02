@@ -10,6 +10,10 @@ export async function handleFetch({ event, request, fetch }) {
 
     if (!token && event.request.url !== '/login') {
         let next = new URL(event.request.url).pathname;
+        // Not ideal workaround but it was redirecting the user to the page data
+        if (next.endsWith('/__data.json')) {
+            next = next.replace('/__data.json', '');
+        }
         return redirect(302, '/login?next=' + next);
     }
 
