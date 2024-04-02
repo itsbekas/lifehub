@@ -4,7 +4,6 @@ export async function load({ fetch }) {
     let data = await res.json();
     return {
         cash: data.cash,
-        investments: data.investments,
-        total: data.total,
+        investments: data.investments
     };
 }
