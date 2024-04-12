@@ -1,10 +1,15 @@
 import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
+export function load({ cookies }) {
+    if (cookies.get('token')) redirect(302, '/user/account');
+}
+
+/** @type {import('./$types').Actions} */
 export const actions = {
     login: async ({ cookies, request }) => {
         const formData = await request.formData();
-        const response = await fetch('http://localhost:8000/auth/token', {
+        const response = await fetch('http://localhost:8000/auth/login', {
             method: 'POST',
             body: formData
         });
