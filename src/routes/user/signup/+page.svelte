@@ -1,5 +1,9 @@
 <form method="POST" action="/user/signup?/signup">
     <label>
+        name
+        <input type="text" name="name" autocomplete="name" />
+    </label>
+    <label>
         Username
         <input type="text" name="username" autocomplete="username" />
     </label>

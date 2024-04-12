@@ -9,15 +9,18 @@ export function load({ cookies }) {
 export const actions = {
     login: async ({ cookies, request }) => {
         const formData = await request.formData();
-        const response = await fetch('http://localhost:8000/auth/login', {
+        const response = await fetch('http://localhost:8000/user/login', {
             method: 'POST',
             body: formData
         });
         const data = await response.json();
+        if (!response.ok) {
+            redirect(302, `/user/login?error=${data.detail}`);
+        }
         // store the token in a cookie
         cookies.set(
             'token',
-            data.access_token,
+            data.token,
             {
                 path: '/',
                 maxAge: data.expires_in,

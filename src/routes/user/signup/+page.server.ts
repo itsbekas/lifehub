@@ -13,15 +13,19 @@ export const actions = {
         if (formData.get('password') !== formData.get('password-confirm')) {
             redirect(302, '/signup?error=Passwords do not match');
         }
-        const response = await fetch('http://localhost:8000/auth/signup', {
+        const response = await fetch('http://localhost:8000/user/signup', {
             method: 'POST',
             body: formData
         });
         const data = await response.json();
+        console.log(data);
+        if (!response.ok) {
+            redirect(302, `/user/signup?error=${data.detail}`);
+        }
         // store the token in a cookie
         cookies.set(
             'token',
-            data.access_token,
+            data.token,
             {
                 path: '/',
                 maxAge: data.expires_in,

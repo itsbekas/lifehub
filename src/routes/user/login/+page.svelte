@@ -25,3 +25,5 @@
     <input type="hidden" name="next" value={next} />
     <button type="submit">Login</button>
 </form>
+
+<p>Want to <a href="/user/signup?next={next}">register</a>?</p>
