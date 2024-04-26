@@ -1,26 +1,27 @@
+import { fetch_api } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export function load({ cookies }) {
-    if (cookies.get('token')) redirect(302, '/user/account');
+    if (cookies.get('token')) redirect(302, '/account');
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
     login: async ({ cookies, request }) => {
         const formData = await request.formData();
-        const response = await fetch('http://localhost:8000/user/login', {
+        const response = await fetch_api('/user/login', {
             method: 'POST',
             body: formData
         });
         const data = await response.json();
         if (!response.ok) {
-            redirect(302, `/user/login?error=${data.detail}`);
+            redirect(302, `/login?error=${data.detail}`);
         }
         // store the token in a cookie
         cookies.set(
             'token',
-            data.token,
+            data.access_token,
             {
                 path: '/',
                 maxAge: data.expires_in,

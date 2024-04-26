@@ -1,8 +1,9 @@
+import { fetch_api } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export function load({ cookies }) {
-    if (cookies.get('token')) redirect(302, '/user/account');
+    if (cookies.get('token')) redirect(302, '/account');
 }
 
 /** @type {import('./$types').Actions} */
@@ -13,14 +14,14 @@ export const actions = {
         if (formData.get('password') !== formData.get('password-confirm')) {
             redirect(302, '/signup?error=Passwords do not match');
         }
-        const response = await fetch('http://localhost:8000/user/signup', {
+        const response = await fetch_api('/user/signup', {
             method: 'POST',
             body: formData
         });
         const data = await response.json();
         console.log(data);
         if (!response.ok) {
-            redirect(302, `/user/signup?error=${data.detail}`);
+            redirect(302, `/signup?error=${data.detail}`);
         }
         // store the token in a cookie
         cookies.set(
@@ -34,6 +35,6 @@ export const actions = {
                 secure: false //TODO: Change to secure when using HTTPS
             }
         );
-        redirect(302, '/user/account')
+        redirect(302, '/account')
     }
 }
