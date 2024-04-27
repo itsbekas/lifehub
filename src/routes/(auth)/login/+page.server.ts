@@ -1,32 +1,27 @@
-import { fetch_api } from '$lib/api';
+import { api_url } from '$lib/api';
 import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export function load({ cookies }) {
-    if (cookies.get('token')) redirect(302, '/account');
+    if (cookies.get('token')) redirect(302, '/welcome');
 }
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-    signup: async ({ cookies, request }) => {
+    login: async ({ cookies, request }) => {
         const formData = await request.formData();
-        // Check if passwords match
-        if (formData.get('password') !== formData.get('password-confirm')) {
-            redirect(302, '/signup?error=Passwords do not match');
-        }
-        const response = await fetch_api('/user/signup', {
+        const response = await fetch(api_url('/user/login'), {
             method: 'POST',
             body: formData
         });
         const data = await response.json();
-        console.log(data);
         if (!response.ok) {
-            redirect(302, `/signup?error=${data.detail}`);
+            redirect(302, `/login?error=${data.detail}`);
         }
         // store the token in a cookie
         cookies.set(
             'token',
-            data.token,
+            data.access_token,
             {
                 path: '/',
                 maxAge: data.expires_in,
@@ -35,6 +30,7 @@ export const actions = {
                 secure: false //TODO: Change to secure when using HTTPS
             }
         );
-        redirect(302, '/account')
+        let next = formData.get('next')?.toString() || '/';
+        redirect(302, next);
     }
 }

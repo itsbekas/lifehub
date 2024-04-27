@@ -1,8 +1,8 @@
-import { fetch_api } from "$lib/api";
+import { api_url } from "$lib/api";
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
-    let res = await fetch_api('/server/qbit-stats');
+    let res = await fetch(api_url('/server/qbit-stats'));
     let data = await res.json();
     return {
         alltime_dl: data.alltime_dl,

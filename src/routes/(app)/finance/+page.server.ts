@@ -1,8 +1,8 @@
-import { fetch_api } from "$lib/api";
+import { api_url } from '$lib/api';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
-    let res = await fetch_api('/finance/networth');
+    let res = await fetch(api_url('/finance/networth'));
     let data = await res.json();
     return {
         cash: data.bank_cash,
