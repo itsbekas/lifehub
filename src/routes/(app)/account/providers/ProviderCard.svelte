@@ -1,29 +1,9 @@
-<script>
-    export let provider;
-
-    function handleClick() {
-        // Handle click event here
-    }
+<script lang="ts">
+    export let provider: Provider;
+    console.log(provider);
+    import { AccordionItem } from 'flowbite-svelte';
 </script>
 
-<button class="provider-card" on:click={handleClick}>
-    <h3>{provider.name}</h3>
-    <p>ID: {provider.id}</p>
-    <p>Type: {provider.type}</p>
-</button>
-
-<style>
-    .provider-card {
-        border: 1px solid #ccc;
-        padding: 10px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        outline: inherit;
-        cursor: pointer;
-        font: inherit;
-        padding: 0;
-        border: none;
-        color: inherit;
-        background: none;
-    }
-</style>
+<AccordionItem>
+    <p>{provider.name}</p>
+</AccordionItem>

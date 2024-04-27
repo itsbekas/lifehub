@@ -1,12 +1,16 @@
 <script lang="ts">
+    import { Accordion } from 'flowbite-svelte';
     import ProviderCard from './ProviderCard.svelte';
     /** @type {import('./$types').PageData}*/
     export let data: { providers: Array<Provider> };
+    console.log(data);
 </script>
 
 <main>
     <h1>Providers</h1>
-    {#each data.providers as provider}
-        <ProviderCard {provider} />
-    {/each}
+    <Accordion>
+        {#each data.providers as provider}
+            <ProviderCard {provider} />
+        {/each}
+    </Accordion>
 </main>

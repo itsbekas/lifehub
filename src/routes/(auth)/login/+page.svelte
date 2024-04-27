@@ -1,5 +1,6 @@
 <script>
     import { afterUpdate } from 'svelte';
+    import { Input, Label, A, Button } from 'flowbite-svelte';
 
     let next = '/account';
 
@@ -13,55 +14,30 @@
 
 </script>
 
-<body>
-    <div class="login">
+<body class="flex justify-center items-center h-screen m-0">
+    <div class="flex flex-col justify-between items-center">
         <form method="POST" action="/login?/login">
-            <label>
-                Username
-                <input type="text" name="username" autocomplete="username" />
-            </label>
-            <label>
-                Password
-                <input type="password" name="password" autocomplete="current-password" />
-            </label>
+            <Label class="mb-2">
+                <span>Username</span>
+                <Input type="text" name="username" autocomplete="username" required />
+            </Label>
+            <Label class="mb-2">
+                <span>Password</span>
+                <Input type="password" name="password" autocomplete="current-password" required />
+            </Label>
             <input type="hidden" name="next" value={next} />
-            <button type="submit">Login</button>
+            <Button type="submit">Login</Button>
         </form>
 
-        <p>Want to <a href="/signup?next={next}">register</a>?</p>
+        <p>Want to <A href="/signup?next={next}">register</A>?</p>
     </div>
 </body>
 
 <style>
-    body {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-    }
-
-    div.login {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-    }
 
     form {
         display: flex;
         flex-direction: column;
-    }
-
-    label {
-        display: flex;
-        flex-direction: column;
-        margin: 0.5rem;
-    }
-
-    button {
-        flex: 0;
-        margin: 0.5rem;
     }
 
 </style>
