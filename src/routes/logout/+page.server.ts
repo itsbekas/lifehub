@@ -6,6 +6,7 @@ export function load({ cookies }) {
     if (!token) redirect(302, '/');
 
     cookies.delete('token', { path: '/' });
+    cookies.delete('display_name', { path: '/' })
 
     redirect(302, '/');
 

@@ -5,7 +5,7 @@
 
 <Button size="sm" on:click={() => formModal = true}>Login</Button>
 
-<Modal bind:open={formModal} size="xs" class="w-full" autoclose >
+<Modal bind:open={formModal} size="xs" class="w-full" autoclose={false} >
     <form class="flex flex-col space-y-6" method="POST" action="/login?/login">
         <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Sign in to Lifehub</h3>
         <Label class="space-y-2">

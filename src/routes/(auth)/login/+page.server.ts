@@ -24,12 +24,21 @@ export const actions = {
             data.access_token,
             {
                 path: '/',
-                maxAge: data.expires_in,
+                // maxAge: data.expires_at,
                 httpOnly: true,
                 sameSite: 'lax',
                 secure: false //TODO: Change to secure when using HTTPS
             }
         );
+        cookies.set(
+            'display_name',
+            data.name,
+            {
+                path: '/',
+                sameSite: 'lax',
+                secure: false //TODO: Change to secure when using HTTPS
+            }
+        )
         let next = formData.get('next')?.toString() || '/';
         redirect(302, next);
     }

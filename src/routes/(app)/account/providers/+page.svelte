@@ -3,7 +3,6 @@
     import ProviderCard from './ProviderCard.svelte';
     /** @type {import('./$types').PageData}*/
     export let data: { providers: Array<Provider> };
-    console.log(data);
 </script>
 
 <main>

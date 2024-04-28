@@ -6,34 +6,34 @@ settings:
 
 devDependencies:
   '@sveltejs/adapter-auto':
-    specifier: ^3.0.0
+    specifier: ^3.2.0
     version: 3.2.0(@sveltejs/kit@2.5.7)
   '@sveltejs/kit':
-    specifier: ^2.0.0
+    specifier: ^2.5.7
     version: 2.5.7(@sveltejs/vite-plugin-svelte@3.1.0)(svelte@4.2.15)(vite@5.2.10)
   '@sveltejs/vite-plugin-svelte':
-    specifier: ^3.0.0
+    specifier: ^3.1.0
     version: 3.1.0(svelte@4.2.15)(vite@5.2.10)
   '@types/eslint':
-    specifier: ^8.56.0
+    specifier: ^8.56.10
     version: 8.56.10
   '@typescript-eslint/eslint-plugin':
-    specifier: ^7.0.0
+    specifier: ^7.7.1
     version: 7.7.1(@typescript-eslint/parser@7.7.1)(eslint@8.57.0)(typescript@5.4.5)
   '@typescript-eslint/parser':
-    specifier: ^7.0.0
+    specifier: ^7.7.1
     version: 7.7.1(eslint@8.57.0)(typescript@5.4.5)
   autoprefixer:
-    specifier: ^10.4.16
+    specifier: ^10.4.19
     version: 10.4.19(postcss@8.4.38)
   eslint:
-    specifier: ^8.56.0
+    specifier: ^8.57.0
     version: 8.57.0
   eslint-config-prettier:
     specifier: ^9.1.0
     version: 9.1.0(eslint@8.57.0)
   eslint-plugin-svelte:
-    specifier: ^2.35.1
+    specifier: ^2.38.0
     version: 2.38.0(eslint@8.57.0)(svelte@4.2.15)
   flowbite:
     specifier: ^2.3.0
@@ -42,37 +42,37 @@ devDependencies:
     specifier: ^0.46.1
     version: 0.46.1(svelte@4.2.15)
   postcss:
-    specifier: ^8.4.32
+    specifier: ^8.4.38
     version: 8.4.38
   postcss-load-config:
-    specifier: ^5.0.2
+    specifier: ^5.0.3
     version: 5.0.3(postcss@8.4.38)
   prettier:
-    specifier: ^3.1.1
+    specifier: ^3.2.5
     version: 3.2.5
   prettier-plugin-svelte:
-    specifier: ^3.1.2
+    specifier: ^3.2.3
     version: 3.2.3(prettier@3.2.5)(svelte@4.2.15)
   prettier-plugin-tailwindcss:
-    specifier: ^0.5.9
+    specifier: ^0.5.14
     version: 0.5.14(prettier-plugin-svelte@3.2.3)(prettier@3.2.5)
   svelte:
-    specifier: ^4.2.7
+    specifier: 4.2.15
     version: 4.2.15
   svelte-check:
-    specifier: ^3.6.0
+    specifier: ^3.7.0
     version: 3.7.0(postcss-load-config@5.0.3)(postcss@8.4.38)(svelte@4.2.15)
   tailwindcss:
-    specifier: ^3.3.6
+    specifier: ^3.4.3
     version: 3.4.3
   tslib:
-    specifier: ^2.4.1
+    specifier: ^2.6.2
     version: 2.6.2
   typescript:
-    specifier: ^5.0.0
+    specifier: ^5.4.5
     version: 5.4.5
   vite:
-    specifier: ^5.0.3
+    specifier: ^5.2.10
     version: 5.2.10
 
 packages:

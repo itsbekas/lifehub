@@ -27,12 +27,21 @@ export const actions = {
             data.token,
             {
                 path: '/',
-                maxAge: data.expires_in,
+                // expires: data.expires_at,
                 httpOnly: true,
                 sameSite: 'lax',
                 secure: false //TODO: Change to secure when using HTTPS
             }
         );
+        cookies.set(
+            'display_name',
+            data.name,
+            {
+                path: '/',
+                sameSite: 'lax',
+                secure: false //TODO: Change to secure when using HTTPS
+            }
+        )
         redirect(302, '/account')
     }
 }
