@@ -5,5 +5,6 @@
 </script>
 
 <AccordionItem>
+    <span slot="header">{provider.name}</span>
     <p>{provider.name}</p>
 </AccordionItem>

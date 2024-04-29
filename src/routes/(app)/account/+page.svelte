@@ -1,1 +1,25 @@
-Hello
+<script lang="ts">
+    import { Accordion, Heading } from 'flowbite-svelte';
+    import ProviderCard from './ProviderCard.svelte';
+    /** @type {import('./$types').PageData}*/
+    export let data: { providers: Array<Provider>, modules: Array<Module> };
+</script>
+
+<main>
+    <div class="flex justify-center">
+        <div id="user-providers" class="flex flex-col w-1/4 m-8">
+            <Heading tag="h3" class="mb-4">Providers</Heading>
+            <Accordion>
+                {#each data.providers as provider}
+                    <ProviderCard {provider} />
+                {/each}
+            </Accordion>
+        </div>
+        <div id="user-modules" class="flex flex-col w-1/4 m-8">
+            <Heading tag="h3" class="mb-4">Modules</Heading>
+            {#each data.modules as m}
+                <p>{m.name}</p>
+            {/each}
+        </div>
+    </div>
+</main>

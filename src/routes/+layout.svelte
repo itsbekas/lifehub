@@ -3,7 +3,11 @@
 	import Navbar from './Navbar.svelte'
 
     /** @type {import('./$types').PageData}*/
-    export let data: { loggedIn: boolean, display_name: string };
+    export let data: { hasToken: boolean, display_name: string };
+
+	import { loggedIn } from '$lib/stores.js';
+
+	loggedIn.set(data.hasToken);
 
 </script>
 
