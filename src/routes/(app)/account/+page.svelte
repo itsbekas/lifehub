@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Accordion, AccordionItem, Heading } from 'flowbite-svelte';
     import ProviderCard from './ProviderCard.svelte';
+    import ModuleCard from './ModuleCard.svelte';
     /** @type {import('./$types').PageData}*/
     export let data: { providers: Array<Provider>, modules: Array<Module> };
 </script>
@@ -20,9 +21,14 @@
         </div>
         <div id="user-modules" class="flex flex-col w-1/4 m-8">
             <Heading tag="h3" class="mb-4">Modules</Heading>
-            {#each data.modules as m}
-                <p>{m.name}</p>
-            {/each}
+            <Accordion>
+                {#each data.modules as module}
+                <AccordionItem>
+                    <span slot="header">{module.name}</span>
+                    <ModuleCard {module} />
+                </AccordionItem>
+                {/each}
+            </Accordion>
         </div>
     </div>
 </main>
