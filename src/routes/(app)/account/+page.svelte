@@ -13,7 +13,7 @@
             <Accordion>
                 {#each data.providers as provider}
                 <AccordionItem>
-                    <span slot="header">{provider.name}</span>
+                    <span slot="header">{provider.name} (ID: {provider.id})</span>
                     <ProviderCard {provider} />
                 </AccordionItem>
                 {/each}
@@ -24,7 +24,7 @@
             <Accordion>
                 {#each data.modules as module}
                 <AccordionItem>
-                    <span slot="header">{module.name}</span>
+                    <span slot="header">{module.name} (ID: {module.id})</span>
                     <ModuleCard {module} />
                 </AccordionItem>
                 {/each}
