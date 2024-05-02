@@ -1,3 +1,4 @@
+import { api_url } from '$lib/api.js';
 import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
@@ -13,7 +14,7 @@ export const actions = {
         if (formData.get('password') !== formData.get('password-confirm')) {
             redirect(302, '/signup?error=Passwords do not match');
         }
-        const response = await fetch('/user/signup', {
+        const response = await fetch(api_url('/user/signup'), {
             method: 'POST',
             body: formData
         });
@@ -24,7 +25,7 @@ export const actions = {
         // store the token in a cookie
         cookies.set(
             'token',
-            data.token,
+            data.access_token,
             {
                 path: '/',
                 // expires: data.expires_at,
