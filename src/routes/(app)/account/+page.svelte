@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Accordion, AccordionItem, Heading } from 'flowbite-svelte';
+    import HeroiconsPlusCircle20Solid from '~icons/heroicons/plus-circle-20-solid';
     import ProviderCard from './ProviderCard.svelte';
     import ModuleCard from './ModuleCard.svelte';
     /** @type {import('./$types').PageData}*/
@@ -9,7 +10,10 @@
 <main>
     <div class="flex justify-center">
         <div id="user-providers" class="flex flex-col w-1/4 m-8">
-            <Heading tag="h3" class="mb-4">Providers</Heading>
+            <div id="user-providers-heading" class="flex flex-row align-middle">
+                <Heading tag="h3" class="mb-4">Providers</Heading>
+                <HeroiconsPlusCircle20Solid /> 
+            </div>
             <Accordion>
                 {#each data.providers as provider}
                 <AccordionItem>
@@ -20,7 +24,10 @@
             </Accordion>
         </div>
         <div id="user-modules" class="flex flex-col w-1/4 m-8">
-            <Heading tag="h3" class="mb-4">Modules</Heading>
+            <div id="user-providers-heading" class="flex flex-row align-middle">
+                <Heading tag="h3" class="mb-4">Modules</Heading>
+                <HeroiconsPlusCircle20Solid /> 
+            </div>
             <Accordion>
                 {#each data.modules as module}
                 <AccordionItem>
