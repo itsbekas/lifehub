@@ -8,14 +8,14 @@
     
     let providersData = {
         title: 'Providers',
-        category: 'providers',
+        category: 'provider',
         cardComponent: UserProviderCard,
         user_items: data.user_providers,
         items: data.providers
     };
     let modulesData = {
         title: 'Modules',
-        category: 'modules',
+        category: 'module',
         cardComponent: UserModuleCard,
         user_items: data.user_modules,
         items: data.modules

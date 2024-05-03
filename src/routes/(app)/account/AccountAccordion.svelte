@@ -11,14 +11,14 @@
 
     export let data: AccountAccordionData;
 
-    let showModal = false;
+    let showListModal: boolean = false;
 
 </script>
 
 <div id="user-{data.category}-accordion" class="flex flex-col w-full">
     <div id="user-{data.category}-heading" class="flex flex-row m-5 justify-start">
         <Heading tag="h4" class="">{data.title}</Heading>
-        <Button on:click={() => (showModal = true)}>Add {data.title}</Button>
+        <Button on:click={() => (showListModal = true)}>Add {data.title}</Button>
     </div>
     <Accordion>
         {#each data.user_items as item}
@@ -30,8 +30,12 @@
     </Accordion>
 </div>
 
-<Modal size="xs" id="{data.category}-modal" bind:open={showModal} >
+<Modal size="xs" id="{data.category}-list-modal" bind:open={showListModal} >
+    <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Choose a {data.category}</h3>
     <Listgroup items={data.items} let:item>
-        {item.name}
+        <div class="flex flex-row justify-between align-middle h-full">
+            {item.name}
+            <Button size="xs">Add</Button>
+        </div>
     </Listgroup>
 </Modal>
