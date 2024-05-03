@@ -11,7 +11,9 @@
 
 </script>
 
-<main class="w-screen h-screen">
-	<Navbar {data} />
-	<slot />
-</main>
+<body class="w-screen h-screen">
+	<Navbar {data}/>
+	<main class="mx-10 mt-5">
+		<slot />
+	</main>
+</body>
