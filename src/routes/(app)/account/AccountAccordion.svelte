@@ -5,13 +5,15 @@
         title: string;
         category: string;
         cardComponent: any;
-        user_items: Array<any>;
+        userItems: Array<any>;
         items: Array<any>;
     }
 
     export let data: AccountAccordionData;
 
     let showListModal: boolean = false;
+
+    let nonUserItems = data.items.filter(item => !data.userItems.some(userItem => userItem.id === item.id));
 
 </script>
 
@@ -21,7 +23,7 @@
         <Button on:click={() => (showListModal = true)}>Add {data.title}</Button>
     </div>
     <Accordion>
-        {#each data.user_items as item}
+        {#each data.userItems as item}
         <AccordionItem>
             <span slot="header">{item.name} (ID: {item.id})</span>
             <svelte:component this={data.cardComponent} {item} />
@@ -32,7 +34,7 @@
 
 <Modal size="xs" id="{data.category}-list-modal" bind:open={showListModal} >
     <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Choose a {data.category}</h3>
-    <Listgroup items={data.items} let:item>
+    <Listgroup items={nonUserItems} let:item>
         <div class="flex flex-row justify-between align-middle h-full">
             {item.name}
             <Button size="xs">Add</Button>

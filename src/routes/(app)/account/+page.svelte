@@ -4,20 +4,20 @@
     import UserModuleCard from './UserModuleCard.svelte';
     import AccountAccordion from './AccountAccordion.svelte';
     /** @type {import('./$types').PageData}*/
-    export let data: { providers: Array<Provider>, modules: Array<Module>, user_providers: Array<Provider>, user_modules: Array<Module> };
+    export let data: { providers: Array<Provider>, modules: Array<Module>, userProviders: Array<Provider>, userModules: Array<Module> };
     
     let providersData = {
         title: 'Providers',
         category: 'provider',
         cardComponent: UserProviderCard,
-        user_items: data.user_providers,
+        userItems: data.userProviders,
         items: data.providers
     };
     let modulesData = {
         title: 'Modules',
         category: 'module',
         cardComponent: UserModuleCard,
-        user_items: data.user_modules,
+        userItems: data.userModules,
         items: data.modules
     };
 </script>
