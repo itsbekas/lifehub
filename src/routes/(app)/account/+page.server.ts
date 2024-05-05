@@ -1,4 +1,5 @@
 import { api_url } from '$lib/api';
+import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
@@ -20,6 +21,22 @@ export async function load({ fetch }) {
 
 /** @type {import('./$types').Actions} */
 export const actions = {
+
+    addOAuthProvider: async ({ fetch, request }) => {
+        const formData = await request.formData();
+
+        const response = await fetch(api_url(`/providers/${formData.get('provider_id')}/oauth_url`))
+        const data = await response.json();
+        if (!response.ok) {
+            // TODO: Improve error handling
+            return { error: data.detail };
+        }
+        const oauth_url = data;
+
+        redirect(301, oauth_url);
+        
+    },
+
     deleteProvider: async ({ fetch, request }) => {
         const formData = await request.formData();
 

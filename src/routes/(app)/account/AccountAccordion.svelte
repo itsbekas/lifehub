@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Accordion, AccordionItem, Button, Heading, Listgroup, Modal } from 'flowbite-svelte';
+    import AddProviderButton from './AddProviderButton.svelte';
 
     type AccountAccordionData = {
         title: string;
@@ -37,7 +38,7 @@
     <Listgroup items={nonUserItems} let:item>
         <div class="flex flex-row justify-between align-middle h-full">
             {item.name}
-            <Button size="xs">Add</Button>
+            <AddProviderButton data={item} />
         </div>
     </Listgroup>
 </Modal>
