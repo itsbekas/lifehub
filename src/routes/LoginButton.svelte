@@ -21,7 +21,8 @@
         </div>
         <Button type="submit" class="w-full1">Login</Button>
         <div class="text-sm font-medium text-gray-500 dark:text-gray-300">
-            Not registered? <a href="/signup" class="text-primary-700 hover:underline dark:text-primary-500">Sign up</a>
+            Not registered?
+            <a href="/signup" class="text-primary-700 hover:underline dark:text-primary-500" on:click={() => {formModal = false;}}>Sign up</a>
         </div>
     </form>
 </Modal>
