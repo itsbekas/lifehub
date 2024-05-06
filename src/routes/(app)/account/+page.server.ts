@@ -37,6 +37,23 @@ export const actions = {
         
     },
 
+    addTokenProvider: async ({ fetch, request }) => {
+        const formData = await request.formData();
+        const token = formData.get('token');
+
+        const response = await fetch(api_url(`/user/providers/${formData.get('provider_id')}/basic_token?token=${token}`), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        const data = await response.json();
+        if (!response.ok) {
+            // TODO: Improve error handling
+            return { error: data.detail };
+        }
+    },
+
     deleteProvider: async ({ fetch, request }) => {
         const formData = await request.formData();
 
