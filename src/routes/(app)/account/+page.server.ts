@@ -39,13 +39,15 @@ export const actions = {
 
     addTokenProvider: async ({ fetch, request }) => {
         const formData = await request.formData();
-        const token = formData.get('token');
 
-        const response = await fetch(api_url(`/user/providers/${formData.get('provider_id')}/basic_token?token=${token}`), {
+        const response = await fetch(api_url(`/user/providers/${formData.get('provider_id')}/basic_token`), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+                token: formData.get('token'),
+            }),
         })
         const data = await response.json();
         if (!response.ok) {
