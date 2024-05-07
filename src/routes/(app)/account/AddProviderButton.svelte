@@ -30,7 +30,12 @@
     </div>
 {:else if data.type == "basic"}
     <div id="add-basic-provider-modal-content">
-
+        <form class="flex flex-col space-y-6" method="POST" action="?/addBasicProvider">
+            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add {data.name} credentials</h3>
+            <Input type="hidden" name="provider_id" value="{data.id}" />
+            <Input type="text" name="username" placeholder="Username" class="input" />
+            <Input type="password" name="password" placeholder="Password" class="input" />
+            <Button type="submit" class="w-full1">Add</Button>
     </div>
 {/if}
 </Modal>

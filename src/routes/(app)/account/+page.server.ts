@@ -56,6 +56,26 @@ export const actions = {
         }
     },
 
+    addBasicProvider: async ({ fetch, request }) => {
+        const formData = await request.formData();
+
+        const response = await fetch(api_url(`/user/providers/${formData.get('provider_id')}/basic_login`), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: formData.get('username'),
+                password: formData.get('password'),
+            }),
+        })
+        const data = await response.json();
+        if (!response.ok) {
+            // TODO: Improve error handling
+            return { error: data.detail };
+        }
+    },
+
     deleteProvider: async ({ fetch, request }) => {
         const formData = await request.formData();
 
