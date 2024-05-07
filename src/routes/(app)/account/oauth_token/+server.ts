@@ -21,7 +21,7 @@ export async function GET({ fetch, url }) {
     const data = await response.json();
 
     if (!response.ok) {
-        // TODO: Improve error handling
+        // TODO: Improve error handling (#7)
         return redirect(301, `/account?error=${data.detail}`);
     }
 

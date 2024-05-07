@@ -10,7 +10,7 @@ export async function POST({ cookies, request }) {
     });
     const data = await response.json();
     if (!response.ok) {
-        // TODO: Display error in the Modal
+        // TODO: Display error in the Modal (#7)
         return redirect(302, '/?error=Invalid%20credentials');
     }
     // store the token in a cookie

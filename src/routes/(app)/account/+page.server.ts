@@ -28,7 +28,7 @@ export const actions = {
         const response = await fetch(api_url(`/providers/${formData.get('provider_id')}/oauth_url`))
         const data = await response.json();
         if (!response.ok) {
-            // TODO: Improve error handling
+            // TODO: Improve error handling (#7)
             return { error: data.detail };
         }
         const oauth_url = data;
@@ -51,7 +51,7 @@ export const actions = {
         })
         const data = await response.json();
         if (!response.ok) {
-            // TODO: Improve error handling
+            // TODO: Improve error handling (#7)
             return { error: data.detail };
         }
     },
@@ -71,7 +71,7 @@ export const actions = {
         })
         const data = await response.json();
         if (!response.ok) {
-            // TODO: Improve error handling
+            // TODO: Improve error handling (#7)
             return { error: data.detail };
         }
     },
@@ -84,7 +84,7 @@ export const actions = {
         })
         const data = await response.json();
         if (!response.ok) {
-            // TODO: Improve error handling
+            // TODO: Improve error handling (#7)
             return { error: data.detail };
         }
     },
@@ -97,7 +97,7 @@ export const actions = {
         })
         const data = await response.json();
         if (!response.ok) {
-            // TODO: Improve error handling
+            // TODO: Improve error handling (#7)
             return { error: data.detail };
         }
     }
