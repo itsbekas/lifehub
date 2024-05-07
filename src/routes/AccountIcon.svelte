@@ -16,7 +16,7 @@
         <A href="/account">Account</A>
     </DropdownItem>
     <DropdownItem slot="footer">
-        <A href="/logout" on:click={logout}>Logout</A>
+        <A href="/auth/logout" on:click={logout}>Logout</A>
     </DropdownItem>
 </Dropdown>
 

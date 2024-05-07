@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 
-/** @type {import('./$types').Actions} */
-export function load({ cookies }) {
+/** @type {import('./$types').RequestHandler} */
+export async function GET({ cookies }) {
     let token = cookies.get('token');
     if (!token) redirect(302, '/');
 
