@@ -19,6 +19,7 @@
             showLoginModal = false;
             showSignupModal = true;
         }
+        error = null;
     }
     
     let error: string | null = null;
@@ -32,7 +33,6 @@
         use:enhance={({ }) => {
 
             return async ({ result }) => {
-                console.log(result);
                 if (result.type === 'failure') {
                     error = result.data?.error;
                 } else if (result.type === 'success') {
@@ -67,8 +67,27 @@
 </Modal>
 
 <Modal bind:open={showSignupModal} size="xs" class="w-full" autoclose={false} >
-    <form class="flex flex-col space-y-6" method="POST" action="/auth/signup?/signup">
+    <form class="flex flex-col space-y-6" method="POST" action="/auth/signup?/signup"
+        use:enhance={({ formData, cancel }) => {
+            if (formData.get('password') !== formData.get('password-confirm')) {
+                error = 'Passwords do not match';
+                cancel();
+            }
+            return async ({ result }) => {
+                if (result.type === 'failure') {
+                    error = result.data?.error;
+                } else if (result.type === 'success') {
+                    loggedIn.set(true);
+                    displayName.set(result.data?.name);
+            }
+        }
+    }}>
         <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Sign up to Lifehub</h3>
+        {#if error}
+            <div class="p-2 text-red-500 bg-red-100 rounded">
+                {error}
+            </div>
+        {/if}
         <Label class="space-y-2">
             <span>Username</span>
             <Input type="text" name="username" autocomplete="username" required />

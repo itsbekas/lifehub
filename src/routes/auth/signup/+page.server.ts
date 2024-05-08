@@ -1,17 +1,21 @@
-import { api_url } from '$lib/api';
+import { api_url } from '$lib/api.js';
 import { fail, redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-    login: async ({ request, cookies }) => {
+    signup: async ({ cookies, request }) => {
         const formData = await request.formData();
-        const response = await fetch(api_url('/user/login'), {
+        // Check if passwords match
+        if (formData.get('password') !== formData.get('password-confirm')) {
+            redirect(302, '/?error=Passwords do not match');
+        }
+        const response = await fetch(api_url('/user/signup'), {
             method: 'POST',
             body: formData
         });
         const data = await response.json();
         if (!response.ok) {
-            return fail(response.status, { error: data.detail });
+            return fail(response.status, {error: data.detail })
         }
         // store the token in a cookie
         cookies.set(
@@ -19,7 +23,7 @@ export const actions = {
             data.access_token,
             {
                 path: '/',
-                // maxAge: data.expires_at,
+                // expires: data.expires_at,
                 httpOnly: true,
                 sameSite: 'lax',
                 secure: false //TODO: Change to secure when using HTTPS
@@ -34,12 +38,6 @@ export const actions = {
                 secure: false //TODO: Change to secure when using HTTPS
             }
         )
-        let next = formData.get('next')?.toString();
-
-        if (next) {
-            redirect(302, next);
-        }
-        
         return { success: true, name: data.name };
     },
 }
