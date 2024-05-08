@@ -8,7 +8,7 @@ export async function handleFetch({ event, request, fetch }) {
     let token = cookies && cookies.split(';')
                 .find(cookie => cookie.trim().startsWith('token='))?.split('=')[1];
 
-    if (!token && event.request.url !== '/login') {
+    if (!token && event.request.url !== '/auth/login') {
         let next = new URL(event.request.url).pathname;
         // Not ideal workaround but it was redirecting the user to the page data
         if (next.endsWith('/__data.json')) {

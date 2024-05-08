@@ -4,17 +4,22 @@
 
     export let data: { display_name: string};
 
-    import { loggedIn } from '$lib/stores.js';
+    import { loggedIn, displayName } from '$lib/stores.js';
     import { onDestroy } from 'svelte';
 	import LoginSignupModal from './LoginSignupModal.svelte';
 
     let isLoggedIn: boolean;
 
-    const unsubscribe = loggedIn.subscribe(value => {
+    const unsubscribeLoggedIn = loggedIn.subscribe(value => {
         isLoggedIn = value;
     });
 
-    onDestroy(unsubscribe);
+    const unsubscribeDisplayName = displayName.subscribe(value => {
+        data.display_name = value;
+    });
+
+    onDestroy(unsubscribeLoggedIn);
+    onDestroy(unsubscribeDisplayName);
 
 </script>
 
