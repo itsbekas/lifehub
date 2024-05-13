@@ -6,6 +6,7 @@
         title: string;
         category: string;
         cardComponent: any;
+        addButtonComponent: any;
         userItems: Array<any>;
         items: Array<any>;
     }
@@ -38,7 +39,7 @@
     <Listgroup items={nonUserItems} let:item>
         <div class="flex flex-row justify-between align-middle h-full">
             {item.name}
-            <AddProviderButton data={item} />
+            <svelte:component this={data.addButtonComponent} data={item} />
         </div>
     </Listgroup>
 </Modal>

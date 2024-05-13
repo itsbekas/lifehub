@@ -36,6 +36,7 @@
             <Input type="text" name="username" placeholder="Username" class="input" />
             <Input type="password" name="password" placeholder="Password" class="input" />
             <Button type="submit" class="w-full1">Add</Button>
+        </form>
     </div>
 {/if}
 </Modal>

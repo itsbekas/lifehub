@@ -89,6 +89,19 @@ export const actions = {
         }
     },
 
+    addModule: async ({ fetch, request }) => {
+        const formData = await request.formData();
+
+        const response = await fetch(api_url(`/user/modules/${formData.get('module_id')}`), {
+            method: 'POST',
+        })
+        const data = await response.json();
+        if (!response.ok) {
+            // TODO: Improve error handling (#7)
+            return { error: data.detail };
+        }
+    },
+
     deleteModule: async ({ fetch, request }) => {
         const formData = await request.formData();
 

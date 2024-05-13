@@ -1,5 +1,7 @@
 <script lang="ts">
     import { Accordion, AccordionItem, Button, Heading, Listgroup, Modal, TabItem } from 'flowbite-svelte';
+    import AddProviderButton from './AddProviderButton.svelte';
+    import AddModuleButton from './AddModuleButton.svelte';
     import UserProviderCard from './UserProviderCard.svelte';
     import UserModuleCard from './UserModuleCard.svelte';
     import AccountAccordion from './AccountAccordion.svelte';
@@ -10,6 +12,7 @@
         title: 'Providers',
         category: 'provider',
         cardComponent: UserProviderCard,
+        addButtonComponent: AddProviderButton,
         userItems: data.userProviders,
         items: data.providers
     };
@@ -18,6 +21,7 @@
         category: 'module',
         cardComponent: UserModuleCard,
         userItems: data.userModules,
+        addButtonComponent: AddModuleButton,
         items: data.modules
     };
 </script>
