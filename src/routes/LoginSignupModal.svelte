@@ -56,7 +56,8 @@
             <Input type="password" name="password" autocomplete="current-password" required />
         </Label>
         <div class="flex items-start">
-            <Checkbox>Remember me</Checkbox>
+            <Checkbox name="remember" class="mr-2" />
+            <span class="text-sm text-gray-500 dark:text-gray-300">Remember me</span>
         </div>
         <Button type="submit" class="w-full1">Login</Button>
         <div class="text-sm font-medium text-gray-500 dark:text-gray-300">

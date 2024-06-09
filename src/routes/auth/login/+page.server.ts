@@ -13,13 +13,20 @@ export const actions = {
         if (!response.ok) {
             return fail(response.status, { error: data.detail });
         }
+        
+        let expires;
+        console.log(data);
+        if (formData.get('remember') === 'on') {
+            expires = new Date(data.expires_at);
+        }
+
         // store the token in a cookie
         cookies.set(
             'token',
             data.access_token,
             {
                 path: '/',
-                // maxAge: data.expires_at,
+                expires,
                 httpOnly: true,
                 sameSite: 'lax',
                 secure: false //TODO: Change to secure when using HTTPS
@@ -30,11 +37,12 @@ export const actions = {
             data.name,
             {
                 path: '/',
+                expires,
                 sameSite: 'lax',
                 secure: false //TODO: Change to secure when using HTTPS
             }
         )
-        let next = formData.get('next')?.toString();
+        const next = formData.get('next')?.toString();
 
         if (next) {
             redirect(302, next);
