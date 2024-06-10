@@ -24,7 +24,7 @@
 </script>
 
 <Navbar >
-    <NavBrand href="/">
+    <NavBrand href={isLoggedIn ? '/dashboard' : '/'}>
         <span class="self-center whitespace-nowrap text-3xl font-semibold dark:text-white">Lifehub</span>
     </NavBrand>
     <div class="flex md:order-2">
