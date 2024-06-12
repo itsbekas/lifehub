@@ -15,7 +15,6 @@ export const actions = {
         }
         
         let expires;
-        console.log(data);
         if (formData.get('remember') === 'on') {
             expires = new Date(data.expires_at);
         }

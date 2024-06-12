@@ -3,7 +3,6 @@ import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ fetch, url }) {
-    console.log(url.searchParams);
 
     const provider_id: string | null = url.searchParams.get('state');
     const code: string | null = url.searchParams.get('code');

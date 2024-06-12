@@ -94,6 +94,10 @@
             <Input type="text" name="username" autocomplete="username" required />
         </Label>
         <Label class="space-y-2">
+            <span>Email</span>
+            <Input type="email" name="email" autocomplete="email" required />
+        </Label>
+        <Label class="space-y-2">
             <span>Display Name</span>
             <Input type="text" name="name" autocomplete="name" required />
         </Label>
