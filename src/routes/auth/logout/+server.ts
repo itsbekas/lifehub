@@ -2,7 +2,7 @@ import { redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
 export async function GET({ cookies }) {
-    let token = cookies.get('token');
+    const token = cookies.get('token');
     if (!token) redirect(302, '/');
 
     cookies.delete('token', { path: '/' });
