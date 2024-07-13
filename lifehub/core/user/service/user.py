@@ -165,7 +165,7 @@ class UserService(BaseService):
         refresh_token: str | None,
         created_at: dt.datetime | None,
         expires_at: dt.datetime | None,
-    ) -> None:
+    ) -> ProviderToken:
         provider_token = ProviderToken(
             user_id=user.id,
             provider_id=provider.id,
@@ -180,13 +180,17 @@ class UserService(BaseService):
         user.providers.append(provider)
         self.user_repository.add(user)
         self.session.commit()
+        return provider_token
 
-    def update_provider_token(self, user: User, provider: Provider, token: str) -> None:
+    def update_provider_token(
+        self, user: User, provider: Provider, token: str
+    ) -> ProviderToken:
         provider_token = self.provider_token_repository.get(user, provider)
         if provider_token is None:
             raise UserServiceException("Token not found")
         provider_token.token = token
         self.provider_token_repository.commit()
+        return provider_token
 
     def get_user_modules(self, user: User) -> list[ModuleResponse]:
         return [
