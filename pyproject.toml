@@ -14,6 +14,7 @@ dependencies = [
     "python-dotenv",
     "python-jose",
     "argon2-cffi",
+    "pytz",
 ]
 
 [tool.setuptools.packages]

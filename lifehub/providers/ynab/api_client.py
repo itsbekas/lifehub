@@ -15,7 +15,7 @@ class YNABAPIClient(APIClient):
 
     def __init__(self, user: User):
         super().__init__(user)
-        self.headers = self._token_headers
+        self.headers = self._token_bearer_headers
 
     def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
         return self._get_with_headers(endpoint)

@@ -2,8 +2,8 @@ from typing import Any
 
 from requests import Response
 
+from lifehub.core.common.api_client import APIClient
 from lifehub.core.user.schema import User
-from lifehub.providers.base.api_client import APIClient
 
 from .models import MainData
 

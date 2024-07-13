@@ -98,8 +98,6 @@ class APIClient(ABC):
             )
         data = res.json()
 
-        print(data)
-
         self.token.token = data["access_token"]
         self.token.expires_at = dt.datetime.now() + dt.timedelta(
             seconds=data["expires_in"]
