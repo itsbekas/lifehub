@@ -2,7 +2,7 @@
     import { Accordion, AccordionItem, Button, Heading, Listgroup } from 'flowbite-svelte';
 
     /** type {import('./$types').PageData} */
-    export let data: { t212Data: t212Data };
+    export let data: { t212Data: T212Data };
 </script>
 
 <div class="grid grid-cols-2 grid-rows-1 gap-10">

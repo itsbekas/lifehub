@@ -12,19 +12,27 @@ type Module = {
     providers: Array<Provider>;
 };
 
-type t212Transaction = {
+type T212Transaction = {
     timestamp: string;
     amount: number;
     type: string;
     ticker: string;
 }
 
-type t212Data = {
+type T212Data = {
     balance: {
         timestamp: string;
         free: number;
         invested: number;
         result: number;
     };
-    history: Array<t212Transaction>;
+    history: Array<T212Transaction>;
+}
+
+type CalendarEvent = {
+    id: number;
+    title: string;
+    start: string;
+    end: string;
+    location: string;
 }
