@@ -27,7 +27,7 @@ class GoogleCalendarAPIClient(APIClient):
         data = res.get("items", [])
         return [Calendar.from_response(c) for c in data]
 
-    def get_events(self, calendar_id: str) -> list[Event]:
+    def get_events(self, calendar_id: str, limit: int = 20) -> list[Event]:
         # url encode calendar_id
         calendar_id = urllib.parse.quote(calendar_id)
         res = self._get(
@@ -38,6 +38,7 @@ class GoogleCalendarAPIClient(APIClient):
                 "timeMin": dt.datetime.now().isoformat() + "Z",
                 "timeMax": (dt.datetime.now() + dt.timedelta(days=365)).isoformat()
                 + "Z",
+                "maxResults": str(limit),
             },
         )
         data = res.get("items", [])

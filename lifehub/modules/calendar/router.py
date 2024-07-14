@@ -18,5 +18,8 @@ async def get_calendars(
 
 
 @router.get("/events")
-async def get_events(calendar_service: CalendarServiceDep) -> list[EventResponse]:
-    return calendar_service.get_events()
+async def get_events(
+    calendar_service: CalendarServiceDep,
+    limit: int = 20,
+) -> list[EventResponse]:
+    return calendar_service.get_events(limit)
