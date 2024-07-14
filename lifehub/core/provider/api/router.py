@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from lifehub.core.provider.api.dependencies import (
@@ -18,7 +16,7 @@ router = APIRouter(
 @router.get("")
 async def get_providers(
     provider_service: ProviderServiceDep,
-) -> List[ProviderWithModulesResponse]:
+) -> list[ProviderWithModulesResponse]:
     return provider_service.get_providers_with_modules()
 
 

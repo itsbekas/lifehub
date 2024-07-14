@@ -6,7 +6,7 @@ from lifehub.core.common.api.dependencies import SessionDep
 from lifehub.core.provider.schema import (
     Provider,
 )
-from lifehub.core.provider.service.provider import ProviderService
+from lifehub.core.provider.service import ProviderService
 
 
 def get_provider_service(session: SessionDep) -> ProviderService:

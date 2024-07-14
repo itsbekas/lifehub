@@ -1,6 +1,6 @@
 import datetime as dt
 import uuid
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import UUID, Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -41,10 +41,10 @@ class User(BaseModel):
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     verified: Mapped[bool] = mapped_column(default=False)
 
-    modules: Mapped[List["Module"]] = relationship(
+    modules: Mapped[list["Module"]] = relationship(
         secondary=user_module, back_populates="users"
     )
-    providers: Mapped[List["Provider"]] = relationship(
+    providers: Mapped[list["Provider"]] = relationship(
         secondary=user_provider, back_populates="users"
     )
-    provider_tokens: Mapped[List["ProviderToken"]] = relationship(back_populates="user")
+    provider_tokens: Mapped[list["ProviderToken"]] = relationship(back_populates="user")

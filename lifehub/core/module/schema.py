@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -25,10 +25,10 @@ class Module(BaseModel):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(32), unique=True)
 
-    providers: Mapped[List["Provider"]] = relationship(
+    providers: Mapped[list["Provider"]] = relationship(
         secondary=module_provider, back_populates="modules"
     )
 
-    users: Mapped[List["User"]] = relationship(
+    users: Mapped[list["User"]] = relationship(
         secondary=user_module, back_populates="modules"
     )

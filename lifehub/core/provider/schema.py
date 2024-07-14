@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 from enum import Enum
-from typing import TYPE_CHECKING, List, TypeGuard
+from typing import TYPE_CHECKING, TypeGuard
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -52,10 +52,10 @@ class Provider(BaseModel):
         back_populates="provider", uselist=False
     )
 
-    modules: Mapped[List[Module]] = relationship(
+    modules: Mapped[list[Module]] = relationship(
         secondary=module_provider, back_populates="providers"
     )
-    users: Mapped[List[User]] = relationship(
+    users: Mapped[list[User]] = relationship(
         secondary=user_provider, back_populates="providers"
     )
 

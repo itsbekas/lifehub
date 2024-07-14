@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic.dataclasses import dataclass
 
 
@@ -17,7 +15,7 @@ class ProviderWithModulesResponse:
     id: int
     name: str
     type: str
-    modules: List[ModuleResponse]
+    modules: list[ModuleResponse]
 
 
 @dataclass
