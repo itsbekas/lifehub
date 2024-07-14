@@ -49,7 +49,7 @@ class CalendarService(BaseUserService):
                 [
                     EventResponse(
                         id=e.id,
-                        summary=e.summary,
+                        title=e.summary,
                         start=self._get_event_time_dt(e.start, calendar.timezone),
                         end=self._get_event_time_dt(e.end, calendar.timezone),
                         location=e.location,

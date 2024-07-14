@@ -13,7 +13,7 @@ class CalendarResponse:
 @dataclass
 class EventResponse:
     id: str
-    summary: str
+    title: str
     start: dt.datetime
     end: dt.datetime
     location: str
