@@ -15,6 +15,7 @@ const config = {
 
 		alias: {
 			$widgets: './src/widgets',
+			$components: './src/components',
 		}
 	}
 };

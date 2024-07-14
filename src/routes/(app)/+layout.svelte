@@ -1,6 +1,6 @@
 <script lang="ts">
-	import '../app.pcss';
-	import Navbar from './Navbar.svelte'
+	import '../../app.pcss';
+	import Navbar from '../Navbar.svelte'
 
     /** @type {import('./$types').PageData}*/
     export let data: { hasToken: boolean, display_name: string };

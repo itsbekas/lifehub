@@ -1,12 +1,12 @@
 <script lang="ts">
     import { Button, Navbar, NavBrand, NavLi, NavUl, NavHamburger } from 'flowbite-svelte';
-    import AccountIcon from './AccountIcon.svelte';
+    import AccountIcon from '../components/AccountIcon.svelte';
 
     export let data: { display_name: string};
 
     import { loggedIn, displayName } from '$lib/stores.js';
     import { onDestroy } from 'svelte';
-	import LoginSignupModal from './LoginSignupModal.svelte';
+	import LoginSignupModal from '../components/LoginSignupModal.svelte';
 
     let isLoggedIn: boolean;
 
