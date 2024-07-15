@@ -18,7 +18,7 @@
     ];
 </script>
 
-<div class="bg-white text-gray-900 min-h-screen pl-24 pt-2">
+<div class="bg-white text-gray-900 min-h-screen">
     <div class="flex flex-col">
         {#each sidebarNavItems as { title, href }}
             <Button.Root
