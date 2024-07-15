@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Card from '$components/settings/Card.svelte';
+    import ProviderCard from '$components/settings/ProviderCard.svelte';
     import SectionTitle from '$components/settings/SectionTitle.svelte';
 
     /** @type {import('./$types').PageData}*/
@@ -7,6 +7,10 @@
 </script>
 
 <SectionTitle title="Providers" />
-{#each data.providers as provider}
-    <Card />
-{/each}
+<div class="mt-2">
+    {#each data.providers as provider}
+        <div class="mb-4">
+            <ProviderCard provider={provider}/>
+        </div>
+    {/each}
+</div>

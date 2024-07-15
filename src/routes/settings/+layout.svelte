@@ -5,7 +5,7 @@
 
 <Navbar />
 <div class="flex flex-row">
-    <div class="w-60 pl-24 pr-12 py-8">
+    <div class="px-24 py-8">
         <SidebarNav />
     </div>
     <div class="py-8">

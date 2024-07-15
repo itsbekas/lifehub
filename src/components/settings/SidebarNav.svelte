@@ -1,5 +1,4 @@
 <script lang="ts">
-    import '../../app.pcss';
     import { Button } from "bits-ui";
 
     export let sidebarNavItems = [
