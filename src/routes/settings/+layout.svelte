@@ -5,10 +5,10 @@
 
 <Navbar />
 <div class="flex flex-row">
-    <div class="px-24 pt-8">
+    <div class="px-24 pt-12">
         <SidebarNav />
     </div>
-    <div class="pt-8 text-sm">
+    <div class="px-24 pt-12 text-sm">
         <slot />
     </div>
 </div>

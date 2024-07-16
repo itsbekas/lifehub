@@ -4,13 +4,13 @@ import { redirect } from '@sveltejs/kit';
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
 
-    const pResponse = await fetch(api_url('/providers'));
-    const providers = await pResponse.json();
-
     const upResponse = await fetch(api_url('/user/providers'));
     const userProviders = await upResponse.json();
 
-    return { providers, userProviders };
+    const mpResponse = await fetch(api_url('/user/providers/missing'));
+    const missingProviders = await mpResponse.json();
+
+    return { userProviders, missingProviders };
 }
 
 /** @type {import('./$types').Actions} */
@@ -70,7 +70,7 @@ export const actions = {
         }
     },
 
-    deleteProvider: async ({ fetch, request }) => {
+    removeProvider: async ({ fetch, request }) => {
         const formData = await request.formData();
 
         const response = await fetch(api_url(`/user/providers/${formData.get('provider_id')}`), {

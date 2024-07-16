@@ -1,6 +1,4 @@
 <script lang="ts">
-    import { Button } from "bits-ui";
-
     export let sidebarNavItems = [
         {
             title: "Profile",
@@ -20,12 +18,12 @@
 <div class="bg-white text-gray-900 min-h-screen">
     <div class="flex flex-col">
         {#each sidebarNavItems as { title, href }}
-            <Button.Root
-                class="w-full text-left p-2 hover:bg-gray-100 rounded-lg transition duration-200"
+            <a
+                class="w-full text-left p-2 pr-24 hover:bg-gray-100 rounded-lg transition duration-200"
                 href={href}
             >
                 <p>{title}</p>
-            </Button.Root>
+            </a>
         {/each}
     </div>
 </div>
