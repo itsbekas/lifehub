@@ -31,7 +31,7 @@ def is_oauth_config(config: ProviderConfig) -> TypeGuard[OAuthProviderConfig]:
 
 
 def oauth_redirect_uri() -> str:
-    redirect_uri: str = REDIRECT_URI_BASE + "/account/oauth_token"
+    redirect_uri: str = REDIRECT_URI_BASE + "/settings/providers/oauth_token"
     return redirect_uri
 
 

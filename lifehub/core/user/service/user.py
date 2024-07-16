@@ -4,11 +4,13 @@ import argon2
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from lifehub.config.providers import PROVIDER_CLIENTS
 from lifehub.core.common.base_service import BaseService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.models import ModuleResponse, ModuleWithProvidersResponse
 from lifehub.core.module.schema import Module
 from lifehub.core.provider.models import ProviderResponse, ProviderWithModulesResponse
+from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken
 from lifehub.core.user.models import UserTokenResponse
@@ -131,6 +133,9 @@ class UserService(BaseService):
             for provider in user.providers
         ]
 
+    def get_user_provider_ids(self, user: User) -> list[int]:
+        return [provider.id for provider in user.providers]
+
     def get_user_providers_with_modules(
         self, user: User
     ) -> list[ProviderWithModulesResponse]:
@@ -147,14 +152,36 @@ class UserService(BaseService):
             for provider in user.providers
         ]
 
+    def get_missing_providers_with_modules(
+        self, user: User
+    ) -> list[ProviderWithModulesResponse]:
+        provider_repository = ProviderRepository(self.session)
+        providers = provider_repository.get_all()
+        user_providers = [provider.id for provider in user.providers]
+        return [
+            ProviderWithModulesResponse(
+                id=provider.id,
+                name=provider.name,
+                type=provider.config.auth_type,
+                modules=[
+                    ModuleResponse(id=module.id, name=module.name)
+                    for module in provider.modules
+                ],
+            )
+            for provider in providers
+            if provider.id not in user_providers
+        ]
+
     def add_provider_to_user(self, user: User, provider: Provider) -> None:
         user.providers.append(provider)
         self.user_repository.commit()
 
     def remove_provider_from_user(self, user: User, provider: Provider) -> None:
         token = self.provider_token_repository.get(user, provider)
-        if token is not None:
-            self.provider_token_repository.delete(token)
+        if token is None:
+            raise UserServiceException("Token not found")
+        self.provider_token_repository.delete(token)
+        user.providers.remove(provider)
         self.user_repository.commit()
 
     def add_provider_token_to_user(
@@ -179,6 +206,13 @@ class UserService(BaseService):
         provider = self.session.merge(provider)
         user.providers.append(provider)
         self.user_repository.add(user)
+        try:
+            api_client = PROVIDER_CLIENTS[provider.name](user, self.session)  # type: ignore
+            api_client.test_connection()
+        except Exception as e:
+            print(e)
+            self.session.rollback()
+            raise UserServiceException("Could not connect to provider")
         self.session.commit()
         return provider_token
 

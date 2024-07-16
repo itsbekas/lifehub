@@ -17,7 +17,7 @@ class MailAPIClient(APIClient):
         }
 
     def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
-        return self._get_with_headers(endpoint)
+        return self._get_with_headers(endpoint, params=params)
 
     def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
         return self._post_with_headers(endpoint, data)
@@ -37,6 +37,9 @@ class MailAPIClient(APIClient):
             "MessageStream": "outbound",
         }
         self._post("email", data=data)
+
+    def _test(self) -> None:
+        raise NotImplementedError
 
     def _error_msg(self, res: Any) -> Any:
         return res.json()

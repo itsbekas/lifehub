@@ -37,6 +37,13 @@ async def get_user_providers(
     return user_service.get_user_providers_with_modules(user)
 
 
+@router.get("/missing")
+async def get_missing_providers(
+    user: UserDep, user_service: UserServiceDep
+) -> list[ProviderWithModulesResponse]:
+    return user_service.get_missing_providers_with_modules(user)
+
+
 @router.delete("/{provider_id}")
 async def remove_user_provider(
     user: UserDep,

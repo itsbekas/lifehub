@@ -18,7 +18,7 @@ class Trading212Fetcher(BaseFetcher):
     provider_name = "trading212"
 
     def fetch_data(self) -> None:
-        t212 = Trading212APIClient(self.user)
+        t212 = Trading212APIClient(self.user, self.session)
 
         orders = t212.get_order_history()
         transactions = t212.get_transactions()

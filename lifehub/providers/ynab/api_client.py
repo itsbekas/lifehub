@@ -1,6 +1,8 @@
 import re
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from lifehub.core.common.api_client import APIClient
 from lifehub.core.user.schema import User
 
@@ -13,12 +15,15 @@ class YNABAPIClient(APIClient):
 
     budget = "last-used"
 
-    def __init__(self, user: User):
-        super().__init__(user)
+    def __init__(self, user: User, session: Session) -> None:
+        super().__init__(user, session)
         self.headers = self._token_bearer_headers
 
     def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
-        return self._get_with_headers(endpoint)
+        return self._get_with_headers(endpoint, params=params)
+
+    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
+        return self._post_with_headers(endpoint, data=data)
 
     def _test(self) -> None:
         self.get_user()

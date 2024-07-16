@@ -4,8 +4,8 @@ from os import getenv
 from typing import Any, Callable, Optional
 
 import requests
+from sqlalchemy.orm import Session as SessionType
 
-from lifehub.core.common.database_service import Session
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken, is_oauth_config
@@ -50,33 +50,31 @@ class APIClient(ABC):
     headers: Optional[dict[str, str]]
     cookies: Optional[dict[str, str]]
 
-    def __init__(self, user: User) -> None:
+    def __init__(self, user: User, session: SessionType) -> None:
         self.user = user
-        with Session() as session:
-            provider: Provider | None = ProviderRepository(session).get_by_name(
-                self.provider_name
-            )
 
-            if provider is None:
-                raise Exception(
-                    f"Provider {self.provider_name} not found in the database"
-                )
+        provider: Provider | None = ProviderRepository(session).get_by_name(
+            self.provider_name
+        )
 
-            self.provider: Provider = provider
+        if provider is None:
+            raise Exception(f"Provider {self.provider_name} not found in the database")
 
-            tokenRepo: ProviderTokenRepository = ProviderTokenRepository(session)
+        self.provider: Provider = provider
 
-            token: ProviderToken | None = tokenRepo.get(user, self.provider)
+        tokenRepo: ProviderTokenRepository = ProviderTokenRepository(session)
 
-            if token is None:
-                raise Exception(f"Token not found for {self.provider_name} provider")
+        token: ProviderToken | None = tokenRepo.get(user, self.provider)
 
-            self.token: ProviderToken = token
-            session.merge(self.token)
+        if token is None:
+            raise Exception(f"Token not found for {self.provider_name} provider")
 
-            if self.token.expires_at < dt.datetime.now():
-                self._refresh_token(tokenRepo)
-                session.commit()
+        self.token: ProviderToken = token
+        session.merge(self.token)
+
+        if self.token.expires_at < dt.datetime.now():
+            self._refresh_token(tokenRepo)
+            session.commit()
 
     @property
     def _token_headers(self) -> dict[str, str]:

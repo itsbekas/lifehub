@@ -10,6 +10,17 @@ from lifehub.core.provider.schema import (
     ProviderConfig,
     TokenProviderConfig,
 )
+from lifehub.providers.google_calendar.api_client import GoogleCalendarAPIClient
+from lifehub.providers.qbittorrent.api_client import QBittorrentAPIClient
+from lifehub.providers.trading212.api_client import Trading212APIClient
+from lifehub.providers.ynab.api_client import YNABAPIClient
+
+PROVIDER_CLIENTS = {
+    "trading212": Trading212APIClient,
+    "ynab": YNABAPIClient,
+    "qbittorrent": QBittorrentAPIClient,
+    "google_calendar": GoogleCalendarAPIClient,
+}
 
 
 def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:

@@ -7,7 +7,7 @@ class QBittorrentStatsFetcher(BaseFetcher):
     module_name = "qbittorrent"
 
     def fetch_data(self) -> None:
-        qb = QBittorrentAPIClient(self.user)
+        qb = QBittorrentAPIClient(self.user, self.session)
 
         main_data = qb.get_main_data()
 

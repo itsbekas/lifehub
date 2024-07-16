@@ -22,7 +22,9 @@ class CalendarService(BaseUserService):
         super().__init__(session, user)
 
     def get_calendars(self) -> list[CalendarResponse]:
-        calendars: list[Calendar] = GoogleCalendarAPIClient(self.user).get_calendars()
+        calendars: list[Calendar] = GoogleCalendarAPIClient(
+            self.user, self.session
+        ).get_calendars()
         return [
             CalendarResponse(
                 id=c.id,
@@ -54,9 +56,9 @@ class CalendarService(BaseUserService):
                         end=self._get_event_time_dt(e.end, calendar.timezone),
                         location=e.location,
                     )
-                    for e in GoogleCalendarAPIClient(self.user).get_events(
-                        calendar.id, limit
-                    )
+                    for e in GoogleCalendarAPIClient(
+                        self.user, self.session
+                    ).get_events(calendar.id, limit)
                 ]
             )
         return sorted(events, key=lambda e: e.start)[:limit]

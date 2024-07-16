@@ -2,6 +2,8 @@ import datetime as dt
 import urllib.parse
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from lifehub.core.common.api_client import APIClient
 from lifehub.core.user.schema import User
 
@@ -12,8 +14,8 @@ class GoogleCalendarAPIClient(APIClient):
     provider_name = "google_calendar"
     base_url = "https://www.googleapis.com/calendar/v3"
 
-    def __init__(self, user: User) -> None:
-        super().__init__(user)
+    def __init__(self, user: User, session: Session) -> None:
+        super().__init__(user, session)
         self.headers = self._token_bearer_headers
 
     def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
@@ -47,5 +49,6 @@ class GoogleCalendarAPIClient(APIClient):
     def _test(self) -> None:
         self.get_calendars()
 
-    def _error_msg(self, res: Any) -> Any:
-        return res.text
+    def _error_msg(self, res: Any) -> str:
+        msg: str = res.text
+        return msg
