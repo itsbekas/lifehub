@@ -40,6 +40,7 @@ class ModuleService(BaseService):
                     ProviderResponse(
                         id=provider.id,
                         name=provider.name,
+                        allow_custom_url=provider.config.allow_custom_url,
                     )
                     for provider in module.providers
                 ],

@@ -129,7 +129,11 @@ class UserService(BaseService):
 
     def get_user_providers(self, user: User) -> list[ProviderResponse]:
         return [
-            ProviderResponse(id=provider.id, name=provider.name)
+            ProviderResponse(
+                id=provider.id,
+                name=provider.name,
+                allow_custom_url=provider.config.allow_custom_url,
+            )
             for provider in user.providers
         ]
 
@@ -144,6 +148,7 @@ class UserService(BaseService):
                 id=provider.id,
                 name=provider.name,
                 type=provider.config.auth_type,
+                allow_custom_url=provider.config.allow_custom_url,
                 modules=[
                     ModuleResponse(id=module.id, name=module.name)
                     for module in provider.modules
@@ -163,6 +168,7 @@ class UserService(BaseService):
                 id=provider.id,
                 name=provider.name,
                 type=provider.config.auth_type,
+                allow_custom_url=provider.config.allow_custom_url,
                 modules=[
                     ModuleResponse(id=module.id, name=module.name)
                     for module in provider.modules
@@ -192,10 +198,21 @@ class UserService(BaseService):
         refresh_token: str | None,
         created_at: dt.datetime | None,
         expires_at: dt.datetime | None,
+        custom_url: str | None = None,
     ) -> ProviderToken:
+        user = self.session.merge(user)
+        provider = self.session.merge(provider)
+
+        if not provider.config.allow_custom_url and custom_url is not None:
+            raise UserServiceException(400, "Provider does not allow custom URLs")
+
+        if provider.config.allow_custom_url and custom_url is None:
+            raise UserServiceException(400, "Custom URL is required")
+
         provider_token = ProviderToken(
             user_id=user.id,
             provider_id=provider.id,
+            custom_url=custom_url,
             token=token,
             refresh_token=refresh_token,
             created_at=created_at,
@@ -204,16 +221,10 @@ class UserService(BaseService):
 
         self.provider_token_repository.add(provider_token)
 
-        user = self.session.merge(user)
-        provider = self.session.merge(provider)
-
         user.providers.append(provider)
         self.user_repository.add(user)
 
-        api_client = PROVIDER_CLIENTS[provider.name](user, self.session)  # type: ignore
-        if not api_client.test_connection():
-            self.session.rollback()
-            raise UserServiceException(400, "Token is invalid")
+        self.test_provider_token(user, provider)
 
         self.session.commit()
         return provider_token
@@ -228,6 +239,14 @@ class UserService(BaseService):
         self.provider_token_repository.commit()
         return provider_token
 
+    def test_provider_token(self, user: User, provider: Provider) -> None:
+        provider_token = self.provider_token_repository.get(user, provider)
+        if provider_token is None:
+            raise UserServiceException(404, "Token not found")
+        api_client = PROVIDER_CLIENTS[provider.name](user, self.session)  # type: ignore
+        if not api_client.test_connection():
+            raise UserServiceException(400, "Token is invalid")
+
     def get_user_modules(self, user: User) -> list[ModuleResponse]:
         return [
             ModuleResponse(id=module.id, name=module.name) for module in user.modules
@@ -241,7 +260,11 @@ class UserService(BaseService):
                 id=module.id,
                 name=module.name,
                 providers=[
-                    ProviderResponse(id=provider.id, name=provider.name)
+                    ProviderResponse(
+                        id=provider.id,
+                        name=provider.name,
+                        allow_custom_url=provider.config.allow_custom_url,
+                    )
                     for provider in module.providers
                 ],
             )

@@ -31,6 +31,7 @@ class ProviderService(BaseService):
             ProviderResponse(
                 id=provider.id,
                 name=provider.name,
+                allow_custom_url=provider.config.allow_custom_url,
             )
             for provider in providers
         ]
@@ -48,6 +49,7 @@ class ProviderService(BaseService):
                 id=provider.id,
                 name=provider.name,
                 type=provider.config.auth_type,
+                allow_custom_url=provider.config.allow_custom_url,
                 modules=[
                     ModuleResponse(
                         id=module.id,

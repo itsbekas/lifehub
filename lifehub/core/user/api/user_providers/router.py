@@ -93,7 +93,9 @@ async def add_token_provider(
 ) -> None:
     if not is_token_config(provider.config):
         raise HTTPException(404, "Provider must be a token provider")
-    user_service.add_provider_token_to_user(user, provider, req.token, None, None, None)
+    user_service.add_provider_token_to_user(
+        user, provider, req.token, None, None, None, req.custom_url
+    )
 
 
 @router.patch("/{provider_id}/basic_token")
@@ -118,7 +120,13 @@ async def add_basic_provider(
     if not is_basic_config(provider.config):
         raise HTTPException(404, "Provider must be a basic login provider")
     user_service.add_provider_token_to_user(
-        user, provider, f"{req.username}:{req.password}", None, None, None
+        user,
+        provider,
+        f"{req.username}:{req.password}",
+        None,
+        None,
+        None,
+        req.custom_url,
     )
 
 
@@ -134,13 +142,8 @@ async def update_basic_login(
     user_service.update_provider_token(user, provider, f"{req.username}:{req.password}")
 
 
-# @router.get("/{provider_id}/test")
-# async def test_user_provider_connection(provider: ProviderDep, user: UserDep):
-#     APIClient = api_clients.get(provider.name)
-#     try:
-#         client = APIClient(user)
-#     except AttributeError:
-#         raise NoTokenException()
-
-#     if not client.test_connection():
-#         raise InvalidTokenException()
+@router.get("/{provider_id}/test")
+async def test_user_provider_connection(
+    provider: ProviderDep, user: UserDep, user_service: UserServiceDep
+) -> None:
+    user_service.test_provider_token(user, provider)
