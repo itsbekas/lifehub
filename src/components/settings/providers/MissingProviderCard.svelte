@@ -44,6 +44,9 @@
                 <input type="hidden" name="provider_id" value="{provider.id}" />
                 <input type="text" name="username" placeholder="Username" class="input" />
                 <input type="password" name="password" placeholder="Password" class="input" />
+                {#if provider.allow_custom_url}
+                    <input type="text" name="custom_url" placeholder="URL" class="input" />
+                {/if}
                 <button type="submit" class="w-full">Add</button>
             </div>
         </form>
@@ -57,6 +60,9 @@
             <div class="flex flex-row">
                 <input type="hidden" name="provider_id" value="{provider.id}" />
                 <input type="text" name="token" placeholder="Token" class="input" />
+                {#if provider.allow_custom_url}
+                    <input type="text" name="custom_url" placeholder="URL" class="input" />
+                {/if}
                 <button type="submit" class="w-full">Add</button>
             </div>
         </form>

@@ -41,6 +41,7 @@ export const actions = {
             },
             body: JSON.stringify({
                 token: formData.get('token'),
+                custom_url: formData.get('custom_url'),
             }),
         })
         const data = await response.json();
@@ -61,6 +62,7 @@ export const actions = {
             body: JSON.stringify({
                 username: formData.get('username'),
                 password: formData.get('password'),
+                custom_url: formData.get('custom_url'),
             }),
         })
         const data = await response.json();

@@ -2,6 +2,7 @@ type Provider = {
     id: number;
     name: string;
     type: string;
+    allow_custom_url: boolean;
     modules: Array<Module>;
 };
 
