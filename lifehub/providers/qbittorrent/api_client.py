@@ -16,7 +16,8 @@ class QBittorrentAPIClient(APIClient):
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session)
         username, password = self.token.token.split(":")
-        headers = {"Referer": "https://qb.b21.tech/"}
+        self.base_url = self.token.custom_url
+        headers = {"Referer": self.token.custom_url}
         auth_data = {"username": username, "password": password}
         res = rq.post(f"{self.base_url}/auth/login", headers=headers, data=auth_data)
         self.cookies: dict[str, str] = res.cookies.get_dict()
