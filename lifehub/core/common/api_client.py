@@ -149,7 +149,7 @@ class APIClient(ABC):
         """
         POST request to the API with custom headers
         """
-        return requests.post(url, headers=self.headers, json=data)
+        return requests.post(url, headers=self.headers, data=data)
 
     @request_handler
     def _post_with_cookies(self, url: str, data: dict[str, Any]) -> Any:

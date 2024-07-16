@@ -18,8 +18,8 @@ from lifehub.providers.trading212.schema import T212Balance
 
 
 class FinanceServiceException(ServiceException):
-    def __init__(self, message: str):
-        super().__init__("Finance", message)
+    def __init__(self, status_code: int, message: str):
+        super().__init__("Finance", status_code, message)
 
 
 class FinanceService(BaseUserService):
@@ -32,7 +32,7 @@ class FinanceService(BaseUserService):
         ).get_latest()
 
         if balance is None:
-            raise FinanceServiceException("Balance not found")
+            raise FinanceServiceException(404, "Balance not found")
 
         return T212BalanceResponse(
             timestamp=balance.timestamp,

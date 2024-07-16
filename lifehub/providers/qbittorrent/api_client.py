@@ -1,6 +1,6 @@
 from typing import Any
 
-from requests import Response
+import requests as rq
 from sqlalchemy.orm import Session
 
 from lifehub.core.common.api_client import APIClient
@@ -10,22 +10,19 @@ from .models import MainData
 
 
 class QBittorrentAPIClient(APIClient):
+    provider_name = "qbittorrent"
     base_url = "https://qb.b21.tech/api/v2"
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session)
-
-        from requests import post
-
-        username = self._load_env_token("QBITTORRENT_USERNAME")
-        password = self._load_env_token("QBITTORRENT_PASSWORD")
+        username, password = self.token.token.split(":")
         headers = {"Referer": "https://qb.b21.tech/"}
         auth_data = {"username": username, "password": password}
-        res = post(f"{self.base_url}/auth/login", headers=headers, data=auth_data)
+        res = rq.post(f"{self.base_url}/auth/login", headers=headers, data=auth_data)
         self.cookies: dict[str, str] = res.cookies.get_dict()
 
     def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
-        return self._get_with_cookies(endpoint)
+        return self._get_with_cookies(endpoint, params)
 
     def _post(self, endpoint: str, data: dict[str, str] = {}) -> Any:
         return self._post_with_cookies(endpoint, data)
@@ -37,5 +34,5 @@ class QBittorrentAPIClient(APIClient):
     def _test(self) -> None:
         self.get_main_data()
 
-    def _error_msg(self, res: Response) -> str:
+    def _error_msg(self, res: rq.Response) -> str:
         return res.text

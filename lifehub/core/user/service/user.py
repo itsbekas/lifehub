@@ -26,8 +26,8 @@ from lifehub.core.utils.mail.api_client import MailAPIClient
 
 
 class UserServiceException(ServiceException):
-    def __init__(self, message: str):
-        super().__init__("User", message)
+    def __init__(self, status_code: int, message: str):
+        super().__init__("User", status_code, message)
 
 
 class UserService(BaseService):
@@ -41,7 +41,7 @@ class UserService(BaseService):
         user = self.user_repository.get_by_username(username)
 
         if user is not None:
-            raise UserServiceException("User already exists")
+            raise UserServiceException(409, "User already exists")
 
         hashed_password = hash_password(password)
 
@@ -79,10 +79,10 @@ class UserService(BaseService):
         user: User | None = self.user_repository.get_by_username(username)
 
         if user is None or not verify_password(password, user.password):
-            raise UserServiceException("Invalid credentials")
+            raise UserServiceException(401, "Invalid credentials")
 
         if not user.verified:
-            raise UserServiceException("User not verified")
+            raise UserServiceException(403, "User not verified")
 
         return user
 
@@ -90,17 +90,17 @@ class UserService(BaseService):
         try:
             payload = decode_jwt_token(token)
         except JWTError:
-            raise UserServiceException("Invalid token")
+            raise UserServiceException(401, "Invalid token")
 
         username: str = payload.get("sub")  # type: ignore
 
         user: User | None = self.user_repository.get_by_username(username)
 
         if user is None:
-            raise UserServiceException("User not found")
+            raise UserServiceException(404, "User not found")
 
         if not user.verified:
-            raise UserServiceException("User not verified")
+            raise UserServiceException(403, "User not verified")
 
         return user
 
@@ -108,15 +108,15 @@ class UserService(BaseService):
         try:
             payload = decode_jwt_token(token)
         except JWTError:
-            raise UserServiceException("Invalid token")
+            raise UserServiceException(401, "Invalid token")
 
         username: str | None = payload.get("sub")
         if username is None:
-            raise UserServiceException("Invalid token")
+            raise UserServiceException(401, "Invalid token")
 
         user: User | None = self.user_repository.get_by_username(username)
         if user is None:
-            raise UserServiceException("User not found")
+            raise UserServiceException(404, "User not found")
 
         user.verified = True
         self.user_repository.commit()
@@ -179,7 +179,7 @@ class UserService(BaseService):
     def remove_provider_from_user(self, user: User, provider: Provider) -> None:
         token = self.provider_token_repository.get(user, provider)
         if token is None:
-            raise UserServiceException("Token not found")
+            raise UserServiceException(404, "Token not found")
         self.provider_token_repository.delete(token)
         user.providers.remove(provider)
         self.user_repository.commit()
@@ -201,18 +201,20 @@ class UserService(BaseService):
             created_at=created_at,
             expires_at=expires_at,
         )
+
         self.provider_token_repository.add(provider_token)
+
         user = self.session.merge(user)
         provider = self.session.merge(provider)
+
         user.providers.append(provider)
         self.user_repository.add(user)
-        try:
-            api_client = PROVIDER_CLIENTS[provider.name](user, self.session)  # type: ignore
-            api_client.test_connection()
-        except Exception as e:
-            print(e)
+
+        api_client = PROVIDER_CLIENTS[provider.name](user, self.session)  # type: ignore
+        if not api_client.test_connection():
             self.session.rollback()
-            raise UserServiceException("Could not connect to provider")
+            raise UserServiceException(400, "Token is invalid")
+
         self.session.commit()
         return provider_token
 
@@ -221,7 +223,7 @@ class UserService(BaseService):
     ) -> ProviderToken:
         provider_token = self.provider_token_repository.get(user, provider)
         if provider_token is None:
-            raise UserServiceException("Token not found")
+            raise UserServiceException(404, "Token not found")
         provider_token.token = token
         self.provider_token_repository.commit()
         return provider_token
@@ -248,7 +250,7 @@ class UserService(BaseService):
 
     def add_module_to_user(self, user: User, module: Module) -> None:
         if module in user.modules:
-            raise UserServiceException(f"User already has module {module.name}")
+            raise UserServiceException(409, "Module already added to user")
 
         missed_providers = []
 
@@ -261,7 +263,7 @@ class UserService(BaseService):
 
         if missed_providers:
             raise UserServiceException(
-                f"User is missing providers: {', '.join(missed_providers)}"
+                409, f"User is missing providers: {', '.join(missed_providers)}"
             )
 
         user.modules.append(module)
@@ -272,7 +274,7 @@ class UserService(BaseService):
         module = self.session.merge(module)
 
         if module not in user.modules:
-            raise UserServiceException(f"User does not have module {module.name}")
+            raise UserServiceException(404, f"User does not have module {module.name}")
 
         user.modules.remove(module)
         self.user_repository.commit()

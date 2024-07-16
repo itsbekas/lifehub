@@ -13,8 +13,8 @@ from .models import CalendarResponse, EventResponse
 
 
 class CalendarServiceException(ServiceException):
-    def __init__(self, message: str):
-        super().__init__("Calendar", message)
+    def __init__(self, status_code: int, message: str):
+        super().__init__("Calendar", status_code, message)
 
 
 class CalendarService(BaseUserService):
@@ -41,7 +41,7 @@ class CalendarService(BaseUserService):
             tz = pytz.timezone(timezone)
             tz_date: dt.datetime = tz.localize(event_time.date)
             return tz_date
-        raise CalendarServiceException("Event start time not found")
+        raise CalendarServiceException(400, "Event start time not found")
 
     def get_events(self, limit: int = 20) -> list[EventResponse]:
         calendars = self.get_calendars()

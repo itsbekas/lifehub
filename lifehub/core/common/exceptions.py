@@ -1,7 +1,8 @@
 class ServiceException(Exception):
-    def __init__(self, module: str, message: str) -> None:
+    def __init__(self, module: str, status_code: int, message: str) -> None:
         self.module = module
         self.message = message
+        self.status_code = status_code
 
     def __str__(self) -> str:
         return f"{self.module}: {self.message}"

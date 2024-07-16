@@ -9,8 +9,8 @@ from lifehub.core.provider.schema import Provider
 
 
 class ProviderServiceException(ServiceException):
-    def __init__(self, message: str):
-        super().__init__("Provider", message)
+    def __init__(self, status_code: int, message: str):
+        super().__init__("Provider", status_code, message)
 
 
 class ProviderService(BaseService):
@@ -21,7 +21,7 @@ class ProviderService(BaseService):
     def get_provider_by_id(self, provider_id: int) -> Provider:
         provider = self.provider_repository.get_by_id(provider_id)
         if provider is None:
-            raise ProviderServiceException("Provider not found")
+            raise ProviderServiceException(404, "Provider not found")
         return provider
 
     def get_providers(self) -> list[ProviderResponse]:

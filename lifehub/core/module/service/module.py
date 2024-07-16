@@ -9,8 +9,8 @@ from lifehub.core.provider.models import ProviderResponse
 
 
 class ModuleServiceException(ServiceException):
-    def __init__(self, message: str):
-        super().__init__("Module", message)
+    def __init__(self, status_code: int, message: str):
+        super().__init__("Module", status_code, message)
 
 
 class ModuleService(BaseService):
@@ -50,5 +50,5 @@ class ModuleService(BaseService):
     def get_module_by_id(self, module_id: int) -> Module:
         module = self.module_repository.get_by_id(module_id)
         if module is None:
-            raise ModuleServiceException("Module not found")
+            raise ModuleServiceException(404, "Module not found")
         return module
