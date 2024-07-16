@@ -9,7 +9,7 @@
 <SectionTitle title="Providers" />
 <div class="mt-2">
     {#each data.providers as provider}
-        <div class="mb-4">
+        <div class="mb-2">
             <ProviderCard provider={provider}/>
         </div>
     {/each}

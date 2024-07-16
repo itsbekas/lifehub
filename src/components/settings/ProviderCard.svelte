@@ -1,24 +1,25 @@
 <script lang="ts">
     import SettingsCard from '$components/settings/SettingsCard.svelte';
-    import { Dialog } from 'bits-ui';
+    import Modal from '$components/Modal.svelte';
 
     export let provider: Provider;
+
+    let isRemoveModalOpen = false;
+
+    function toggleRemoveModal() {
+        isRemoveModalOpen = !isRemoveModalOpen;
+    }
 </script>
 
 <SettingsCard>
     <div class="flex justify-between">
-    <p>{ provider.name }</p>
-    <Dialog.Root>
-        <Dialog.Trigger>
-            Delete
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay />
-          <Dialog.Content>
-            <Dialog.Title />
-            <Dialog.Description />
-            <Dialog.Close />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+    <p class="">{ provider.name }</p>
+    <button class="text-red-500" on:click={toggleRemoveModal}>Remove</button>
 </SettingsCard>
+
+<Modal title="Remove" bind:isOpen={isRemoveModalOpen}>
+    <div class="flex gap-4">
+        <p>Are you sure you want to remove { provider.name }?</p>
+        <button class="text-red-500" on:click={toggleRemoveModal}>Remove</button>
+    </div>
+</Modal>
