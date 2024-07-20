@@ -5,7 +5,7 @@ from pydantic.dataclasses import dataclass
 
 @dataclass
 class ProviderResponse:
-    id: int
+    id: str
     name: str
     allow_custom_url: bool
 
@@ -15,7 +15,7 @@ from lifehub.core.module.models import ModuleResponse  # noqa: E402
 
 @dataclass
 class ProviderWithModulesResponse:
-    id: int
+    id: str
     name: str
     type: str
     allow_custom_url: bool

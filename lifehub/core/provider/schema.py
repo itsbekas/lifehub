@@ -44,7 +44,7 @@ class ProviderType(str, Enum):
 class Provider(BaseModel):
     __tablename__ = "provider"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, unique=True)
     name: Mapped[str] = mapped_column(String(32), unique=True)
     last_fetch: Mapped[dt.datetime] = mapped_column(insert_default=dt.datetime.min)
 
@@ -63,8 +63,8 @@ class Provider(BaseModel):
 class ProviderToken(UserBaseModel):
     __tablename__ = "provider_token"
 
-    provider_id: Mapped[int] = mapped_column(
-        ForeignKey("provider.id"), primary_key=True
+    provider_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("provider.id"), primary_key=True
     )
     custom_url: Mapped[str] = mapped_column(String(64), nullable=True)
     token: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -78,8 +78,8 @@ class ProviderToken(UserBaseModel):
 class ProviderConfig(BaseModel):
     __tablename__ = "provider_config"
 
-    provider_id: Mapped[int] = mapped_column(
-        ForeignKey("provider.id"), primary_key=True
+    provider_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("provider.id"), primary_key=True
     )
     auth_type: Mapped[str] = mapped_column(String(8), nullable=False)
     allow_custom_url: Mapped[bool] = mapped_column(default=False)
@@ -97,8 +97,8 @@ class ProviderConfig(BaseModel):
 class OAuthProviderConfig(ProviderConfig):
     __tablename__ = "oauth_provider_config"
 
-    provider_id: Mapped[int] = mapped_column(
-        ForeignKey("provider_config.provider_id"), primary_key=True
+    provider_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("provider_config.provider_id"), primary_key=True
     )
     auth_url: Mapped[str] = mapped_column(String(64), nullable=False)
     token_url: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -121,8 +121,8 @@ class OAuthProviderConfig(ProviderConfig):
 class TokenProviderConfig(ProviderConfig):
     __tablename__ = "token_provider_config"
 
-    provider_id: Mapped[int] = mapped_column(
-        ForeignKey("provider_config.provider_id"), primary_key=True
+    provider_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("provider_config.provider_id"), primary_key=True
     )
 
     __mapper_args__ = {"polymorphic_identity": "token"}
@@ -131,8 +131,8 @@ class TokenProviderConfig(ProviderConfig):
 class BasicProviderConfig(ProviderConfig):
     __tablename__ = "basic_provider_config"
 
-    provider_id: Mapped[int] = mapped_column(
-        ForeignKey("provider_config.provider_id"), primary_key=True
+    provider_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("provider_config.provider_id"), primary_key=True
     )
 
     __mapper_args__ = {"polymorphic_identity": "basic"}

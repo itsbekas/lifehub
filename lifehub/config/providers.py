@@ -26,9 +26,11 @@ PROVIDER_CLIENTS = {
 def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
     provider_configs: dict[str, dict[str, Any]] = {
         "trading212": {
+            "name": "Trading212",
             "auth_type": "token",
         },
         "ynab": {
+            "name": "YNAB",
             "auth_type": "oauth",
             "auth_url": "https://app.ynab.com/oauth/authorize",
             "token_url": "https://app.ynab.com/oauth/token",
@@ -37,10 +39,12 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "scope": "read-only",
         },
         "qbittorrent": {
+            "name": "QBittorrent",
             "auth_type": "basic",
             "allow_custom_url": True,
         },
         "google_calendar": {
+            "name": "Google Calendar",
             "auth_type": "oauth",
             "auth_url": "https://accounts.google.com/o/oauth2/auth",
             "token_url": "https://accounts.google.com/o/oauth2/token",
@@ -65,13 +69,11 @@ def setup_providers() -> None:
     session = Session()
     providers_dict = {}
 
-    for name in provider_configs:
-        provider = Provider(name=name)
+    for provider_id in provider_configs:
+        config = provider_configs[provider_id]
+        provider = Provider(id=provider_id, name=config["name"])
         session.add(provider)
-        session.flush()  # Ensure the provider ID is available
-        providers_dict[name] = provider
-
-        config = provider_configs[name]
+        providers_dict[provider_id] = provider
 
         provider_config: ProviderConfig
 
