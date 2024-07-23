@@ -36,7 +36,7 @@ class ProviderService(BaseService):
             for provider in providers
         ]
 
-    def get_provider_ids(self) -> list[int]:
+    def get_provider_ids(self) -> list[str]:
         providers = self.provider_repository.get_all()
 
         return [provider.id for provider in providers]

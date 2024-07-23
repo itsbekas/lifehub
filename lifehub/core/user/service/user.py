@@ -137,7 +137,7 @@ class UserService(BaseService):
             for provider in user.providers
         ]
 
-    def get_user_provider_ids(self, user: User) -> list[int]:
+    def get_user_provider_ids(self, user: User) -> list[str]:
         return [provider.id for provider in user.providers]
 
     def get_user_providers_with_modules(
