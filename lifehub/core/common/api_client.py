@@ -53,7 +53,7 @@ class APIClient(ABC):
     def __init__(self, user: User, session: SessionType) -> None:
         self.user = user
 
-        provider: Provider | None = ProviderRepository(session).get_by_name(
+        provider: Provider | None = ProviderRepository(session).get_by_id(
             self.provider_name
         )
 

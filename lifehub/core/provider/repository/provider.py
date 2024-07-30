@@ -9,10 +9,6 @@ class ProviderRepository(BaseRepository[Provider]):
     def __init__(self, session: Session):
         super().__init__(Provider, session)
 
-    def get_by_id(self, id: int) -> Provider | None:
+    def get_by_id(self, id: str) -> Provider | None:
         stmt = select(Provider).where(Provider.id == id)
-        return self.session.execute(stmt).scalar_one_or_none()
-
-    def get_by_name(self, name: str) -> Provider | None:
-        stmt = select(Provider).where(Provider.name == name)
         return self.session.execute(stmt).scalar_one_or_none()

@@ -67,8 +67,8 @@ class ProviderToken(UserBaseModel):
         String(32), ForeignKey("provider.id"), primary_key=True
     )
     custom_url: Mapped[str] = mapped_column(String(64), nullable=True)
-    token: Mapped[str] = mapped_column(String(128), nullable=False)
-    refresh_token: Mapped[str] = mapped_column(String(128), nullable=True)
+    token: Mapped[str] = mapped_column(String(256), nullable=False)
+    refresh_token: Mapped[str] = mapped_column(String(256), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     expires_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.max)
 
@@ -107,7 +107,7 @@ class OAuthProviderConfig(ProviderConfig):
     scope: Mapped[str] = mapped_column(String(64), nullable=False)
 
     def build_auth_url(self) -> str:
-        return f"{self.auth_url}?client_id={self.client_id}&redirect_uri={oauth_redirect_uri()}&scope={self.scope}&response_type=code&state={self.provider_id}"
+        return f"{self.auth_url}?client_id={self.client_id}&redirect_uri={oauth_redirect_uri()}&scope={self.scope}&access_type=offline&response_type=code&state={self.provider_id}"
 
     def build_token_url(self, auth_code: str) -> str:
         return f"{self.token_url}?client_id={self.client_id}&redirect_uri={oauth_redirect_uri()}&scope={self.scope}&grant_type=authorization_code&client_secret={self.client_secret}&code={auth_code}"

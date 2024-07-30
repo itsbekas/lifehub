@@ -243,7 +243,7 @@ class UserService(BaseService):
         provider_token = self.provider_token_repository.get(user, provider)
         if provider_token is None:
             raise UserServiceException(404, "Token not found")
-        api_client = PROVIDER_CLIENTS[provider.name](user, self.session)  # type: ignore
+        api_client = PROVIDER_CLIENTS[provider.id](user, self.session)  # type: ignore
         if not api_client.test_connection():
             raise UserServiceException(400, "Token is invalid")
 

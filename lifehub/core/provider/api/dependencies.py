@@ -17,7 +17,7 @@ ProviderServiceDep = Annotated[ProviderService, Depends(get_provider_service)]
 
 
 def get_provider(
-    provider_id: int,
+    provider_id: str,
     provider_service: ProviderServiceDep,
 ) -> Provider:
     provider = provider_service.get_provider_by_id(provider_id)
