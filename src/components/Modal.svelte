@@ -11,7 +11,9 @@
                 <h2>{ title }</h2>
                 <button on:click={() => isOpen = false}>Close</button>
             </div>
-            <slot />
+            <div class="pt-4">
+                <slot/>
+            </div>
         </div>
     </div>
 {/if}

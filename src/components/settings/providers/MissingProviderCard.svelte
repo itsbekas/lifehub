@@ -1,6 +1,7 @@
 <script lang="ts">
     import SettingsCard from '$components/settings/SettingsCard.svelte';
     import Modal from '$components/Modal.svelte';
+    import TextInput from '$components/TextInput.svelte';
 
     export let provider: Provider;
 
@@ -40,12 +41,12 @@
 <Modal title="Add Basic Provider" bind:isOpen={(isAddModalOpen.basic)}>
     <div class="flex gap-4">
         <form method="POST" action="?/addBasicProvider">
-            <div class="flex flex-row">
+            <div class="flex flex-col">
                 <input type="hidden" name="provider_id" value="{provider.id}" />
-                <input type="text" name="username" placeholder="Username" class="input" />
-                <input type="password" name="password" placeholder="Password" class="input" />
+                <TextInput type="text" name="username" placeholder="Username" />
+                <TextInput type="password" name="password" placeholder="Password" />
                 {#if provider.allow_custom_url}
-                    <input type="text" name="custom_url" placeholder="URL" class="input" />
+                    <TextInput type="text" name="custom_url" placeholder="URL" />
                 {/if}
                 <button type="submit" class="w-full">Add</button>
             </div>
@@ -57,11 +58,11 @@
 <Modal title="Add Token Provider" bind:isOpen={isAddModalOpen.token}>
     <div class="flex gap-4">
         <form method="POST" action="?/addTokenProvider">
-            <div class="flex flex-row">
+            <div class="flex flex-col">
                 <input type="hidden" name="provider_id" value="{provider.id}" />
-                <input type="text" name="token" placeholder="Token" class="input" />
+                <TextInput name="token" placeholder="Token" />
                 {#if provider.allow_custom_url}
-                    <input type="text" name="custom_url" placeholder="URL" class="input" />
+                    <TextInput type="text" name="custom_url" placeholder="URL" />
                 {/if}
                 <button type="submit" class="w-full">Add</button>
             </div>

@@ -1,6 +1,4 @@
 <script lang="ts">
-    import '../app.pcss';
-
     export let navbarItems = [
         {
             title: "Dashboard",
