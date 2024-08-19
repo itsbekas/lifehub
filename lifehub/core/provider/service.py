@@ -18,7 +18,7 @@ class ProviderService(BaseService):
         super().__init__(session)
         self.provider_repository = ProviderRepository(self.session)
 
-    def get_provider_by_id(self, provider_id: int) -> Provider:
+    def get_provider_by_id(self, provider_id: str) -> Provider:
         provider = self.provider_repository.get_by_id(provider_id)
         if provider is None:
             raise ProviderServiceException(404, "Provider not found")

@@ -11,7 +11,7 @@ class BaseFetcher:
 
     def __init__(self) -> None:
         with Session() as session:
-            provider: Provider | None = ProviderRepository(session).get_by_name(
+            provider: Provider | None = ProviderRepository(session).get_by_id(
                 self.provider_name
             )
             if not provider:
