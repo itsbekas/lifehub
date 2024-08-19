@@ -1,6 +1,13 @@
 import { api_url } from '$lib/api';
 import { fail, redirect } from '@sveltejs/kit';
 
+/** @type {import('./$types').PageServerLoad} */
+export async function load({ cookies }) {
+    if (cookies.get('token')) {
+        return redirect(302, '/dashboard');
+    }
+}
+
 /** @type {import('./$types').Actions} */
 export const actions = {
     login: async ({ request, cookies }) => {

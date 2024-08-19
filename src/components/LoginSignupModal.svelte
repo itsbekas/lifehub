@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { applyAction, enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+    import { enhance } from '$app/forms';
     import { displayName, loggedIn } from '$lib/stores.js';
     import { A, Button, Checkbox, Modal, Label, Input } from 'flowbite-svelte';
 
@@ -29,7 +27,7 @@
 <Button size="sm" on:click={() => showLoginModal = true}>Login</Button>
 
 <Modal bind:open={showLoginModal} size="xs" class="w-full" autoclose={false} >
-    <form class="flex flex-col space-y-6" method="POST" action="/auth/login/?/login"
+    <form class="flex flex-col space-y-6" method="POST" action="/login/?/login"
         use:enhance={({ }) => {
 
             return async ({ result }) => {
@@ -68,7 +66,7 @@
 </Modal>
 
 <Modal bind:open={showSignupModal} size="xs" class="w-full" autoclose={false} >
-    <form class="flex flex-col space-y-6" method="POST" action="/auth/signup?/signup"
+    <form class="flex flex-col space-y-6" method="POST" action="/signup?/signup"
         use:enhance={({ formData, cancel }) => {
             if (formData.get('password') !== formData.get('password-confirm')) {
                 error = 'Passwords do not match';

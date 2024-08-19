@@ -7,7 +7,7 @@ export function load({ url, cookies }) {
     const display_name = cookies.get('display_name');
 
     if (!token && url.pathname !== '/') {
-        return redirect(302, '/?login');
+        return redirect(302, '/login?next=' + url.pathname);
     }
 
     return {

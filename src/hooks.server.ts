@@ -14,7 +14,7 @@ export async function handleFetch({ event, request, fetch }) {
         if (next.endsWith('/__data.json')) {
             next = next.replace('/__data.json', '');
         }
-        return redirect(302, '/?login&next=' + next);
+        return redirect(302, '/login?next=' + next);
     }
 
     request.headers.set('Authorization', `Bearer ${token}`);
