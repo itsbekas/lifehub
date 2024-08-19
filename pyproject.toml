@@ -10,11 +10,13 @@ dependencies = [
     "fastapi",
     "sqlalchemy",
     "pydantic",
-    "mariadb",
+    "mariadb==1.1.9",
     "python-dotenv",
     "python-jose",
     "argon2-cffi",
     "pytz",
+    "uvicorn",
+    "python-multipart"
 ]
 
 [tool.setuptools.packages]
