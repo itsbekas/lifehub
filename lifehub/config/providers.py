@@ -12,19 +12,44 @@ from lifehub.core.provider.schema import (
 )
 from lifehub.providers.google_calendar.api_client import GoogleCalendarAPIClient
 from lifehub.providers.qbittorrent.api_client import QBittorrentAPIClient
+from lifehub.providers.strava.api_client import StravaAPIClient
 from lifehub.providers.trading212.api_client import Trading212APIClient
 from lifehub.providers.ynab.api_client import YNABAPIClient
 
 PROVIDER_CLIENTS = {
+    "google_calendar": GoogleCalendarAPIClient,
+    "qbittorrent": QBittorrentAPIClient,
+    "strava": StravaAPIClient,
     "trading212": Trading212APIClient,
     "ynab": YNABAPIClient,
-    "qbittorrent": QBittorrentAPIClient,
-    "google_calendar": GoogleCalendarAPIClient,
 }
 
 
 def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
     provider_configs: dict[str, dict[str, Any]] = {
+        "google_calendar": {
+            "name": "Google Calendar",
+            "auth_type": "oauth",
+            "auth_url": "https://accounts.google.com/o/oauth2/auth",
+            "token_url": "https://accounts.google.com/o/oauth2/token",
+            "client_id": getenv("GOOGLE_CALENDAR_CLIENT_ID"),
+            "client_secret": getenv("GOOGLE_CALENDAR_CLIENT_SECRET"),
+            "scope": "https://www.googleapis.com/auth/calendar.readonly",
+        },
+        "qbittorrent": {
+            "name": "QBittorrent",
+            "auth_type": "basic",
+            "allow_custom_url": True,
+        },
+        "strava": {
+            "name": "Strava",
+            "auth_type": "oauth",
+            "auth_url": "https://www.strava.com/oauth/authorize",
+            "token_url": "https://www.strava.com/oauth/token",
+            "client_id": getenv("STRAVA_CLIENT_ID"),
+            "client_secret": getenv("STRAVA_CLIENT_SECRET"),
+            "scope": "activity:read_all",
+        },
         "trading212": {
             "name": "Trading212",
             "auth_type": "token",
@@ -37,20 +62,6 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "client_id": getenv("YNAB_CLIENT_ID"),
             "client_secret": getenv("YNAB_CLIENT_SECRET"),
             "scope": "read-only",
-        },
-        "qbittorrent": {
-            "name": "QBittorrent",
-            "auth_type": "basic",
-            "allow_custom_url": True,
-        },
-        "google_calendar": {
-            "name": "Google Calendar",
-            "auth_type": "oauth",
-            "auth_url": "https://accounts.google.com/o/oauth2/auth",
-            "token_url": "https://accounts.google.com/o/oauth2/token",
-            "client_id": getenv("GOOGLE_CALENDAR_CLIENT_ID"),
-            "client_secret": getenv("GOOGLE_CALENDAR_CLIENT_SECRET"),
-            "scope": "https://www.googleapis.com/auth/calendar.readonly",
         },
     }
 
