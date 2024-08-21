@@ -27,3 +27,11 @@ class UserTokenResponse:
     name: str
     access_token: str
     expires_at: dt.datetime
+
+
+@dataclass
+class UserResponse:
+    username: str
+    email: str
+    name: str
+    created_at: dt.datetime

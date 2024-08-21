@@ -14,7 +14,7 @@ from lifehub.core.provider.models import ProviderResponse, ProviderWithModulesRe
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken
-from lifehub.core.user.models import UserTokenResponse
+from lifehub.core.user.models import UserResponse, UserTokenResponse
 from lifehub.core.user.repository.user import UserRepository
 from lifehub.core.user.schema import User
 from lifehub.core.utils.auth import (
@@ -123,6 +123,14 @@ class UserService(BaseService):
         self.user_repository.commit()
 
         return user
+
+    def get_user(self, user: User) -> UserResponse:
+        return UserResponse(
+            username=user.username,
+            email=user.email,
+            name=user.name,
+            created_at=user.created_at,
+        )
 
     def delete_user(self, user: User) -> None:
         self.user_repository.delete(user)
