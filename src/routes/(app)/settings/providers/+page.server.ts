@@ -1,5 +1,5 @@
 import { api_url } from '$lib/api';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
@@ -85,4 +85,15 @@ export const actions = {
         }
     },
 
+    testProvider: async ({ fetch, request }) => {
+        const formData = await request.formData();
+
+        const response = await fetch(api_url(`/user/providers/${formData.get('provider_id')}/test`), {
+            method: 'POST',
+        })
+        if (!response.ok) {
+            const data = await response.json();
+            return fail(response.status, { error: data.message });
+        }
+    },
 }
