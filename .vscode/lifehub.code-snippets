@@ -1,0 +1,35 @@
+{
+	"APIClient": {
+		"scope": "python",
+		"prefix": "api-client",
+		"body": [
+			"from typing import Any",
+			"",
+			"from sqlalchemy.orm import Session",
+			"",
+			"from lifehub.core.common.api_client import APIClient",
+			"from lifehub.core.user.schema import User",
+			"",
+			"from .models import ",
+			"",
+			"",
+			"class ${1:Provider}APIClient(APIClient):",
+			"    provider_name = '${2:provider_id}'",
+			"    base_url = '${3:base_url}'",
+			"",
+			"    def __init__(self, session: Session, user: User) -> None:",
+			"        super().__init__(session, user)",
+			"",
+			"    def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:",
+			"        return self._get${4:get_method}(endpoint, params=params)",
+			"",
+			"    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:",
+			"        return self._post${5:post_method}(endpoint, data=data)",
+			"",
+			"    def _test(self) -> None:",
+			"",
+			"    def _error_msg(self, res: Any) -> str:",
+		],
+		"description": "Create an instance of APIClient"
+	}
+}

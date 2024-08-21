@@ -6,7 +6,7 @@ venv/
 .env
 test.env
 
-.vscode/
+# .vscode/
 
 __pycache__/
 .pytest_cache/
