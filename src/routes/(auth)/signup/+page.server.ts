@@ -6,7 +6,7 @@ export const actions = {
     signup: async ({ request }) => {
         const formData = await request.formData();
         // Check if passwords match
-        if (formData.get('password') !== formData.get('password-confirm')) {
+        if (formData.get('password') !== formData.get('confirmPassword')) {
             redirect(302, '/?error=Passwords do not match');
         }
         const response = await fetch(api_url('/user/signup'), {
