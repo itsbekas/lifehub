@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from lifehub.core.module.schema import Module
     from lifehub.core.user.schema import User
 
-from lifehub.config.constants import REDIRECT_URI_BASE
+from lifehub.config.constants import OAUTH_REDIRECT_URI
 
 
 def is_basic_config(config: ProviderConfig) -> TypeGuard[BasicProviderConfig]:
@@ -28,11 +28,6 @@ def is_token_config(config: ProviderConfig) -> TypeGuard[TokenProviderConfig]:
 
 def is_oauth_config(config: ProviderConfig) -> TypeGuard[OAuthProviderConfig]:
     return config.auth_type == ProviderType.oauth
-
-
-def oauth_redirect_uri() -> str:
-    redirect_uri: str = REDIRECT_URI_BASE + "/settings/providers/oauth_token"
-    return redirect_uri
 
 
 class ProviderType(str, Enum):
@@ -107,13 +102,13 @@ class OAuthProviderConfig(ProviderConfig):
     scope: Mapped[str] = mapped_column(String(64), nullable=False)
 
     def build_auth_url(self) -> str:
-        return f"{self.auth_url}?client_id={self.client_id}&redirect_uri={oauth_redirect_uri()}&scope={self.scope}&access_type=offline&response_type=code&state={self.provider_id}"
+        return f"{self.auth_url}?client_id={self.client_id}&redirect_uri={OAUTH_REDIRECT_URI}&scope={self.scope}&access_type=offline&response_type=code&state={self.provider_id}"
 
     def build_token_url(self, auth_code: str) -> str:
-        return f"{self.token_url}?client_id={self.client_id}&redirect_uri={oauth_redirect_uri()}&scope={self.scope}&grant_type=authorization_code&client_secret={self.client_secret}&code={auth_code}"
+        return f"{self.token_url}?client_id={self.client_id}&redirect_uri={OAUTH_REDIRECT_URI}&scope={self.scope}&grant_type=authorization_code&client_secret={self.client_secret}&code={auth_code}"
 
     def build_refresh_token_url(self, refresh_token: str) -> str:
-        return f"{self.token_url}?client_id={self.client_id}&redirect_uri={oauth_redirect_uri()}&scope={self.scope}&grant_type=refresh_token&client_secret={self.client_secret}&refresh_token={refresh_token}"
+        return f"{self.token_url}?client_id={self.client_id}&redirect_uri={OAUTH_REDIRECT_URI}&scope={self.scope}&grant_type=refresh_token&client_secret={self.client_secret}&refresh_token={refresh_token}"
 
     __mapper_args__ = {"polymorphic_identity": "oauth"}
 

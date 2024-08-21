@@ -53,7 +53,7 @@ class Calendar:
         return cls(**data)
 
     def __repr__(self) -> str:
-        return f"<Google Calendar: {self.summary}>"
+        return f"<GoogleCalendar Calendar: {self.summary}>"
 
 
 class EventTime:
@@ -76,7 +76,7 @@ class EventTime:
         return cls(**data)
 
     def __repr__(self) -> str:
-        return f"<Google Calendar Event Time: {self.date_time}>"
+        return f"<GoogleCalendar EventTime: {self.date_time}>"
 
 
 class Event:
@@ -174,4 +174,4 @@ class Event:
         return cls(**data)
 
     def __repr__(self) -> str:
-        return f"<Google Calendar Event: {self.summary}>"
+        return f"<GoogleCalendar Event: {self.summary}>"

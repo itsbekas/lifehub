@@ -5,6 +5,7 @@ from jose import JWTError
 from sqlalchemy.orm import Session
 
 from lifehub.config.providers import PROVIDER_CLIENTS
+from lifehub.core.common.api_client import APIClient
 from lifehub.core.common.base_service import BaseService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.models import ModuleResponse, ModuleWithProvidersResponse
@@ -220,12 +221,9 @@ class UserService(BaseService):
         )
 
         self.provider_token_repository.add(provider_token)
-
         user.providers.append(provider)
         self.user_repository.add(user)
-
         self.test_provider_token(user, provider)
-
         self.session.commit()
         return provider_token
 
@@ -243,7 +241,7 @@ class UserService(BaseService):
         provider_token = self.provider_token_repository.get(user, provider)
         if provider_token is None:
             raise UserServiceException(404, "Token not found")
-        api_client = PROVIDER_CLIENTS[provider.id](user, self.session)  # type: ignore
+        api_client: APIClient = PROVIDER_CLIENTS[provider.id](user, self.session)  # type: ignore
         if not api_client.test_connection():
             raise UserServiceException(400, "Token is invalid")
 

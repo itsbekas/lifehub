@@ -1,8 +1,10 @@
+import base64 as b64
 import datetime as dt
 
 import requests
 from fastapi import APIRouter, Depends, HTTPException
 
+from lifehub.config.constants import OAUTH_REDIRECT_URI
 from lifehub.core.provider.api.dependencies import (
     ProviderDep,
 )
@@ -62,8 +64,30 @@ async def add_oauth_provider(
 ) -> None:
     if not is_oauth_config(provider.config):
         raise HTTPException(404, "Provider must be an OAuth provider")
+    # TODO: Move this code to a service
     url = provider.config.build_token_url(code)
-    res = requests.post(url)
+    data = {}
+    params = {}
+    headers = {}
+
+    if provider.id == "spotify":
+        url = provider.config.token_url
+        headers = {
+            "Authorization": "Basic "
+            + b64.b64encode(
+                f"{provider.config.client_id}:{provider.config.client_secret}".encode(
+                    "utf-8"
+                )
+            ).decode("utf-8"),
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": OAUTH_REDIRECT_URI,
+        }
+
+    res = requests.post(url, data=data, params=params, headers=headers)
     if res.status_code != 200:
         raise OAuthTokenRequestFailedException(res)
     data = res.json()

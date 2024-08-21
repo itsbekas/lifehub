@@ -132,7 +132,7 @@ class CategoryGroup:
         return cls(**data)
 
     def __repr__(self) -> str:
-        return f"<YNAB Category Group: {self.name} ({len(self.categories)} categories)>"
+        return f"<YNAB CategoryGroup: {self.name} ({len(self.categories)} categories)>"
 
 
 class LoanAccountPeriodicValue:

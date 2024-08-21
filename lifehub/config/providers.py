@@ -11,14 +11,14 @@ from lifehub.core.provider.schema import (
     TokenProviderConfig,
 )
 from lifehub.providers.google_calendar.api_client import GoogleCalendarAPIClient
-from lifehub.providers.qbittorrent.api_client import QBittorrentAPIClient
+from lifehub.providers.spotify.api_client import SpotifyAPIClient
 from lifehub.providers.strava.api_client import StravaAPIClient
 from lifehub.providers.trading212.api_client import Trading212APIClient
 from lifehub.providers.ynab.api_client import YNABAPIClient
 
 PROVIDER_CLIENTS = {
     "google_calendar": GoogleCalendarAPIClient,
-    "qbittorrent": QBittorrentAPIClient,
+    "spotify": SpotifyAPIClient,
     "strava": StravaAPIClient,
     "trading212": Trading212APIClient,
     "ynab": YNABAPIClient,
@@ -36,10 +36,14 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "client_secret": getenv("GOOGLE_CALENDAR_CLIENT_SECRET"),
             "scope": "https://www.googleapis.com/auth/calendar.readonly",
         },
-        "qbittorrent": {
-            "name": "QBittorrent",
-            "auth_type": "basic",
-            "allow_custom_url": True,
+        "spotify": {
+            "name": "Spotify",
+            "auth_type": "oauth",
+            "auth_url": "https://accounts.spotify.com/authorize",
+            "token_url": "https://accounts.spotify.com/api/token",
+            "client_id": getenv("SPOTIFY_CLIENT_ID"),
+            "client_secret": getenv("SPOTIFY_CLIENT_SECRET"),
+            "scope": "user-read-private user-read-email",
         },
         "strava": {
             "name": "Strava",
@@ -68,7 +72,6 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
     module_providers: dict[str, list[str]] = {
         "networth": ["trading212", "ynab"],
         "t212history": ["trading212"],
-        "server": ["qbittorrent"],
     }
 
     return provider_configs, module_providers
