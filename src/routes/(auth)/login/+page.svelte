@@ -3,14 +3,8 @@
 </script>
 
 <form method="POST" action="/login/?/login">
-    <label>
-        <span>Username</span>
-        <TextInput name="username" autocomplete="username" required />
-    </label>
-    <label>
-        <span>Password</span>
-        <TextInput name="password" autocomplete="current-password" type="password" required />
-    </label>
+    <TextInput label="Username" name="username" autocomplete="username" required />
+    <TextInput label="Password" name="password" autocomplete="current-password" type="password" required />
     <div>
         <input type="checkbox" name="remember">
         <span>Remember me</span>

@@ -37,3 +37,10 @@ type CalendarEvent = {
     end: string;
     location: string;
 }
+
+type User = {
+    username: string;
+    email: string;
+    name: string;
+    created_at: string;
+}
