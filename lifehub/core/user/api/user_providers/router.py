@@ -142,7 +142,7 @@ async def update_basic_login(
     user_service.update_provider_token(user, provider, f"{req.username}:{req.password}")
 
 
-@router.get("/{provider_id}/test")
+@router.post("/{provider_id}/test")
 async def test_user_provider_connection(
     provider: ProviderDep, user: UserDep, user_service: UserServiceDep
 ) -> None:
