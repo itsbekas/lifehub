@@ -15,7 +15,7 @@
     ];
 </script>
 
-<div class="bg-white text-gray-900 min-h-screen">
+<div class="bg-white text-gray-900">
     <div class="flex flex-col">
         {#each sidebarNavItems as { title, href }}
             <a
