@@ -6,7 +6,7 @@
         },
         {
             title: "Settings",
-            href: "/settings",
+            href: "/settings/profile",
         },
     ];
 </script>
