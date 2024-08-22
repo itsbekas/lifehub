@@ -132,6 +132,27 @@ class UserService(BaseService):
             created_at=user.created_at,
         )
 
+    def update_user(
+        self, user: User, name: str, email: str, password: str
+    ) -> UserResponse:
+        self.session.merge(user)
+
+        if name:
+            user.name = name
+        if email:
+            user.email = email
+        if password:
+            user.password = hash_password(password)
+
+        self.session.commit()
+
+        return UserResponse(
+            username=user.username,
+            email=user.email,
+            name=user.name,
+            created_at=user.created_at,
+        )
+
     def delete_user(self, user: User) -> None:
         self.user_repository.delete(user)
         self.user_repository.commit()

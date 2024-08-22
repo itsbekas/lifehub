@@ -35,3 +35,10 @@ class UserResponse:
     email: str
     name: str
     created_at: dt.datetime
+
+
+@dataclass
+class UpdateUserRequest:
+    name: str | None = None
+    email: str | None = None
+    password: str | None = None

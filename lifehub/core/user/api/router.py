@@ -3,7 +3,12 @@ from typing import Annotated
 from fastapi import APIRouter, Form, HTTPException
 
 from lifehub.core.user.api.dependencies import UserDep, UserServiceDep
-from lifehub.core.user.models import UserResponse, UserTokenResponse, UserVerifyRequest
+from lifehub.core.user.models import (
+    UpdateUserRequest,
+    UserResponse,
+    UserTokenResponse,
+    UserVerifyRequest,
+)
 from lifehub.core.user.service.user import UserServiceException
 
 router = APIRouter()
@@ -40,6 +45,17 @@ async def user_signup(
 @router.get("/me")
 async def get_user(user: UserDep, user_service: UserServiceDep) -> UserResponse:
     return user_service.get_user(user)
+
+
+@router.patch("/me")
+async def update_user(
+    user: UserDep,
+    user_service: UserServiceDep,
+    user_data: UpdateUserRequest,
+) -> UserResponse:
+    return user_service.update_user(
+        user, user_data.name, user_data.email, user_data.password
+    )
 
 
 @router.delete("/me")
