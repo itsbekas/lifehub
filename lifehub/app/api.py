@@ -13,6 +13,7 @@ from lifehub.core.user.api.user_modules.router import router as user_modules_rou
 from lifehub.core.user.api.user_providers.router import router as user_providers_router
 from lifehub.modules.calendar.router import router as calendar_router
 from lifehub.modules.finance.router import router as finance_router
+from lifehub.config.checks import pre_run_checks
 
 #### Config ####
 app = FastAPI(
@@ -65,6 +66,7 @@ async def service_exception_handler(
 
 
 def run() -> None:
+    pre_run_checks()
     uvicorn.run("lifehub.app.api:app", host=UVICORN_HOST, port=8000, reload=True)
 
 
