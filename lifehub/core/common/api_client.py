@@ -1,4 +1,5 @@
 import datetime as dt
+import time
 from abc import ABC, abstractmethod
 from os import getenv
 from typing import Any, Callable, Optional
@@ -13,22 +14,41 @@ from lifehub.core.user.schema import User
 
 
 def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
+    """
+    A wrapper for request functions
+    Handles retries and rate limiting (with exponential backoff if a Retry-After header isn't provided)
+    Raises an APIException if the status code is not 200
+    """
+
     def wrapper(self: "APIClient", endpoint: str, *args: Any, **kwargs: Any) -> Any:
-        try:
-            url = f"{self.base_url}/{endpoint}"
-            res = func(self, url, *args, **kwargs)
-            if res.status_code != 200:
+        url = f"{self.base_url}/{endpoint}"
+        retries = 0
+        max_retries = 5
+        backoff_factor = 2
+        delay = 1
+
+        while retries < max_retries:
+            try:
+                res = func(self, url, *args, **kwargs)
+
+                if res.status_code == 429:
+                    retries += 1
+                    retry_after = int(res.headers.get("Retry-After", delay))
+                    wait_time = delay * (backoff_factor ** (retries - 1))
+                    time.sleep(max(retry_after, wait_time))
+                    continue
+                if res.status_code != 200:
+                    raise APIException(
+                        type(self).__name__, url, res.status_code, self._error_msg(res)
+                    )
+                return res.json()
+            except requests.exceptions.RequestException as e:
                 raise APIException(
-                    type(self).__name__, url, res.status_code, self._error_msg(res)
+                    type(self).__name__,
+                    url,
+                    500,
+                    f"Error accessing {self.base_url}: {str(e)}",
                 )
-            return res.json()
-        except requests.exceptions.RequestException as e:
-            raise APIException(
-                type(self).__name__,
-                url,
-                500,
-                f"Error accessing {self.base_url}: {str(e)}",
-            )
 
     return wrapper
 
