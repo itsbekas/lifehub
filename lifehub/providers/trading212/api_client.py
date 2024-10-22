@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.api_client import APIClient
+from lifehub.core.common.api_client import APIClient, APIException
 from lifehub.core.user.schema import User
 
 from .models import AccountCash, AccountMetadata, Dividend, Order, Transaction
@@ -71,7 +71,20 @@ class Trading212APIClient(APIClient):
         # and needs to be used together with the time parameter
         # The cursor and time in nextPagePath both belong to the first transaction that wasn't returned
         while not stop:
-            res = self._get("history/transactions", params)
+            try:
+                print("REQUEST:", params)
+                res = self._get("history/transactions", params)
+                print(res)
+            # For some reason the API returns a 500 error whenever the limit is higher than the amount of transactions left
+            # To fix this, we just halve the limit and try again until we get all transactions
+            except APIException as e:
+                if e.status_code == 500:
+                    params["limit"] //= 2
+                    if params["limit"] == 0:
+                        stop = True
+                    continue
+                else:
+                    raise e
             transaction_data = res.get("items", [])
             for transaction in [Transaction.from_response(t) for t in transaction_data]:
                 if transaction.date_time < prev_timestamp:

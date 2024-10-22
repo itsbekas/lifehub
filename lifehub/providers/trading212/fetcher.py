@@ -23,7 +23,7 @@ class Trading212Fetcher(BaseFetcher):
 
         orders: list[Order] = t212.get_order_history(self.prev_timestamp)
 
-        transactions = t212.get_transactions()
+        transactions = t212.get_transactions(self.prev_timestamp)
         balance = t212.get_account_cash()
         dividends = t212.get_dividends()
         balance = []
@@ -52,14 +52,13 @@ class Trading212Fetcher(BaseFetcher):
         transaction_db = T212TransactionRepository(self.user, self.session)
 
         for transaction in transactions:
-            if transaction.date_time > self.prev_timestamp:
-                new_transaction = T212Transaction(
-                    id=transaction.reference,
-                    user_id=self.user.id,
-                    amount=transaction.amount,
-                    timestamp=transaction.date_time,
-                )
-                transaction_db.add(new_transaction)
+            new_transaction = T212Transaction(
+                id=transaction.reference,
+                user_id=self.user.id,
+                amount=transaction.amount,
+                timestamp=transaction.date_time,
+            )
+            transaction_db.add(new_transaction)
 
         balance_db = T212BalanceRepository(self.user, self.session)
 
