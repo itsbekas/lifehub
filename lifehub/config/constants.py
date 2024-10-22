@@ -20,7 +20,13 @@ OAUTH_REDIRECT_URI = f"{REDIRECT_URI_BASE}/settings/providers/oauth_token"
 AUTH_SECRET_KEY = getenv("AUTH_SECRET_KEY")
 AUTH_ALGORITHM = getenv("AUTH_ALGORITHM")
 
-DATABASE_URL = getenv("DATABASE_URL")
+DB_USER = getenv("DB_USER")
+DB_PASSWORD = getenv("DB_PASSWORD")
+DB_HOST = getenv("DB_HOST")
+DB_NAME = getenv("DB_NAME")
+DATABASE_URL = (
+    f"mariadb+mariadbconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
+)
 
 POSTMARK_API_TOKEN = getenv("POSTMARK_API_TOKEN")
 

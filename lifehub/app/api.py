@@ -3,6 +3,7 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from lifehub.config.checks import pre_run_checks
 from lifehub.config.constants import UVICORN_HOST
 from lifehub.config.util.schemas import *  # noqa: F401,F403
 from lifehub.core.common.exceptions import ServiceException
@@ -13,7 +14,6 @@ from lifehub.core.user.api.user_modules.router import router as user_modules_rou
 from lifehub.core.user.api.user_providers.router import router as user_providers_router
 from lifehub.modules.calendar.router import router as calendar_router
 from lifehub.modules.finance.router import router as finance_router
-from lifehub.config.checks import pre_run_checks
 
 #### Config ####
 app = FastAPI(
@@ -27,7 +27,7 @@ app = FastAPI(
 
 #### CORS ####
 origins = [
-    "http://localhost:5173",
+    "*",
 ]
 
 app.add_middleware(
