@@ -3,9 +3,8 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from lifehub.config.checks import pre_run_checks
+from lifehub.config.checks import pre_run_setup
 from lifehub.config.constants import UVICORN_HOST
-from lifehub.config.util.schemas import *  # noqa: F401,F403
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.api.router import router as modules_router
 from lifehub.core.provider.api.router import router as providers_router
@@ -66,7 +65,7 @@ async def service_exception_handler(
 
 
 def run() -> None:
-    pre_run_checks()
+    pre_run_setup()
     uvicorn.run("lifehub.app.api:app", host=UVICORN_HOST, port=8000, reload=True)
 
 

@@ -36,3 +36,9 @@ lint.extend-select = ["I"]
 strict = true
 
 exclude = '^tests/'
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.13.0",
+    "ruff>=0.7.0",
+]

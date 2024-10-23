@@ -14,7 +14,7 @@ class BaseFetcher:
             provider: Provider | None = ProviderRepository(session).get_by_id(
                 self.provider_name
             )
-            if not provider:
+            if provider is None:
                 raise ValueError(
                     f"Provider {self.provider_name} not found in the database"
                 )
