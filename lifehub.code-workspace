@@ -1,0 +1,36 @@
+{
+  "folders": [
+    {
+      "path": ".",
+      "name": "root"
+    },
+    {
+      "path": "backend",
+      "name": "backend"
+    },
+    {
+      "path": "frontend",
+      "name": "frontend"
+    }
+  ],
+  "extensions": {
+    "recommendations": [
+      // Generic
+      "aaron-bond.better-comments",
+      "usernamehw.errorlens",
+      "monokai.theme-monokai-pro-vscode",
+      "GitHub.copilot",
+      "GitHub.copilot-chat",
+      "PKief.material-icon-theme",
+      // Frontend
+      "svelte.svelte-vscode",
+      "dbaeumer.vscode-eslint",
+      "bradlc.vscode-tailwindcss",
+      // Backend
+      "ms-python.python",
+      "matangover.mypy",
+      "tamasfe.even-better-toml",
+      "charliermarsh.ruff",
+    ]
+  }
+}
