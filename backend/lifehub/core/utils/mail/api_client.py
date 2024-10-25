@@ -1,7 +1,7 @@
 from typing import Any
 
 from lifehub.config.constants import POSTMARK_API_TOKEN, REDIRECT_URI_BASE
-from lifehub.core.common.api_client import APIClient
+from lifehub.core.common.base.api_client import APIClient
 from lifehub.core.utils.mail.templates import verify_email
 
 

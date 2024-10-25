@@ -3,7 +3,7 @@ import datetime as dt
 import pytz
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base_user_service import BaseUserService
+from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.user.schema import User
 from lifehub.providers.google_calendar.api_client import GoogleCalendarAPIClient

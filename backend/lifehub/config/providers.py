@@ -2,7 +2,7 @@ from typing import Any
 
 from lifehub.config.constants import getenv
 from lifehub.core.common.database_service import Session
-from lifehub.core.module.schema import Module
+from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.schema import (
     BasicProviderConfig,
     OAuthProviderConfig,
@@ -83,7 +83,12 @@ def setup_providers() -> None:
     session = Session()
     providers_dict = {}
 
+    provider_repo = ProviderRepository(session)
+
     for provider_id in provider_configs:
+        if provider_repo.get_by_id(provider_id) is not None:
+            continue
+
         config = provider_configs[provider_id]
         provider = Provider(id=provider_id, name=config["name"])
         session.add(provider)
@@ -117,15 +122,15 @@ def setup_providers() -> None:
 
     session.commit()
 
-    modules = []
-    for module_name, provider_names in module_providers.items():
-        module_providers_list = [
-            providers_dict[provider_name] for provider_name in provider_names
-        ]
-        module = Module(name=module_name, providers=module_providers_list)
-        modules.append(module)
-        session.add(module)
+    # modules = []
+    # for module_name, provider_names in module_providers.items():
+    #     module_providers_list = [
+    #         providers_dict[provider_name] for provider_name in provider_names
+    #     ]
+    #     module = Module(name=module_name, providers=module_providers_list)
+    #     modules.append(module)
+    #     session.add(module)
 
-    session.commit()
+    # session.commit()
 
     session.close()

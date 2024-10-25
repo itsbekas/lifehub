@@ -2,7 +2,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.api_client import APIClient
+from lifehub.core.common.base.api_client import APIClient
 from lifehub.core.user.schema import User
 
 from .models import User as SpotifyUser

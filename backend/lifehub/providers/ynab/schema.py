@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import DECIMAL, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from lifehub.core.common.base_model import BaseModel
+from lifehub.core.common.base.db_model import BaseModel
 
 
 class YNABBalance(BaseModel):

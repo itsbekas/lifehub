@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy import DECIMAL, BigInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from lifehub.core.common.base_model import FetchBaseModel
+from lifehub.core.common.base.db_model import FetchBaseModel
 
 
 class T212Transaction(FetchBaseModel):

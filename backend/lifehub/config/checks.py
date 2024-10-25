@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from lifehub.config.constants import DATABASE_URL
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
-from lifehub.core.common.base_model import BaseModel
+from lifehub.core.common.base.db_model import BaseModel
 
 
 def check_mariadb() -> None:
@@ -25,6 +25,7 @@ def check_mariadb() -> None:
                 exit(1)
             print("MariaDB not ready, waiting...")
             time.sleep(interval)
+
 
 # Deprecated. Likely to be replaced with pre_run_setup()
 # Or maybe just make the fetchers depend on the api through docker compose

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, TypeGuard
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from lifehub.core.common.base_model import BaseModel, UserBaseModel
+from lifehub.core.common.base.db_model import BaseModel, UserBaseModel
 from lifehub.core.module.schema import module_provider
 from lifehub.core.user.schema import user_provider
 

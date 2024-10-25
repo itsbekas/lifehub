@@ -5,8 +5,8 @@ from jose import JWTError
 from sqlalchemy.orm import Session
 
 from lifehub.config.providers import PROVIDER_CLIENTS
-from lifehub.core.common.api_client import APIClient
-from lifehub.core.common.base_service import BaseService
+from lifehub.core.common.base.api_client import APIClient
+from lifehub.core.common.base.service.base import BaseService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.models import ModuleResponse, ModuleWithProvidersResponse
 from lifehub.core.module.schema import Module

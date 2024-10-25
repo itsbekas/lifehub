@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
-from lifehub.core.common.repository import TimeBaseModelType
-from lifehub.core.common.repository.base import BaseRepository
+from lifehub.core.common.base.repository import TimeBaseModelType
+from lifehub.core.common.base.repository.base import BaseRepository
 
 
 class TimeBaseRepository(BaseRepository[TimeBaseModelType]):

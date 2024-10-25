@@ -1,6 +1,6 @@
 from typing import TypeVar
 
-from lifehub.core.common.base_model import (
+from lifehub.core.common.base.db_model import (
     BaseModel,
     FetchBaseModel,
     TimeBaseModel,

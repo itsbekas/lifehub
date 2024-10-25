@@ -3,7 +3,7 @@ from typing import Generic, Sequence, Type
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.repository import BaseModelType
+from lifehub.core.common.base.repository import BaseModelType
 
 
 class BaseRepository(Generic[BaseModelType]):

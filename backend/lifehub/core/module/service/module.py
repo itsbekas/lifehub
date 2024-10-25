@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base_service import BaseService
+from lifehub.core.common.base.service.base import BaseService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.models import ModuleResponse, ModuleWithProvidersResponse
 from lifehub.core.module.repository.module import ModuleRepository

@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.repository.base import BaseRepository
+from lifehub.core.common.base.repository.base import BaseRepository
 from lifehub.core.provider.schema import Provider, ProviderToken
 from lifehub.core.user.schema import User
 

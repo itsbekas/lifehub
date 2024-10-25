@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base_service import BaseService
+from lifehub.core.common.base.service.base import BaseService
 from lifehub.core.user.schema import User
 
 

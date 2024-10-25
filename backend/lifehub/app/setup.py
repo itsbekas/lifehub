@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine
 
+from lifehub.config.checks import pre_run_checks
 from lifehub.config.constants import DATABASE_URL
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
-from lifehub.core.common.base_model import BaseModel
-from lifehub.config.checks import pre_run_checks
+from lifehub.core.common.base.db_model import BaseModel
 
 
 def setup() -> None:
@@ -19,7 +19,7 @@ def setup() -> None:
 
 def clean() -> None:
     pre_run_checks()
-    
+
     """
     Warning: This function will drop all tables and recreate them
     This is only for development purposes
