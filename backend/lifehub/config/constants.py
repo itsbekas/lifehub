@@ -28,6 +28,8 @@ DATABASE_URL = (
     f"mariadb+mariadbconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
 )
 
+GOCARDLESS_BANK_ID = getenv("GOCARDLESS_BANK_ID")
+
 POSTMARK_API_TOKEN = getenv("POSTMARK_API_TOKEN")
 
 __all__ = [

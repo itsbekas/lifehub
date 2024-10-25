@@ -10,6 +10,7 @@ from lifehub.core.provider.schema import (
     ProviderConfig,
     TokenProviderConfig,
 )
+from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.google_calendar.api_client import GoogleCalendarAPIClient
 from lifehub.providers.spotify.api_client import SpotifyAPIClient
 from lifehub.providers.strava.api_client import StravaAPIClient
@@ -17,6 +18,7 @@ from lifehub.providers.trading212.api_client import Trading212APIClient
 from lifehub.providers.ynab.api_client import YNABAPIClient
 
 PROVIDER_CLIENTS = {
+    "gocardless": GoCardlessAPIClient,
     "google_calendar": GoogleCalendarAPIClient,
     "spotify": SpotifyAPIClient,
     "strava": StravaAPIClient,
@@ -27,6 +29,10 @@ PROVIDER_CLIENTS = {
 
 def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
     provider_configs: dict[str, dict[str, Any]] = {
+        "gocardless": {
+            "name": "GoCardless",
+            "auth_type": "token",
+        },
         "google_calendar": {
             "name": "Google Calendar",
             "auth_type": "oauth",
