@@ -26,8 +26,6 @@ class Trading212Fetcher(BaseFetcher):
         transactions = t212.get_transactions(self.prev_timestamp)
         balance = t212.get_account_cash()
         dividends = t212.get_dividends()
-        balance = []
-        dividends = []
 
         order_db = T212OrderRepository(self.user, self.session)
 

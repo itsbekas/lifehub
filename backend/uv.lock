@@ -261,6 +261,9 @@ dependencies = [
 dev = [
     { name = "mypy" },
     { name = "ruff" },
+    { name = "types-python-jose" },
+    { name = "types-pytz" },
+    { name = "types-requests" },
 ]
 
 [package.metadata]
@@ -282,6 +285,9 @@ requires-dist = [
 dev = [
     { name = "mypy", specifier = ">=1.13.0" },
     { name = "ruff", specifier = ">=0.7.0" },
+    { name = "types-python-jose", specifier = ">=3.3.4.20240106" },
+    { name = "types-pytz", specifier = ">=2024.2.0.20241003" },
+    { name = "types-requests", specifier = ">=2.32.0.20241016" },
 ]
 
 [[package]]
@@ -555,6 +561,48 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/78/53/c3a36690a923706e7ac841f649c64f5108889ab1ec44218dac45771f252a/starlette-0.41.0.tar.gz", hash = "sha256:39cbd8768b107d68bfe1ff1672b38a2c38b49777de46d2a592841d58e3bf7c2a", size = 2573755 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/35/c6/a4443bfabf5629129512ca0e07866c4c3c094079ba4e9b2551006927253c/starlette-0.41.0-py3-none-any.whl", hash = "sha256:a0193a3c413ebc9c78bff1c3546a45bb8c8bcb4a84cae8747d650a65bd37210a", size = 73216 },
+]
+
+[[package]]
+name = "types-pyasn1"
+version = "0.6.0.20240913"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c5/e2/42410b64ba53584a8f2b681e76b23569a61869a22325cfeef2728e999ffd/types-pyasn1-0.6.0.20240913.tar.gz", hash = "sha256:a1da054db13d3d4ccfa69c515678154014336ad3d9f9ade01845f9edb1a2bc71", size = 12375 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ff/6a/847b2a137dba37974e17cc2ae5f62bed0d68006ac609a063810038adecff/types_pyasn1-0.6.0.20240913-py3-none-any.whl", hash = "sha256:95f3cb1fbd63ff91cd0410945f8aeae6b0be359533c00f39d8e17124884157af", size = 19338 },
+]
+
+[[package]]
+name = "types-python-jose"
+version = "3.3.4.20240106"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-pyasn1" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4d/83/5824277f62a0a07ab3eaade216f19b59fadea4efdad9071d70799d97f170/types-python-jose-3.3.4.20240106.tar.gz", hash = "sha256:b18cf8c5080bbfe1ef7c3b707986435d9efca3e90889acb6a06f65e06bc3405a", size = 6937 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/bd/fe23e814f1ca70f8427bf5defb981b8e0636731863c7836a6d6b6e49c715/types_python_jose-3.3.4.20240106-py3-none-any.whl", hash = "sha256:b515a6c0c61f5e2a53bc93e3a2b024cbd42563e2e19cbde9fd1c2cc2cfe77ccc", size = 9712 },
+]
+
+[[package]]
+name = "types-pytz"
+version = "2024.2.0.20241003"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/d0/73aa3063a9ef9881bd7103cb4ae379bfd8fafda0e86b01b694d676313a4b/types-pytz-2024.2.0.20241003.tar.gz", hash = "sha256:575dc38f385a922a212bac00a7d6d2e16e141132a3c955078f4a4fd13ed6cb44", size = 5474 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/86/60/2a2977ce0f91255bbb668350b127a801a06ad37c326a2e5bfd52f03e0784/types_pytz-2024.2.0.20241003-py3-none-any.whl", hash = "sha256:3e22df1336c0c6ad1d29163c8fda82736909eb977281cb823c57f8bae07118b7", size = 5245 },
+]
+
+[[package]]
+name = "types-requests"
+version = "2.32.0.20241016"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fa/3c/4f2a430c01a22abd49a583b6b944173e39e7d01b688190a5618bd59a2e22/types-requests-2.32.0.20241016.tar.gz", hash = "sha256:0d9cad2f27515d0e3e3da7134a1b6f28fb97129d86b867f24d9c726452634d95", size = 18065 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/01/485b3026ff90e5190b5e24f1711522e06c79f4a56c8f4b95848ac072e20f/types_requests-2.32.0.20241016-py3-none-any.whl", hash = "sha256:4195d62d6d3e043a4eaaf08ff8a62184584d2e8684e9d2aa178c7915a7da3747", size = 15836 },
 ]
 
 [[package]]

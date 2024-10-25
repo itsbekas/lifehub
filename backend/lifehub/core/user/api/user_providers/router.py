@@ -67,7 +67,7 @@ async def add_oauth_provider(
     # TODO: Move this code to a service
     url = provider.config.build_token_url(code)
     data = {}
-    params = {}
+    params: dict[str, str] = {}
     headers = {}
 
     if provider.id == "spotify":
@@ -93,10 +93,10 @@ async def add_oauth_provider(
     data = res.json()
 
     if "created_at" in data:
-        created_at = dt.datetime.fromtimestamp(data["created_at"])
+        created_at = dt.datetime.fromtimestamp(float(data["created_at"]))
     else:
         created_at = dt.datetime.now()
-    expires_at: dt.datetime = created_at + dt.timedelta(seconds=data["expires_in"])
+    expires_at: dt.datetime = created_at + dt.timedelta(seconds=float(data["expires_in"]))
 
     user_service.add_provider_token_to_user(
         user,

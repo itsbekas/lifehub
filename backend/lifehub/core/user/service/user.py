@@ -133,15 +133,15 @@ class UserService(BaseService):
         )
 
     def update_user(
-        self, user: User, name: str, email: str, password: str
+        self, user: User, name: str | None, email: str | None, password: str | None
     ) -> UserResponse:
         self.session.merge(user)
 
-        if name:
+        if name is not None:
             user.name = name
-        if email:
+        if email is not None:
             user.email = email
-        if password:
+        if password is not None:
             user.password = hash_password(password)
 
         self.session.commit()

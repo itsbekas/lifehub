@@ -18,7 +18,7 @@ class Trading212APIClient(APIClient):
         super().__init__(user, session)
         self.headers = self._token_headers
 
-    def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
+    def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
         # Handle 429: Too Many Requests
         return self._get_with_headers(endpoint, params=params)
 
@@ -65,7 +65,7 @@ class Trading212APIClient(APIClient):
     ) -> list[Transaction]:
         transactions = []
         stop = False
-        params = {"limit": 50}
+        params: dict[str, Any] = {"limit": 50}
         # Documentation for this endpoint is just plain wrong...
         # Instead of the cursor being a timestamp, the cursor is a reference to the last transaction
         # and needs to be used together with the time parameter

@@ -12,11 +12,11 @@ class SpotifyAPIClient(APIClient):
     provider_name = "spotify"
     base_url = "https://api.spotify.com/v1"
 
-    def __init__(self, session: Session, user: User) -> None:
-        super().__init__(session, user)
+    def __init__(self, user: User, session: Session) -> None:
+        super().__init__(user, session)
         self.headers = self._token_bearer_headers
 
-    def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
+    def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
         return self._get_with_headers(endpoint, params=params)
 
     def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
@@ -30,4 +30,5 @@ class SpotifyAPIClient(APIClient):
         return SpotifyUser.from_response(res)
 
     def _error_msg(self, res: Any) -> str:
-        return res.json().get("error", {}).get("message", "Unknown error")
+        msg: str = res.json().get("error", {}).get("message", "Unknown error")
+        return msg

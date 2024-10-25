@@ -12,8 +12,8 @@ class StravaAPIClient(APIClient):
     provider_name = "strava"
     base_url = "https://www.strava.com/api/v3"
 
-    def __init__(self, session: Session, user: User) -> None:
-        super().__init__(session, user)
+    def __init__(self, user: User, session: Session) -> None:
+        super().__init__(user, session)
         self.headers = self._token_bearer_headers
 
     def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
@@ -30,4 +30,5 @@ class StravaAPIClient(APIClient):
         return DetailedAthlete.from_response(res)
 
     def _error_msg(self, res: Any) -> str:
-        return res.json().get("message", "Unknown error")
+        msg: str = res.json().get("message", "Unknown error")
+        return msg
