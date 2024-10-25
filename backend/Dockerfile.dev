@@ -2,11 +2,10 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm
 
 WORKDIR /app
 
-COPY . .
+COPY entrypoint.sh /entrypoint.sh
 
-RUN uv venv
-RUN uv pip install -e .
+RUN chmod +x /entrypoint.sh
 
-CMD ["uv", "run", "lifehub-api"]
+CMD ["/entrypoint.sh"]
 
 EXPOSE 8000
