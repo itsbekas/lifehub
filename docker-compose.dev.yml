@@ -15,6 +15,7 @@ services:
   lifehub-backend:
     build:
       context: backend/
+      dockerfile: Dockerfile.dev
     container_name: lifehub-backend
     environment:
       - DB_HOST=lifehub-mariadb
@@ -26,11 +27,13 @@ services:
       - "8000:8000"
     depends_on:
       - lifehub-mariadb
+    volumes:
+      - ./backend:/app
 
   lifehub-frontend:
     build:
       context: frontend/
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: lifehub-frontend
     environment:
       - BACKEND_URL=lifehub-backend
@@ -38,6 +41,9 @@ services:
       - "80:5173"
     depends_on:
       - lifehub-backend
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
 
 volumes:
   dbdata:
