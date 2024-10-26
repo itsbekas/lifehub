@@ -22,7 +22,7 @@ services:
       - DB_USER=${MARIADB_USER}
       - DB_PASSWORD=${MARIADB_PASSWORD}
       - DB_NAME=${MARIADB_DATABASE}
-      - FRONTEND_URL=http://lifehub-frontend
+      - FRONTEND_URL=http://localhost
     ports:
       - "8000:8000"
     depends_on:

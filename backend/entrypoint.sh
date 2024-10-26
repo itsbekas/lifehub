@@ -1,7 +1,8 @@
 #!/bin/bash
 
-uv venv .venv-dev
-source .venv-dev/bin/activate
-uv pip install -e .
+export UV_PROJECT_ENVIRONMENT=.venv-dev
+
+uv venv
+VIRTUAL_ENV="${UV_PROJECT_ENVIRONMENT}" uv pip install -e .
 
 exec uv run lifehub-api
