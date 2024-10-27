@@ -62,8 +62,8 @@ class ProviderToken(UserBaseModel):
         String(32), ForeignKey("provider.id"), primary_key=True
     )
     custom_url: Mapped[str] = mapped_column(String(64), nullable=True)
-    token: Mapped[str] = mapped_column(String(256), nullable=False)
-    refresh_token: Mapped[str] = mapped_column(String(256), nullable=True)
+    token: Mapped[str] = mapped_column(String(512), nullable=False)
+    refresh_token: Mapped[str] = mapped_column(String(512), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     expires_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.max)
 

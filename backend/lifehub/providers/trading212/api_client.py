@@ -25,6 +25,9 @@ class Trading212APIClient(APIClient):
     def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
         return self._post_with_headers(endpoint, data=data)
 
+    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
+        return self._put_with_headers(endpoint, data=data)
+
     def _test(self) -> None:
         self.get_account_metadata()
 
