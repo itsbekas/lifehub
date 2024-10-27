@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import datetime as dt
 import time
 from abc import ABC, abstractmethod
+from dataclasses import asdict, is_dataclass
 from os import getenv
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeIs
 
 import requests
 from sqlalchemy.orm import Session as SessionType
@@ -10,7 +13,13 @@ from sqlalchemy.orm import Session as SessionType
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken, is_oauth_config
+from lifehub.core.user.repository.user import UserRepository
 from lifehub.core.user.schema import User
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
+
+    RequestParams = DataclassInstance
 
 
 def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -26,6 +35,15 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
         max_retries = 5
         backoff_factor = 2
         delay = 1
+
+        def is_dataclass_obj(obj: Any) -> TypeIs[RequestParams]:
+            return is_dataclass(obj) and not isinstance(obj, type)
+
+        if "params" in kwargs and is_dataclass_obj(kwargs["params"]):
+            kwargs["params"] = asdict(kwargs["params"])
+
+        if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
+            kwargs["data"] = asdict(kwargs["data"])
 
         while retries < max_retries:
             try:
@@ -70,7 +88,19 @@ class APIClient(ABC):
     headers: Optional[dict[str, str]]
     cookies: Optional[dict[str, str]]
 
-    def __init__(self, user: User, session: SessionType) -> None:
+    def __init__(self, user: User, session: SessionType, token_username: str = "") -> None:
+
+        # token_user allows overriding the user for the token
+        # This is useful for providers such as GoCardless where the admin token is used
+        # and client tokens are passed in the request body
+        if token_username:
+            token_user = UserRepository(session).get_by_username(token_username)
+
+            if token_user is None:
+                raise Exception(f"User {token_username} not found in the database")
+        else:
+            token_user = user
+
         self.user = user
 
         provider: Provider | None = ProviderRepository(session).get_by_id(
@@ -84,7 +114,7 @@ class APIClient(ABC):
 
         tokenRepo: ProviderTokenRepository = ProviderTokenRepository(session)
 
-        token: ProviderToken | None = tokenRepo.get(user, self.provider)
+        token: ProviderToken | None = tokenRepo.get(token_user, self.provider)
 
         if token is None:
             raise Exception(f"Token not found for {self.provider_name} provider")
@@ -151,7 +181,7 @@ class APIClient(ABC):
         return requests.get(url, headers=self.headers, params=params)
 
     @request_handler
-    def _get_with_cookies(self, url: str, params: dict[str, Any]) -> Any:
+    def _get_with_cookies(self, url: str, params: dict[str, Any] ) -> Any:
         """
         GET request to the API with cookies
         """

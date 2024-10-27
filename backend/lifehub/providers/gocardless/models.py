@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import asdict, field
-from typing import Any, List, Literal
+from dataclasses import field
+from typing import List, Literal
 
 from pydantic.dataclasses import dataclass
 
@@ -17,9 +17,6 @@ class RequisitionRequest:
     account_selection: bool
     redirect_immediate: bool
 
-    def dict(self) -> dict[str, Any]:
-        return asdict(self)
-
 
 @dataclass
 class EndUserAgreementRequest:
@@ -31,5 +28,27 @@ class EndUserAgreementRequest:
         default_factory=lambda: ["balances", "details", "transactions"]
     )
 
-    def dict(self) -> dict[str, Any]:
-        return asdict(self)
+
+@dataclass
+class JWTObtainPairRequest:
+    secret_id: str
+    secret_key: str
+
+
+@dataclass
+class SpectacularJWTObtainResponse:
+    access: str
+    access_expires: int
+    refresh: str
+    refresh_expires: int
+
+
+@dataclass
+class JWTRefreshRequest:
+    refresh: str
+
+
+@dataclass
+class SpectacularJWTRefreshResponse:
+    access: str
+    access_expires: int

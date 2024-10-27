@@ -44,7 +44,7 @@ async def user_signup(
 
 @router.get("/me")
 async def get_user(user: UserDep, user_service: UserServiceDep) -> UserResponse:
-    return user_service.get_user(user)
+    return user_service.get_user_data(user)
 
 
 @router.patch("/me")

@@ -124,13 +124,19 @@ class UserService(BaseService):
 
         return user
 
-    def get_user(self, user: User) -> UserResponse:
+    def get_user_data(self, user: User) -> UserResponse:
         return UserResponse(
             username=user.username,
             email=user.email,
             name=user.name,
             created_at=user.created_at,
         )
+
+    def get_user(self, username: str) -> User:
+        user = self.user_repository.get_by_username(username)
+        if user is None:
+            raise UserServiceException(404, "User not found")
+        return user
 
     def update_user(
         self, user: User, name: str | None, email: str | None, password: str | None
@@ -229,6 +235,7 @@ class UserService(BaseService):
         created_at: dt.datetime | None,
         expires_at: dt.datetime | None,
         custom_url: str | None = None,
+        skip_test: bool = False,
     ) -> ProviderToken:
         user = self.session.merge(user)
         provider = self.session.merge(provider)
@@ -238,6 +245,9 @@ class UserService(BaseService):
 
         if provider.config.allow_custom_url and custom_url is None:
             raise UserServiceException(400, "Custom URL is required")
+
+        if self.provider_token_repository.get(user, provider) is not None:
+            raise UserServiceException(409, "Token already exists")
 
         provider_token = ProviderToken(
             user_id=user.id,
@@ -252,17 +262,36 @@ class UserService(BaseService):
         self.provider_token_repository.add(provider_token)
         user.providers.append(provider)
         self.user_repository.add(user)
-        self.test_provider_token(user, provider)
+        if not skip_test:
+            self.test_provider_token(user, provider)
         self.session.commit()
         return provider_token
 
     def update_provider_token(
-        self, user: User, provider: Provider, token: str
+        self,
+        user: User,
+        provider: Provider,
+        token: str,
+        refresh_token: str | None = None,
+        expires_at: dt.datetime | None = None,
+        custom_url: str | None = None,
     ) -> ProviderToken:
         provider_token = self.provider_token_repository.get(user, provider)
         if provider_token is None:
             raise UserServiceException(404, "Token not found")
+        
+        if not provider.config.allow_custom_url and custom_url is not None:
+            raise UserServiceException(400, "Provider does not allow custom URLs")
+
         provider_token.token = token
+        if refresh_token is not None:
+            provider_token.refresh_token = refresh_token
+        if expires_at is not None:
+            provider_token.expires_at = expires_at
+        if custom_url is not None:
+            provider_token.custom_url = custom_url
+
+        self.test_provider_token(user, provider)
         self.provider_token_repository.commit()
         return provider_token
 

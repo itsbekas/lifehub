@@ -1,3 +1,4 @@
+import datetime as dt
 import time
 
 from sqlalchemy import create_engine
@@ -7,7 +8,9 @@ from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
 from lifehub.core.common.base.db_model import BaseModel
 from lifehub.core.common.database_service import Session, engine
-from lifehub.core.user.schema import User
+from lifehub.core.provider.repository.provider import ProviderRepository
+from lifehub.core.user.service.user import UserService, UserServiceException
+from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 
 
 def check_mariadb() -> None:
@@ -29,25 +32,67 @@ def check_mariadb() -> None:
 
 
 def setup_admin_user() -> None:
-    user = User(
-        username=ADMIN_USERNAME,
-        email="admin@lifehub",
-        password=ADMIN_PASSWORD,
-        name="Admin",
-        verified=True,
-    )
     with Session() as session:
-        # check if admin exists and update if necessary
-        current_user = (
-            session.query(User).filter(User.username == ADMIN_USERNAME).first()
+        user_service = UserService(session)
+
+        try:
+            user = user_service.create_user(
+                ADMIN_USERNAME,
+                "admin@lifehub",
+                ADMIN_PASSWORD,
+                "Admin",
+            )
+            admin_token = user_service.create_access_token(user)
+            user_service.verify_user(admin_token.access_token)
+        except UserServiceException as e:
+            if e.status_code != 409:
+                raise
+            user = user_service.get_user(ADMIN_USERNAME)
+            user_service.update_user(
+                user,
+                "Admin",
+                "admin@lifehub",
+                ADMIN_PASSWORD,
+            )
+        session.commit()
+
+
+def setup_admin_tokens() -> None:
+    with Session() as session:
+        user_service = UserService(session)
+        provider_repo = ProviderRepository(session)
+
+        admin = user_service.get_user(ADMIN_USERNAME)
+
+        gocardless_provider = provider_repo.get_by_id("gocardless")
+        if gocardless_provider is None:
+            raise Exception("Provider GoCardless not found in the database")
+
+        # If the admin user has no token, add an empty one to be updated
+        try:
+            user_service.add_provider_token_to_user(
+                admin,
+                gocardless_provider,
+                "",
+                "",
+                dt.datetime.now(),
+                dt.datetime.max,
+                skip_test=True,
+            )
+        except UserServiceException as e:
+            if e.status_code != 409:
+                raise
+
+        gocardless_token = GoCardlessAPIClient(admin, session).get_token()
+
+        user_service.update_provider_token(
+            admin,
+            gocardless_provider,
+            gocardless_token.access,
+            gocardless_token.refresh,
+            dt.datetime.now() + dt.timedelta(seconds=gocardless_token.access_expires),
         )
-        if current_user:
-            current_user.email = user.email
-            current_user.password = user.password
-            current_user.name = user.name
-            current_user.verified = user.verified
-        else:
-            session.add(user)
+
         session.commit()
 
 
@@ -65,5 +110,6 @@ def create_db_tables() -> None:
 def pre_run_setup() -> None:
     check_mariadb()
     create_db_tables()
-    setup_admin_user()
     setup_providers()
+    setup_admin_user()
+    setup_admin_tokens()
