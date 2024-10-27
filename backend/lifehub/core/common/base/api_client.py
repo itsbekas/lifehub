@@ -55,7 +55,7 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
                     wait_time = delay * (backoff_factor ** (retries - 1))
                     time.sleep(max(retry_after, wait_time))
                     continue
-                if res.status_code != 200:
+                if not (200 <= res.status_code < 300):
                     raise APIException(
                         type(self).__name__, url, res.status_code, self._error_msg(res)
                     )
@@ -88,8 +88,9 @@ class APIClient(ABC):
     headers: Optional[dict[str, str]]
     cookies: Optional[dict[str, str]]
 
-    def __init__(self, user: User, session: SessionType, token_username: str = "") -> None:
-
+    def __init__(
+        self, user: User, session: SessionType, token_username: str = ""
+    ) -> None:
         # token_user allows overriding the user for the token
         # This is useful for providers such as GoCardless where the admin token is used
         # and client tokens are passed in the request body
@@ -181,7 +182,7 @@ class APIClient(ABC):
         return requests.get(url, headers=self.headers, params=params)
 
     @request_handler
-    def _get_with_cookies(self, url: str, params: dict[str, Any] ) -> Any:
+    def _get_with_cookies(self, url: str, params: dict[str, Any]) -> Any:
         """
         GET request to the API with cookies
         """
