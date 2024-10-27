@@ -167,6 +167,13 @@ class APIClient(ABC):
         """
         pass
 
+    @abstractmethod
+    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
+        """
+        PUT request to the API
+        """
+        pass
+
     @request_handler
     def _get_basic(self, url: str, params: dict[str, Any]) -> Any:
         """
@@ -208,6 +215,27 @@ class APIClient(ABC):
         POST request to the API with cookies
         """
         return requests.post(url, cookies=self.cookies, data=data)
+
+    @request_handler
+    def _put_basic(self, url: str, data: dict[str, Any]) -> Any:
+        """
+        Basic PUT request to the API
+        """
+        return requests.put(url, data=data)
+
+    @request_handler
+    def _put_with_headers(self, url: str, data: dict[str, Any]) -> Any:
+        """
+        PUT request to the API with custom headers
+        """
+        return requests.put(url, headers=self.headers, data=data)
+
+    @request_handler
+    def _put_with_cookies(self, url: str, data: dict[str, Any]) -> Any:
+        """
+        PUT request to the API with cookies
+        """
+        return requests.put(url, cookies=self.cookies, data=data)
 
     @abstractmethod
     def _error_msg(self, res: requests.Response) -> str:

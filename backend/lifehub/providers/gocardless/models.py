@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import field
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic.dataclasses import dataclass
 
@@ -13,7 +13,7 @@ class RequisitionRequest:
     agreement: str
     reference: str
     user_language: str
-    ssn: str
+    ssn: Optional[str]
     account_selection: bool
     redirect_immediate: bool
 
@@ -27,6 +27,23 @@ class EndUserAgreementRequest:
     access_scope: List[Literal["balances", "details", "transactions"]] = field(
         default_factory=lambda: ["balances", "details", "transactions"]
     )
+
+
+@dataclass
+class EndUserAcceptanceDetailsRequest:
+    user_agent: str
+    ip_address: str
+
+
+@dataclass
+class EndUserAgreementResponse:
+    id: str
+    created: str
+    institution_id: str
+    max_historical_days: int
+    access_valid_for_days: int
+    access_scope: List[Literal["balances", "details", "transactions"]]
+    accepted: Optional[str]
 
 
 @dataclass
@@ -52,3 +69,20 @@ class JWTRefreshRequest:
 class SpectacularJWTRefreshResponse:
     access: str
     access_expires: int
+
+
+@dataclass
+class SpectacularRequisitionResponse:
+    id: str
+    created: str
+    redirect: str
+    status: str
+    institution_id: str
+    agreement: str
+    reference: str
+    accounts: List[str]
+    user_language: str
+    link: str
+    ssn: str
+    account_selection: bool
+    redirect_immediate: bool
