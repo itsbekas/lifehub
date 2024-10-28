@@ -12,6 +12,7 @@ from lifehub.core.provider.schema import (
 )
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.google_calendar.api_client import GoogleCalendarAPIClient
+from lifehub.providers.google_tasks.api_client import GoogleTasksAPIClient
 from lifehub.providers.spotify.api_client import SpotifyAPIClient
 from lifehub.providers.strava.api_client import StravaAPIClient
 from lifehub.providers.trading212.api_client import Trading212APIClient
@@ -20,6 +21,7 @@ from lifehub.providers.ynab.api_client import YNABAPIClient
 PROVIDER_CLIENTS = {
     "gocardless": GoCardlessAPIClient,
     "google_calendar": GoogleCalendarAPIClient,
+    "google_tasks": GoogleTasksAPIClient,
     "spotify": SpotifyAPIClient,
     "strava": StravaAPIClient,
     "trading212": Trading212APIClient,
@@ -41,6 +43,15 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "client_id": getenv("GOOGLE_CALENDAR_CLIENT_ID"),
             "client_secret": getenv("GOOGLE_CALENDAR_CLIENT_SECRET"),
             "scope": "https://www.googleapis.com/auth/calendar.readonly",
+        },
+        "google_tasks": {
+            "name": "Google Tasks",
+            "auth_type": "oauth",
+            "auth_url": "https://accounts.google.com/o/oauth2/auth",
+            "token_url": "https://accounts.google.com/o/oauth2/token",
+            "client_id": getenv("GOOGLE_TASKS_CLIENT_ID"),
+            "client_secret": getenv("GOOGLE_TASKS_CLIENT_SECRET"),
+            "scope": "https://www.googleapis.com/auth/tasks",
         },
         "spotify": {
             "name": "Spotify",
