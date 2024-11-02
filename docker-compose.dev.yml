@@ -42,7 +42,6 @@ services:
     depends_on:
       - lifehub-backend
     volumes:
-      - /app/node_modules
       - ./frontend:/app
 
 volumes:
