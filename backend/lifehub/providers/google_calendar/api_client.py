@@ -4,7 +4,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base.api_client import APIClient
+from lifehub.core.common.base.api_client import APIClient, AuthType
 from lifehub.core.user.schema import User
 
 from .models import Calendar, Event
@@ -13,19 +13,10 @@ from .models import Calendar, Event
 class GoogleCalendarAPIClient(APIClient):
     provider_name = "google_calendar"
     base_url = "https://www.googleapis.com/calendar/v3"
+    auth_type = AuthType.OAUTH
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session)
-        self.headers = self._token_bearer_headers
-
-    def _get(self, endpoint: str, params: dict[str, str] = {}) -> Any:
-        return self._get_with_headers(endpoint, params=params)
-
-    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._post_with_headers(endpoint, data=data)
-    
-    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._put_with_headers(endpoint, data=data)
 
     def get_calendars(self) -> list[Calendar]:
         res = self._get("users/me/calendarList")

@@ -1,13 +1,14 @@
 from typing import Any
 
 from lifehub.config.constants import POSTMARK_API_TOKEN, REDIRECT_URI_BASE
-from lifehub.core.common.base.api_client import APIClient
+from lifehub.core.common.base.api_client import APIClient, AuthType
 from lifehub.core.utils.mail.templates import verify_email
 
 
 class MailAPIClient(APIClient):
     provider_name = "postmark"
     base_url = "https://api.postmarkapp.com"
+    auth_type = AuthType.HEADERS
 
     def __init__(self) -> None:
         self.headers = {
@@ -15,17 +16,6 @@ class MailAPIClient(APIClient):
             "Content-Type": "application/json",
             "X-Postmark-Server-Token": POSTMARK_API_TOKEN,
         }
-
-    def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
-        return self._get_with_headers(endpoint, params=params)
-
-    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        # return self._post_with_headers(endpoint, data)
-        # Mail API isn't working, so we'll just skip this for now
-        pass
-
-    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._put_with_headers(endpoint, data=data)
 
     def send_verification_email(
         self, email: str, name: str, verification_token: str

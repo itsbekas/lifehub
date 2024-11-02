@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base.api_client import APIClient, APIException
+from lifehub.core.common.base.api_client import APIClient, APIException, AuthType
 from lifehub.core.user.schema import User
 
 from .models import AccountCash, AccountMetadata, Dividend, Order, Transaction
@@ -13,20 +13,10 @@ from .models import AccountCash, AccountMetadata, Dividend, Order, Transaction
 class Trading212APIClient(APIClient):
     provider_name = "trading212"
     base_url = "https://live.trading212.com/api/v0"
+    auth_type = AuthType.TOKEN_HEADERS
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session)
-        self.headers = self._token_headers
-
-    def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
-        # Handle 429: Too Many Requests
-        return self._get_with_headers(endpoint, params=params)
-
-    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._post_with_headers(endpoint, data=data)
-
-    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._put_with_headers(endpoint, data=data)
 
     def _test(self) -> None:
         self.get_account_metadata()
