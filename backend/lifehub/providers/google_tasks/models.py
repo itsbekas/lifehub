@@ -1,5 +1,5 @@
 from dataclasses import field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic.dataclasses import dataclass
 
@@ -20,10 +20,12 @@ class TaskLink:
     description: str
     link: str
 
+
 @dataclass
 class ListTasklistsRequest:
     maxResults: Optional[int] = 20
     pageToken: Optional[str] = None
+
 
 @dataclass
 class ListTasksRequest:
@@ -59,3 +61,11 @@ class TaskResponse:
     links: List[TaskLink] = field(default_factory=list)
     webViewLink: Optional[str] = None
     assignmentInfo: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class TaskCompleteRequest:
+    status: str = "completed"
+
+
+TaskUpdateRequest = Union[TaskCompleteRequest]

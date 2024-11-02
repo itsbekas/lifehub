@@ -1,5 +1,8 @@
+import datetime as dt
+
 from sqlalchemy.orm import Session
 
+import lifehub.providers.google_tasks.models as gt_models
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.user.schema import User
@@ -17,6 +20,11 @@ class RoutineService(BaseUserService):
     def __init__(self, session: Session, user: User):
         super().__init__(session, user)
 
+    def get_task(self, tasklist_id: str, task_id: str) -> TaskResponse:
+        api_client = GoogleTasksAPIClient(self.user, self.session)
+        task = api_client.get_task(tasklist_id, task_id)
+        return TaskResponse(id=task.id, title=task.title, due=task.due)
+
     def get_tasks(self) -> list[TaskListResponse]:
         api_client = GoogleTasksAPIClient(self.user, self.session)
 
@@ -33,3 +41,14 @@ class RoutineService(BaseUserService):
                 )
 
         return tasklists
+
+    def complete_task(self, tasklist_id: str, task_id: str) -> TaskResponse:
+        api_client = GoogleTasksAPIClient(self.user, self.session)
+        updated_task = api_client.update_task(
+            tasklist_id,
+            task_id,
+            gt_models.TaskCompleteRequest(),
+        )
+        if updated_task.completed is None:
+            raise RoutineServiceException(500, "Failed to complete task")
+        return self.get_task(tasklist_id, task_id)

@@ -75,6 +75,8 @@ def request_handler(func: T) -> T:
                 kwargs["params"] = asdict(kwargs["params"])
             if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
                 kwargs["data"] = asdict(kwargs["data"])
+            if "json" in kwargs and is_dataclass_obj(kwargs["json"]):
+                kwargs["json"] = asdict(kwargs["json"])
             return kwargs
 
         def exponential_backoff(retry_count: int, retry_after: Optional[int]) -> None:
@@ -213,6 +215,7 @@ class APIClient(ABC):
         url: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        json: Optional[RequestParams] = None,
         headers: Optional[dict[str, str]] = None,
         cookies: Optional[dict[str, str]] = None,
     ) -> Any:
@@ -227,7 +230,7 @@ class APIClient(ABC):
 
         request_method = getattr(requests, method.lower())
         return request_method(
-            url, params=params, data=data, headers=headers, cookies=cookies
+            url, params=params, data=data, headers=headers, json=json, cookies=cookies
         )
 
     def _get(self, endpoint: str, params: Optional[RequestParams] = None) -> Any:
@@ -238,27 +241,40 @@ class APIClient(ABC):
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> Any:
-        return self._request("POST", endpoint, params=params, data=data)
+        return self._request(
+            "POST", endpoint, params=params, data=data, headers=headers
+        )
 
     def _put(
         self,
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> Any:
-        return self._request("PUT", endpoint, params=params, data=data)
+        return self._request("PUT", endpoint, params=params, data=data, headers=headers)
 
-    def _delete(self, endpoint: str, params: Optional[RequestParams] = None) -> Any:
-        return self._request("DELETE", endpoint, params=params)
+    def _delete(
+        self,
+        endpoint: str,
+        params: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
+    ) -> Any:
+        return self._request("DELETE", endpoint, params=params, headers=headers)
 
     def _patch(
         self,
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        json: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> Any:
-        return self._request("PATCH", endpoint, params=params, data=data)
+        return self._request(
+            "PATCH", endpoint, params=params, data=data, json=json, headers=headers
+        )
 
     @abstractmethod
     def _error_msg(self, res: requests.Response) -> str:

@@ -10,6 +10,7 @@ from .models import (
     ListTasksRequest,
     TaskListResponse,
     TaskResponse,
+    TaskUpdateRequest,
 )
 
 
@@ -72,9 +73,20 @@ class GoogleTasksAPIClient(APIClient):
         res = self._get(f"lists/{tasklist_id}/tasks", params).get("items", [])
         return [TaskResponse(**item) for item in res]
 
+    def update_task(
+        self,
+        tasklist_id: str,
+        task_id: str,
+        task: TaskUpdateRequest,
+    ) -> TaskResponse:
+        res = self._patch(
+            f"lists/{tasklist_id}/tasks/{task_id}",
+            json=task,
+        )
+        return TaskResponse(**res)
+
     def _test(self) -> None:
         self.list_tasklists(1)
 
     def _error_msg(self, res: Any) -> str:
-        msg: str = res.text
-        return msg
+        return str(res.json().get("error", {}).get("message", res.text))
