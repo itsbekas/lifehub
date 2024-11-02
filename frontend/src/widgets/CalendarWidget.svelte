@@ -1,7 +1,11 @@
 <script lang="ts">
-    import Widget from '$widgets/Widget.svelte';
+    import Widget from '@/widgets/Widget.svelte';
 
-    export let data: Array<CalendarEvent>;
+    interface Props {
+        data: Array<CalendarEvent>;
+    }
+
+    let { data }: Props = $props();
 
 </script>
 

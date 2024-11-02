@@ -1,10 +1,15 @@
 <script lang="ts">
-    import UserProviderCard from '$components/settings/providers/UserProviderCard.svelte';
-    import MissingProviderCard from '$components/settings/providers/MissingProviderCard.svelte';
-    import SettingsSection from '$components/settings/SettingsSection.svelte';
+    import UserProviderCard from '@/components/settings/providers/UserProviderCard.svelte';
+    import MissingProviderCard from '@/components/settings/providers/MissingProviderCard.svelte';
+    import SettingsSection from '@/components/settings/SettingsSection.svelte';
 
-    /** @type {import('./$types').PageData}*/
-    export let data: { missingProviders: Array<Provider>, userProviders: Array<Provider> };
+    
+    interface Props {
+        /** @type {import('./$types').PageData}*/
+        data: { missingProviders: Array<Provider>, userProviders: Array<Provider> };
+    }
+
+    let { data }: Props = $props();
 </script>
 
 <SettingsSection

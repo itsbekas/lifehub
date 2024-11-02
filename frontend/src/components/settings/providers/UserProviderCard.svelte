@@ -1,12 +1,16 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import SettingsCard from '$components/settings/SettingsCard.svelte';
-    import Modal from '$components/Modal.svelte';
+    import SettingsCard from '@/components/settings/SettingsCard.svelte';
+    import Modal from '@/components/Modal.svelte';
 
-    export let provider: Provider;
+    interface Props {
+        provider: Provider;
+    }
 
-    let isRemoveModalOpen = false;
-    let canConnect: boolean;
+    let { provider }: Props = $props();
+
+    let isRemoveModalOpen = $state(false);
+    let canConnect: boolean = $state();
 
     function toggleRemoveModal() {
         isRemoveModalOpen = !isRemoveModalOpen;
@@ -37,7 +41,7 @@
         {:else if canConnect === true}
             <p class="text-green-500">Connected</p>
         {/if}
-        <button class="text-red-500" on:click={toggleRemoveModal}>Remove</button>
+        <button class="text-red-500" onclick={toggleRemoveModal}>Remove</button>
     </div>
 </SettingsCard>
 

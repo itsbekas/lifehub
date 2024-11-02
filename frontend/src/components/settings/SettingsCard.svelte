@@ -1,7 +1,16 @@
 <script lang="ts">
 
+    import * as Card from '@/components/ui/card/index';
+    interface Props {
+        children?: import('svelte').Snippet;
+    }
+
+    let { children }: Props = $props();
+
 </script>
 
-<div class="bg-white border border-gray-300 rounded-lg p-2 hover:bg-gray-100">
-    <slot />
-</div>
+<Card.Root class="hover:bg-accent">
+    <Card.Content class="p-3">
+        {@render children?.()}
+    </Card.Content>
+</Card.Root>

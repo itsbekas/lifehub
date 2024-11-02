@@ -1,9 +1,14 @@
 <script lang="ts">
 
-    import T212Widget from "$widgets/T212Widget.svelte";
+    import T212Widget from "@/widgets/T212Widget.svelte";
 
-    /** type {import('./$types').PageData} */
-    export let data: { t212Data: T212Data };
+    
+    interface Props {
+        /** type {import('./$types').PageData} */
+        data: { t212Data: T212Data };
+    }
+
+    let { data }: Props = $props();
 
 </script>
 

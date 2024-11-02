@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let navbarItems = [
+    let { navbarItems = [
         {
             title: "Dashboard",
             href: "/dashboard",
@@ -8,7 +8,7 @@
             title: "Settings",
             href: "/settings/profile",
         },
-    ];
+    ] } = $props();
 </script>
 
 <div class="py-4 px-24 align-middle border-b border-gray-300">

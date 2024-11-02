@@ -1,7 +1,12 @@
 <script lang="ts">
 
-    export let title: string;
-    export let isOpen: boolean;
+    interface Props {
+        title: string;
+        isOpen: boolean;
+        children?: import('svelte').Snippet;
+    }
+
+    let { title, isOpen = $bindable(), children }: Props = $props();
 </script>
 
 {#if isOpen}
@@ -9,10 +14,10 @@
         <div class="bg-white p-4 rounded-lg">
             <div class="flex gap-4 justify-between">
                 <h2>{ title }</h2>
-                <button on:click={() => isOpen = false}>Close</button>
+                <button onclick={() => isOpen = false}>Close</button>
             </div>
             <div class="pt-4">
-                <slot/>
+                {@render children?.()}
             </div>
         </div>
     </div>
