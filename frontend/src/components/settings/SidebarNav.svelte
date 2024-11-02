@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Button } from "@/components/ui/button";
+
     let { sidebarNavItems = [
         {
             title: "Profile",
@@ -15,15 +17,13 @@
     ] } = $props();
 </script>
 
-<div class="bg-white text-gray-900">
-    <div class="flex flex-col">
-        {#each sidebarNavItems as { title, href }}
-            <a
-                class="w-full text-left p-2 pr-24 hover:bg-gray-100 rounded-lg transition duration-200"
-                href={href}
-            >
-                <p>{title}</p>
-            </a>
-        {/each}
-    </div>
-</div>
+<nav class="flex flex-col">
+    {#each sidebarNavItems as { title, href }}
+        <Button
+            variant="ghost"
+            href={href}
+        >
+            <p class="w-full text-left text-base font-semibold text-primary">{title}</p>
+        </Button>
+    {/each}
+</nav>
