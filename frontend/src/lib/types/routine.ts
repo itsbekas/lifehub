@@ -9,3 +9,11 @@ export interface TaskList {
   title: string;
   tasks: Task[];
 }
+
+export interface Event {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  location: string;
+}
