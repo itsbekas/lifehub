@@ -59,7 +59,9 @@ def request_handler(func: T) -> T:
     """
 
     @wraps(func)
-    def wrapper(self: "APIClient", endpoint: str, *args: Any, **kwargs: Any) -> Any:
+    def wrapper(
+        self: "APIClient", method: str, endpoint: str, *args: Any, **kwargs: Any
+    ) -> Any:
         url = f"{self.base_url}/{endpoint}"
         max_retries = 5
         backoff_factor = 2
@@ -73,6 +75,8 @@ def request_handler(func: T) -> T:
                 kwargs["params"] = asdict(kwargs["params"])
             if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
                 kwargs["data"] = asdict(kwargs["data"])
+            if "json" in kwargs and is_dataclass_obj(kwargs["json"]):
+                kwargs["json"] = asdict(kwargs["json"])
             return kwargs
 
         def exponential_backoff(retry_count: int, retry_after: Optional[int]) -> None:
@@ -87,7 +91,7 @@ def request_handler(func: T) -> T:
 
         for attempt in range(max_retries):
             try:
-                res = func(self, url, *args, **kwargs)
+                res = func(self, method, url, *args, **kwargs)
                 if res.status_code == 429:
                     retry_after = int(res.headers.get("Retry-After", delay))
                     exponential_backoff(attempt, retry_after)
@@ -208,9 +212,10 @@ class APIClient(ABC):
     def _request(
         self,
         method: str,
-        endpoint: str,
+        url: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        json: Optional[RequestParams] = None,
         headers: Optional[dict[str, str]] = None,
         cookies: Optional[dict[str, str]] = None,
     ) -> Any:
@@ -218,13 +223,14 @@ class APIClient(ABC):
         Generalized request handler to perform HTTP requests with various configurations.
         """
 
-        if headers is not None and self.headers is not None:
+        if headers is None:
+            headers = self.headers
+        elif self.headers is not None:
             headers = {**self.headers, **headers}
 
-        url = f"{self.base_url}/{endpoint}"
         request_method = getattr(requests, method.lower())
         return request_method(
-            url, params=params, data=data, headers=headers, cookies=cookies
+            url, params=params, data=data, headers=headers, json=json, cookies=cookies
         )
 
     def _get(self, endpoint: str, params: Optional[RequestParams] = None) -> Any:
@@ -235,27 +241,40 @@ class APIClient(ABC):
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> Any:
-        return self._request("POST", endpoint, params=params, data=data)
+        return self._request(
+            "POST", endpoint, params=params, data=data, headers=headers
+        )
 
     def _put(
         self,
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> Any:
-        return self._request("PUT", endpoint, params=params, data=data)
+        return self._request("PUT", endpoint, params=params, data=data, headers=headers)
 
-    def _delete(self, endpoint: str, params: Optional[RequestParams] = None) -> Any:
-        return self._request("DELETE", endpoint, params=params)
+    def _delete(
+        self,
+        endpoint: str,
+        params: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
+    ) -> Any:
+        return self._request("DELETE", endpoint, params=params, headers=headers)
 
     def _patch(
         self,
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        json: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
     ) -> Any:
-        return self._request("PATCH", endpoint, params=params, data=data)
+        return self._request(
+            "PATCH", endpoint, params=params, data=data, json=json, headers=headers
+        )
 
     @abstractmethod
     def _error_msg(self, res: requests.Response) -> str:

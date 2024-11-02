@@ -5,9 +5,7 @@ import requests
 from fastapi import APIRouter, Depends, HTTPException
 
 from lifehub.config.constants import OAUTH_REDIRECT_URI
-from lifehub.core.provider.api.dependencies import (
-    ProviderDep,
-)
+from lifehub.core.provider.api.dependencies import ProviderDep
 from lifehub.core.provider.models import (
     ProviderTokenBasicRequest,
     ProviderTokenTokenRequest,
@@ -96,7 +94,9 @@ async def add_oauth_provider(
         created_at = dt.datetime.fromtimestamp(float(data["created_at"]))
     else:
         created_at = dt.datetime.now()
-    expires_at: dt.datetime = created_at + dt.timedelta(seconds=float(data["expires_in"]))
+    expires_at: dt.datetime = created_at + dt.timedelta(
+        seconds=float(data["expires_in"])
+    )
 
     user_service.add_provider_token_to_user(
         user,
