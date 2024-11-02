@@ -59,7 +59,9 @@ def request_handler(func: T) -> T:
     """
 
     @wraps(func)
-    def wrapper(self: "APIClient", endpoint: str, *args: Any, **kwargs: Any) -> Any:
+    def wrapper(
+        self: "APIClient", method: str, endpoint: str, *args: Any, **kwargs: Any
+    ) -> Any:
         url = f"{self.base_url}/{endpoint}"
         max_retries = 5
         backoff_factor = 2
@@ -87,7 +89,7 @@ def request_handler(func: T) -> T:
 
         for attempt in range(max_retries):
             try:
-                res = func(self, url, *args, **kwargs)
+                res = func(self, method, url, *args, **kwargs)
                 if res.status_code == 429:
                     retry_after = int(res.headers.get("Retry-After", delay))
                     exponential_backoff(attempt, retry_after)
@@ -208,7 +210,7 @@ class APIClient(ABC):
     def _request(
         self,
         method: str,
-        endpoint: str,
+        url: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
         headers: Optional[dict[str, str]] = None,
@@ -218,10 +220,11 @@ class APIClient(ABC):
         Generalized request handler to perform HTTP requests with various configurations.
         """
 
-        if headers is not None and self.headers is not None:
+        if headers is None:
+            headers = self.headers
+        elif self.headers is not None:
             headers = {**self.headers, **headers}
 
-        url = f"{self.base_url}/{endpoint}"
         request_method = getattr(requests, method.lower())
         return request_method(
             url, params=params, data=data, headers=headers, cookies=cookies
