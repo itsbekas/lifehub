@@ -4,6 +4,7 @@ import datetime as dt
 import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, is_dataclass
+from functools import wraps
 from os import getenv
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeIs
 
@@ -29,9 +30,9 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
     Raises an APIException if the status code is not 200
     """
 
+    @wraps(func)
     def wrapper(self: "APIClient", endpoint: str, *args: Any, **kwargs: Any) -> Any:
         url = f"{self.base_url}/{endpoint}"
-        retries = 0
         max_retries = 5
         backoff_factor = 2
         delay = 1
@@ -39,21 +40,29 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
         def is_dataclass_obj(obj: Any) -> TypeIs[RequestParams]:
             return is_dataclass(obj) and not isinstance(obj, type)
 
-        if "params" in kwargs and is_dataclass_obj(kwargs["params"]):
-            kwargs["params"] = asdict(kwargs["params"])
+        def prepare_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+            if "params" in kwargs and is_dataclass_obj(kwargs["params"]):
+                kwargs["params"] = asdict(kwargs["params"])
+            if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
+                kwargs["data"] = asdict(kwargs["data"])
+            return kwargs
 
-        if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
-            kwargs["data"] = asdict(kwargs["data"])
+        def exponential_backoff(retry_count: int, retry_after: Optional[int]) -> None:
+            wait_time = (
+                retry_after
+                if retry_after is not None
+                else delay * (backoff_factor**retry_count)
+            )
+            time.sleep(wait_time)
 
-        while retries < max_retries:
+        kwargs = prepare_kwargs(kwargs)
+
+        for attempt in range(max_retries):
             try:
                 res = func(self, url, *args, **kwargs)
-
                 if res.status_code == 429:
-                    retries += 1
                     retry_after = int(res.headers.get("Retry-After", delay))
-                    wait_time = delay * (backoff_factor ** (retries - 1))
-                    time.sleep(max(retry_after, wait_time))
+                    exponential_backoff(attempt, retry_after)
                     continue
                 if not (200 <= res.status_code < 300):
                     raise APIException(
@@ -61,12 +70,13 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
                     )
                 return res.json()
             except requests.exceptions.RequestException as e:
-                raise APIException(
-                    type(self).__name__,
-                    url,
-                    500,
-                    f"Error accessing {self.base_url}: {str(e)}",
-                )
+                if attempt == max_retries - 1:
+                    raise APIException(
+                        type(self).__name__,
+                        url,
+                        500,
+                        f"Error accessing {self.base_url}: {str(e)}",
+                    )
 
     return wrapper
 
