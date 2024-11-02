@@ -3,6 +3,8 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
+from pydantic.dataclasses import dataclass
+
 
 class Calendar:
     # Reference: https://developers.google.com/calendar/api/v3/reference/calendarList#resource-representations
@@ -175,3 +177,13 @@ class Event:
 
     def __repr__(self) -> str:
         return f"<GoogleCalendar Event: {self.summary}>"
+
+
+#! INCOMPLETE - Ref https://developers.google.com/calendar/api/v3/reference/events/list
+@dataclass
+class CalendarEventsRequest:
+    singleEvents: bool
+    showDeleted: bool
+    timeMin: str
+    timeMax: str
+    maxResults: int

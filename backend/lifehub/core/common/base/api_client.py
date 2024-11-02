@@ -4,8 +4,10 @@ import datetime as dt
 import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, is_dataclass
+from enum import Enum
+from functools import wraps
 from os import getenv
-from typing import TYPE_CHECKING, Any, Callable, Optional, TypeIs
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeIs, TypeVar, cast
 
 import requests
 from sqlalchemy.orm import Session as SessionType
@@ -21,17 +23,44 @@ if TYPE_CHECKING:
 
     RequestParams = DataclassInstance
 
+T = TypeVar("T", bound=Callable[..., Any])
 
-def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
+
+class AuthType(Enum):
+    BASIC = "basic"
+    HEADERS = "headers"
+    TOKEN_HEADERS = "token_headers"
+    TOKEN_BEARER_HEADERS = "token_bearer_headers"
+    OAUTH = TOKEN_BEARER_HEADERS
+    COOKIES = "cookies"
+
+
+def auth_override(auth_type: AuthType) -> Callable[[T], T]:
+    def decorator(func: T) -> T:
+        @wraps(func)
+        def wrapper(self: APIClient, *args: Any, **kwargs: Any) -> Any:
+            original_auth_type = self.auth_type
+            try:
+                self.auth_type = auth_type
+                return func(self, *args, **kwargs)
+            finally:
+                self.auth_type = original_auth_type
+
+        return cast(T, wrapper)
+
+    return decorator
+
+
+def request_handler(func: T) -> T:
     """
     A wrapper for request functions
     Handles retries and rate limiting (with exponential backoff if a Retry-After header isn't provided)
     Raises an APIException if the status code is not 200
     """
 
+    @wraps(func)
     def wrapper(self: "APIClient", endpoint: str, *args: Any, **kwargs: Any) -> Any:
         url = f"{self.base_url}/{endpoint}"
-        retries = 0
         max_retries = 5
         backoff_factor = 2
         delay = 1
@@ -39,21 +68,29 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
         def is_dataclass_obj(obj: Any) -> TypeIs[RequestParams]:
             return is_dataclass(obj) and not isinstance(obj, type)
 
-        if "params" in kwargs and is_dataclass_obj(kwargs["params"]):
-            kwargs["params"] = asdict(kwargs["params"])
+        def prepare_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+            if "params" in kwargs and is_dataclass_obj(kwargs["params"]):
+                kwargs["params"] = asdict(kwargs["params"])
+            if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
+                kwargs["data"] = asdict(kwargs["data"])
+            return kwargs
 
-        if "data" in kwargs and is_dataclass_obj(kwargs["data"]):
-            kwargs["data"] = asdict(kwargs["data"])
+        def exponential_backoff(retry_count: int, retry_after: Optional[int]) -> None:
+            wait_time = (
+                retry_after
+                if retry_after is not None
+                else delay * (backoff_factor**retry_count)
+            )
+            time.sleep(wait_time)
 
-        while retries < max_retries:
+        kwargs = prepare_kwargs(kwargs)
+
+        for attempt in range(max_retries):
             try:
                 res = func(self, url, *args, **kwargs)
-
                 if res.status_code == 429:
-                    retries += 1
                     retry_after = int(res.headers.get("Retry-After", delay))
-                    wait_time = delay * (backoff_factor ** (retries - 1))
-                    time.sleep(max(retry_after, wait_time))
+                    exponential_backoff(attempt, retry_after)
                     continue
                 if not (200 <= res.status_code < 300):
                     raise APIException(
@@ -61,14 +98,15 @@ def request_handler(func: Callable[..., Any]) -> Callable[..., Any]:
                     )
                 return res.json()
             except requests.exceptions.RequestException as e:
-                raise APIException(
-                    type(self).__name__,
-                    url,
-                    500,
-                    f"Error accessing {self.base_url}: {str(e)}",
-                )
+                if attempt == max_retries - 1:
+                    raise APIException(
+                        type(self).__name__,
+                        url,
+                        500,
+                        f"Error accessing {self.base_url}: {str(e)}",
+                    )
 
-    return wrapper
+    return cast(T, wrapper)
 
 
 class APIException(Exception):
@@ -87,6 +125,15 @@ class APIClient(ABC):
     base_url: str
     headers: Optional[dict[str, str]]
     cookies: Optional[dict[str, str]]
+
+    @property
+    @abstractmethod
+    def auth_type(self) -> AuthType:
+        pass
+
+    @auth_type.setter
+    def auth_type(self, value: AuthType) -> None:
+        self.auth_type = value
 
     def __init__(
         self, user: User, session: SessionType, token_username: str = ""
@@ -127,13 +174,17 @@ class APIClient(ABC):
             self._refresh_token(tokenRepo)
             session.commit()
 
-    @property
-    def _token_headers(self) -> dict[str, str]:
-        return {"Authorization": self.token.token}
-
-    @property
-    def _token_bearer_headers(self) -> dict[str, str]:
-        return {"Authorization": f"Bearer {self.token.token}"}
+        match self.auth_type:
+            case AuthType.BASIC:
+                pass
+            case AuthType.HEADERS:
+                pass
+            case AuthType.TOKEN_HEADERS:
+                self.headers = {"Authorization": self.token.token}
+            case AuthType.TOKEN_BEARER_HEADERS:
+                self.headers = {"Authorization": f"Bearer {self.token.token}"}
+            case AuthType.COOKIES:
+                pass
 
     def _refresh_token(self, tokenRepo: ProviderTokenRepository) -> None:
         config = self.provider.config
@@ -153,89 +204,58 @@ class APIClient(ABC):
         )
         tokenRepo.update(self.token)
 
-    @abstractmethod
-    def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
-        """
-        GET request to the API
-        """
-        pass
-
-    @abstractmethod
-    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        """
-        POST request to the API
-        """
-        pass
-
-    @abstractmethod
-    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        """
-        PUT request to the API
-        """
-        pass
-
     @request_handler
-    def _get_basic(self, url: str, params: dict[str, Any]) -> Any:
+    def _request(
+        self,
+        method: str,
+        endpoint: str,
+        params: Optional[RequestParams] = None,
+        data: Optional[RequestParams] = None,
+        headers: Optional[dict[str, str]] = None,
+        cookies: Optional[dict[str, str]] = None,
+    ) -> Any:
         """
-        Basic GET request to the API
+        Generalized request handler to perform HTTP requests with various configurations.
         """
-        return requests.get(url, params=params)
 
-    @request_handler
-    def _get_with_headers(self, url: str, params: dict[str, Any]) -> Any:
-        """
-        GET request to the API with custom headers
-        """
-        return requests.get(url, headers=self.headers, params=params)
+        if headers is not None and self.headers is not None:
+            headers = {**self.headers, **headers}
 
-    @request_handler
-    def _get_with_cookies(self, url: str, params: dict[str, Any]) -> Any:
-        """
-        GET request to the API with cookies
-        """
-        return requests.get(url, cookies=self.cookies, params=params)
+        url = f"{self.base_url}/{endpoint}"
+        request_method = getattr(requests, method.lower())
+        return request_method(
+            url, params=params, data=data, headers=headers, cookies=cookies
+        )
 
-    @request_handler
-    def _post_basic(self, url: str, data: dict[str, Any]) -> Any:
-        """
-        Basic POST request to the API
-        """
-        return requests.post(url, data=data)
+    def _get(self, endpoint: str, params: Optional[RequestParams] = None) -> Any:
+        return self._request("GET", endpoint, params=params)
 
-    @request_handler
-    def _post_with_headers(self, url: str, data: dict[str, Any]) -> Any:
-        """
-        POST request to the API with custom headers
-        """
-        return requests.post(url, headers=self.headers, data=data)
+    def _post(
+        self,
+        endpoint: str,
+        params: Optional[RequestParams] = None,
+        data: Optional[RequestParams] = None,
+    ) -> Any:
+        return self._request("POST", endpoint, params=params, data=data)
 
-    @request_handler
-    def _post_with_cookies(self, url: str, data: dict[str, Any]) -> Any:
-        """
-        POST request to the API with cookies
-        """
-        return requests.post(url, cookies=self.cookies, data=data)
+    def _put(
+        self,
+        endpoint: str,
+        params: Optional[RequestParams] = None,
+        data: Optional[RequestParams] = None,
+    ) -> Any:
+        return self._request("PUT", endpoint, params=params, data=data)
 
-    @request_handler
-    def _put_basic(self, url: str, data: dict[str, Any]) -> Any:
-        """
-        Basic PUT request to the API
-        """
-        return requests.put(url, data=data)
+    def _delete(self, endpoint: str, params: Optional[RequestParams] = None) -> Any:
+        return self._request("DELETE", endpoint, params=params)
 
-    @request_handler
-    def _put_with_headers(self, url: str, data: dict[str, Any]) -> Any:
-        """
-        PUT request to the API with custom headers
-        """
-        return requests.put(url, headers=self.headers, data=data)
-
-    @request_handler
-    def _put_with_cookies(self, url: str, data: dict[str, Any]) -> Any:
-        """
-        PUT request to the API with cookies
-        """
-        return requests.put(url, cookies=self.cookies, data=data)
+    def _patch(
+        self,
+        endpoint: str,
+        params: Optional[RequestParams] = None,
+        data: Optional[RequestParams] = None,
+    ) -> Any:
+        return self._request("PATCH", endpoint, params=params, data=data)
 
     @abstractmethod
     def _error_msg(self, res: requests.Response) -> str:

@@ -86,3 +86,9 @@ class SpectacularRequisitionResponse:
     ssn: str
     account_selection: bool
     redirect_immediate: bool
+
+
+@dataclass
+class RequisitionsRequest:
+    limit: int
+    offset: int

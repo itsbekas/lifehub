@@ -10,7 +10,7 @@ from lifehub.config.constants import (
     GOCARDLESS_CLIENT_SECRET,
     REDIRECT_URI_BASE,
 )
-from lifehub.core.common.base.api_client import APIClient
+from lifehub.core.common.base.api_client import APIClient, AuthType, auth_override
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.user.schema import User
 
@@ -21,6 +21,7 @@ from .models import (
     JWTObtainPairRequest,
     JWTRefreshRequest,
     RequisitionRequest,
+    RequisitionsRequest,
     SpectacularJWTObtainResponse,
     SpectacularJWTRefreshResponse,
     SpectacularRequisitionResponse,
@@ -30,10 +31,10 @@ from .models import (
 class GoCardlessAPIClient(APIClient):
     provider_name = "gocardless"
     base_url = "https://bankaccountdata.gocardless.com/api/v2"
+    auth_type = AuthType.OAUTH
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session, ADMIN_USERNAME)
-        self.headers = self._token_bearer_headers
 
     def _refresh_token(self, tokenRepo: ProviderTokenRepository) -> None:
         res = self.refresh_token()
@@ -43,26 +44,18 @@ class GoCardlessAPIClient(APIClient):
         )
         tokenRepo.update(self.token)
 
-    def _get(self, endpoint: str, params: Any = {}) -> Any:
-        return self._get_with_headers(endpoint, params=params)
-
-    def _post(self, endpoint: str, data: Any = {}) -> Any:
-        return self._post_with_headers(endpoint, data=data)
-
-    def _put(self, endpoint: str, data: Any = {}) -> Any:
-        return self._put_with_headers(endpoint, data=data)
-
+    @auth_override(AuthType.BASIC)
     def get_token(self) -> SpectacularJWTObtainResponse:
         req = JWTObtainPairRequest(
             secret_id=GOCARDLESS_CLIENT_ID,
             secret_key=GOCARDLESS_CLIENT_SECRET,
         )
-        res = self._post_basic("token/new/", data=req)
+        res = self._post("token/new/", data=req)
         return SpectacularJWTObtainResponse(**res)
 
     def refresh_token(self) -> SpectacularJWTRefreshResponse:
         req = JWTRefreshRequest(refresh=self.token.refresh_token)
-        res = self._post_basic("token/refresh/", data=req)
+        res = self._post("token/refresh/", data=req)
         return SpectacularJWTRefreshResponse(**res)
 
     def create_agreement(self) -> EndUserAgreementResponse:
@@ -81,9 +74,12 @@ class GoCardlessAPIClient(APIClient):
         )
         res = self._put(f"agreements/enduser/{agreement_id}/accept/", data=req)
         return EndUserAgreementResponse(**res)
-    
+
     def get_requisitions(self, limit: int = 100, offset: int = 0) -> Any:
-        params = {"limit": limit, "offset": offset}
+        params = RequisitionsRequest(
+            limit=limit,
+            offset=offset,
+        )
         return self._get("requisitions", params=params)
 
     def create_requisition(self, agreement_id: str, user_id: str) -> Any:

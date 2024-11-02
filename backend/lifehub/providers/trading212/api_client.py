@@ -4,29 +4,27 @@ from urllib.parse import parse_qs, urlparse
 
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base.api_client import APIClient, APIException
+from lifehub.core.common.base.api_client import APIClient, APIException, AuthType
 from lifehub.core.user.schema import User
 
-from .models import AccountCash, AccountMetadata, Dividend, Order, Transaction
+from .models import (
+    AccountCash,
+    AccountMetadata,
+    Dividend,
+    Order,
+    OrderHistoryRequest,
+    Transaction,
+    TransactionsRequest,
+)
 
 
 class Trading212APIClient(APIClient):
     provider_name = "trading212"
     base_url = "https://live.trading212.com/api/v0"
+    auth_type = AuthType.TOKEN_HEADERS
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session)
-        self.headers = self._token_headers
-
-    def _get(self, endpoint: str, params: dict[str, Any] = {}) -> Any:
-        # Handle 429: Too Many Requests
-        return self._get_with_headers(endpoint, params=params)
-
-    def _post(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._post_with_headers(endpoint, data=data)
-
-    def _put(self, endpoint: str, data: dict[str, Any] = {}) -> Any:
-        return self._put_with_headers(endpoint, data=data)
 
     def _test(self) -> None:
         self.get_account_metadata()
@@ -44,7 +42,7 @@ class Trading212APIClient(APIClient):
     ) -> list[Order]:
         orders = []
         stop = False
-        params = {"limit": 50}
+        params = OrderHistoryRequest(limit=50)
         # I'm pretty sure that the cursors returned by the API are wrong and useless
         # For reference, a cursor is the timestamp of the most recent order to be returned
         # The date used for the check is date_modified
@@ -58,7 +56,7 @@ class Trading212APIClient(APIClient):
                     break
                 orders.append(order)
             # Get the cursor for the next page
-            params["cursor"] = int(order.date_created.timestamp() * 1000)
+            params.cursor = int(order.date_created.timestamp() * 1000)
             if res.get("nextPagePath") is None:
                 stop = True
         return orders
@@ -68,22 +66,20 @@ class Trading212APIClient(APIClient):
     ) -> list[Transaction]:
         transactions = []
         stop = False
-        params: dict[str, Any] = {"limit": 50}
+        params = TransactionsRequest(limit=50)
         # Documentation for this endpoint is just plain wrong...
         # Instead of the cursor being a timestamp, the cursor is a reference to the last transaction
         # and needs to be used together with the time parameter
         # The cursor and time in nextPagePath both belong to the first transaction that wasn't returned
         while not stop:
             try:
-                print("REQUEST:", params)
                 res = self._get("history/transactions", params)
-                print(res)
             # For some reason the API returns a 500 error whenever the limit is higher than the amount of transactions left
             # To fix this, we just halve the limit and try again until we get all transactions
             except APIException as e:
                 if e.status_code == 500:
-                    params["limit"] //= 2
-                    if params["limit"] == 0:
+                    params.limit //= 2
+                    if params.limit == 0:
                         stop = True
                     continue
                 else:
@@ -102,8 +98,8 @@ class Trading212APIClient(APIClient):
                 print(nextPath)
                 query_params = parse_qs(urlparse(nextPath).query)
                 print(query_params)
-                params["cursor"] = query_params["cursor"][0]
-                params["time"] = query_params["time"][0]
+                params.cursor = query_params["cursor"][0]
+                params.time = query_params["time"][0]
         return transactions
 
     def get_dividends(self) -> list[Dividend]:
