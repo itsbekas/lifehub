@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from lifehub.core.common.base.api_client import APIClient, AuthType
 from lifehub.core.user.schema import User
 
-from .models import Calendar, Event
+from .models import Calendar, CalendarEventsRequest, Event
 
 
 class GoogleCalendarAPIClient(APIClient):
@@ -26,18 +26,16 @@ class GoogleCalendarAPIClient(APIClient):
     def get_events(self, calendar_id: str, limit: int = 20) -> list[Event]:
         # url encode calendar_id
         calendar_id = urllib.parse.quote(calendar_id)
-        res = self._get(
-            f"calendars/{calendar_id}/events",
-            {
-                "singleEvents": "true",
-                "showDeleted": "false",
-                "timeMin": dt.datetime.now().isoformat() + "Z",
-                "timeMax": (dt.datetime.now() + dt.timedelta(days=365)).isoformat()
-                + "Z",
-                "maxResults": str(limit),
-            },
+        params = CalendarEventsRequest(
+            singleEvents=True,
+            showDeleted=False,
+            timeMin=dt.datetime.now().isoformat() + "Z",
+            timeMax=(dt.datetime.now() + dt.timedelta(days=365)).isoformat() + "Z",
+            maxResults=limit,
         )
-        data = res.get("items", [])
+        data = self._get(f"calendars/{calendar_id}/events", params=params).get(
+            "items", []
+        )
         return [Event.from_response(e) for e in data]
 
     def _test(self) -> None:

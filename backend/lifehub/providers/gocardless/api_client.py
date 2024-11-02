@@ -21,6 +21,7 @@ from .models import (
     JWTObtainPairRequest,
     JWTRefreshRequest,
     RequisitionRequest,
+    RequisitionsRequest,
     SpectacularJWTObtainResponse,
     SpectacularJWTRefreshResponse,
     SpectacularRequisitionResponse,
@@ -75,7 +76,10 @@ class GoCardlessAPIClient(APIClient):
         return EndUserAgreementResponse(**res)
 
     def get_requisitions(self, limit: int = 100, offset: int = 0) -> Any:
-        params = {"limit": limit, "offset": offset}
+        params = RequisitionsRequest(
+            limit=limit,
+            offset=offset,
+        )
         return self._get("requisitions", params=params)
 
     def create_requisition(self, agreement_id: str, user_id: str) -> Any:

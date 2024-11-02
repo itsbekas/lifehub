@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
+from typing import Any, Optional
+
+from pydantic.dataclasses import dataclass
 
 
 class AccountCash:
@@ -167,3 +169,20 @@ class Dividend:
 
     def __repr__(self) -> str:
         return f"<Trading212 Dividend: {self.reference}>"
+
+
+@dataclass
+class OrderHistoryRequest:
+    limit: Optional[int] = 20
+    ticker: Optional[str] = None
+    cursor: Optional[int] = 0
+
+
+PaidOutDividendsRequest = OrderHistoryRequest
+
+
+@dataclass
+class TransactionsRequest:
+    limit: int = 20
+    cursor: Optional[str] = None
+    time: Optional[str] = None

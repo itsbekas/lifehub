@@ -4,6 +4,8 @@ from lifehub.config.constants import POSTMARK_API_TOKEN, REDIRECT_URI_BASE
 from lifehub.core.common.base.api_client import APIClient, AuthType
 from lifehub.core.utils.mail.templates import verify_email
 
+from .models import EmailRequest
+
 
 class MailAPIClient(APIClient):
     provider_name = "postmark"
@@ -24,13 +26,14 @@ class MailAPIClient(APIClient):
             f"{REDIRECT_URI_BASE}/auth/verify-email?token={verification_token}"
         )
 
-        data = {
-            "From": "lifehub@b21.tech",
-            "To": email,
-            "Subject": "[Lifehub] Verify your email address",
-            "HtmlBody": verify_email(name, verification_link),
-            "MessageStream": "outbound",
-        }
+        data = EmailRequest(
+            From="lifehub@b21.tech",
+            To=email,
+            Subject="[Lifehub] Verify your email address",
+            HtmlBody=verify_email(name, verification_link),
+            MessageStream="outbound",
+        )
+
         self._post("email", data=data)
 
     def _test(self) -> None:
