@@ -1,11 +1,22 @@
 <!-- Basic text input -->
 <script lang="ts">
-    export let label: string;
-    export let placeholder: string = '';
-    export let name: string;
-    export let required: boolean = false;
-    export let autocomplete: string = 'off';
-    export let type: string = 'text';
+    interface Props {
+        label: string;
+        placeholder?: string;
+        name: string;
+        required?: boolean;
+        autocomplete?: string;
+        type?: string;
+    }
+
+    let {
+        label,
+        placeholder = '',
+        name,
+        required = false,
+        autocomplete = 'off',
+        type = 'text'
+    }: Props = $props();
 </script>
 
 {#if label}

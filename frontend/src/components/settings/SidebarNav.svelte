@@ -1,5 +1,5 @@
 <script lang="ts">
-    export let sidebarNavItems = [
+    let { sidebarNavItems = [
         {
             title: "Profile",
             href: "/settings/profile",
@@ -12,7 +12,7 @@
             title: "Modules",
             href: "/settings/modules",
         },
-    ];
+    ] } = $props();
 </script>
 
 <div class="bg-white text-gray-900">

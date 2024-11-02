@@ -2,8 +2,13 @@
     import SettingsSection from '$components/settings/SettingsSection.svelte';
     import SettingsTextInput from '$components/settings/SettingsTextInput.svelte';
 
-    /** @type {import('./$types').PageData} */
-    export let data: { user: User };
+    
+    interface Props {
+        /** @type {import('./$types').PageData} */
+        data: { user: User };
+    }
+
+    let { data }: Props = $props();
 
 </script>
 

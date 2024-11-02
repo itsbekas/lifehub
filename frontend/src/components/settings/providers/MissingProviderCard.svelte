@@ -3,13 +3,17 @@
     import Modal from '$components/Modal.svelte';
     import TextInput from '$components/TextInput.svelte';
 
-    export let provider: Provider;
+    interface Props {
+        provider: Provider;
+    }
 
-    let isAddModalOpen = {
+    let { provider }: Props = $props();
+
+    let isAddModalOpen = $state({
         basic: false,
         token: false,
         oauth: false
-    };
+    });
 
     function toggleAddModal(provider: Provider) {
         isAddModalOpen.basic = false;
@@ -34,7 +38,7 @@
 <SettingsCard>
     <div class="flex justify-between gap-4">
     <p class="">{ provider.name }</p>
-    <button class="text-blue-500" on:click={() => toggleAddModal(provider)}>Add</button>
+    <button class="text-blue-500" onclick={() => toggleAddModal(provider)}>Add</button>
 </SettingsCard>
 
 <!-- Basic Provider (User/Password) -->

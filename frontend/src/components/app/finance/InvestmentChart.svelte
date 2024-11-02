@@ -2,8 +2,13 @@
     import { onMount } from 'svelte';
     import * as echarts from 'echarts';
 
-    /** type {import('./types').PageData}*/
-    export let data: { history: Array<T212Transaction> };
+    
+    interface Props {
+        /** type {import('./types').PageData}*/
+        data: { history: Array<T212Transaction> };
+    }
+
+    let { data }: Props = $props();
     
     let cumulativeData: Array<T212Transaction> = data.history.reduce((acc: Array<T212Transaction>, transaction: T212Transaction) => {
         if (acc.length === 0) {

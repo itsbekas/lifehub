@@ -1,11 +1,23 @@
 <script lang="ts">
-    export let title: string;
-    export let description: string = "";
-    export let placeholder: string = "";
-    export let value: string = "";
-    export let name: string = "";
-    export let type: "text" | "password" = "text";
-    export let autocomplete: string = "off";
+    interface Props {
+        title: string;
+        description?: string;
+        placeholder?: string;
+        value?: string;
+        name?: string;
+        type?: "text" | "password";
+        autocomplete?: string;
+    }
+
+    let {
+        title,
+        description = "",
+        placeholder = "",
+        value = "",
+        name = "",
+        type = "text",
+        autocomplete = "off"
+    }: Props = $props();
 </script>
 
 <div class="flex flex-col mb-4">
