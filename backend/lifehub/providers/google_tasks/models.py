@@ -20,6 +20,25 @@ class TaskLink:
     description: str
     link: str
 
+@dataclass
+class ListTasklistsRequest:
+    maxResults: Optional[int] = 20
+    pageToken: Optional[str] = None
+
+@dataclass
+class ListTasksRequest:
+    completedMax: Optional[str] = None
+    completedMin: Optional[str] = None
+    dueMax: Optional[str] = None
+    dueMin: Optional[str] = None
+    maxResults: Optional[int] = 20
+    pageToken: Optional[str] = None
+    showCompleted: Optional[bool] = True
+    showDeleted: Optional[bool] = False
+    showHidden: Optional[bool] = False
+    updatedMin: Optional[str] = None
+    showAssigned: Optional[bool] = False
+
 
 @dataclass
 class TaskResponse:
