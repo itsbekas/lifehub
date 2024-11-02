@@ -1,7 +1,7 @@
 <script lang="ts">
-    import SettingsCard from '$components/settings/SettingsCard.svelte';
-    import Modal from '$components/Modal.svelte';
-    import TextInput from '$components/TextInput.svelte';
+    import SettingsCard from '@/components/settings/SettingsCard.svelte';
+    import Modal from '@/components/Modal.svelte';
+    import TextInput from '@/components/TextInput.svelte';
 
     interface Props {
         provider: Provider;

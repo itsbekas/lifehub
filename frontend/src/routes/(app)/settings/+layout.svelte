@@ -1,5 +1,5 @@
 <script lang="ts">
-    import SidebarNav from "$components/settings/SidebarNav.svelte";
+    import SidebarNav from "@/components/settings/SidebarNav.svelte";
     interface Props {
         children?: import('svelte').Snippet;
     }

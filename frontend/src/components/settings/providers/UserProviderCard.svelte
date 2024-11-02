@@ -1,7 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import SettingsCard from '$components/settings/SettingsCard.svelte';
-    import Modal from '$components/Modal.svelte';
+    import SettingsCard from '@/components/settings/SettingsCard.svelte';
+    import Modal from '@/components/Modal.svelte';
 
     interface Props {
         provider: Provider;

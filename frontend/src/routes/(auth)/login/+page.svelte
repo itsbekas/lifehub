@@ -1,5 +1,5 @@
 <script>
-    import TextInput from "$components/TextInput.svelte";
+    import TextInput from "@/components/TextInput.svelte";
 </script>
 
 <form method="POST" action="/login/?/login">

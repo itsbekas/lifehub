@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import T212Widget from "$widgets/T212Widget.svelte";
+    import T212Widget from "@/widgets/T212Widget.svelte";
 
     
     interface Props {

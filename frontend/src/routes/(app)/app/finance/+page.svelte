@@ -1,5 +1,5 @@
 <script lang="ts">
-    import InvestmentChart from "$components/app/finance/InvestmentChart.svelte";
+    import InvestmentChart from "@/components/app/finance/InvestmentChart.svelte";
 
     
     interface Props {

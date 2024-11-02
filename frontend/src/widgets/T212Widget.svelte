@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Widget from '$widgets/Widget.svelte';
+    import Widget from '@/widgets/Widget.svelte';
 
     let { data } = $props();
 

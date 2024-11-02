@@ -1,7 +1,7 @@
 <script lang="ts">
-    import UserProviderCard from '$components/settings/providers/UserProviderCard.svelte';
-    import MissingProviderCard from '$components/settings/providers/MissingProviderCard.svelte';
-    import SettingsSection from '$components/settings/SettingsSection.svelte';
+    import UserProviderCard from '@/components/settings/providers/UserProviderCard.svelte';
+    import MissingProviderCard from '@/components/settings/providers/MissingProviderCard.svelte';
+    import SettingsSection from '@/components/settings/SettingsSection.svelte';
 
     
     interface Props {

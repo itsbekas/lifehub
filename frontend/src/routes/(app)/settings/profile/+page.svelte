@@ -1,6 +1,6 @@
 <script lang="ts">
-    import SettingsSection from '$components/settings/SettingsSection.svelte';
-    import SettingsTextInput from '$components/settings/SettingsTextInput.svelte';
+    import SettingsSection from '@/components/settings/SettingsSection.svelte';
+    import SettingsTextInput from '@/components/settings/SettingsTextInput.svelte';
 
     
     interface Props {
