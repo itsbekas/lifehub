@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { Label } from "@/components/ui/label/index";
-    import { Input } from "@/components/ui/input/index";
+    import { Label } from "@/components/ui/label";
+    import { Input } from "@/components/ui/input";
     interface Props {
         title: string;
         description?: string;
