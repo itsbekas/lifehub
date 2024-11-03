@@ -7,7 +7,7 @@ export async function load({ fetch }) {
     const tasksRequest = await fetch(api_url('/routine/tasks'));
     const tasksData: TaskList[] = await tasksRequest.json();
 
-    const eventsRequest = await fetch(api_url('/calendar/events'));
+    const eventsRequest = await fetch(api_url('/routine/events'));
     const eventsData: Event[] = await eventsRequest.json();
 
     return { tasks: tasksData, events: eventsData };
