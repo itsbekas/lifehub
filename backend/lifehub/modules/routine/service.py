@@ -68,7 +68,13 @@ class RoutineService(BaseUserService):
     def get_task(self, tasklist_id: str, task_id: str) -> TaskResponse:
         api_client = GoogleTasksAPIClient(self.user, self.session)
         task = api_client.get_task(tasklist_id, task_id)
-        return TaskResponse(id=task.id, title=task.title, due=task.due, completed=task.completed)
+        return TaskResponse(
+            id=task.id, title=task.title, due=task.due, completed=task.completed
+        )
+
+    def delete_task(self, tasklist_id: str, task_id: str) -> None:
+        api_client = GoogleTasksAPIClient(self.user, self.session)
+        api_client.delete_task(tasklist_id, task_id)
 
     def get_tasks(self, show_completed: bool = False) -> list[TaskListResponse]:
         api_client = GoogleTasksAPIClient(self.user, self.session)
@@ -80,7 +86,9 @@ class RoutineService(BaseUserService):
                 TaskListResponse(id=tasklist.id, title=tasklist.title, tasks=[])
             )
 
-            for task in api_client.list_tasks(tasklist.id, show_completed=show_completed):
+            for task in api_client.list_tasks(
+                tasklist.id, show_completed=show_completed
+            ):
                 tasklists[-1].tasks.append(
                     TaskResponse(
                         id=task.id,
@@ -92,9 +100,7 @@ class RoutineService(BaseUserService):
 
         return tasklists
 
-    def toggle_task(
-        self, tasklist_id: str, task_id: str
-    ) -> TaskResponse:
+    def toggle_task(self, tasklist_id: str, task_id: str) -> TaskResponse:
         api_client = GoogleTasksAPIClient(self.user, self.session)
         task = api_client.get_task(tasklist_id, task_id)
         updated_task = api_client.update_task(

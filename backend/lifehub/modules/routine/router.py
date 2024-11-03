@@ -23,6 +23,12 @@ async def toggle_task(
 ) -> TaskResponse:
     return routine_service.toggle_task(tasklist_id, task_id)
 
+@router.delete("/tasks/{tasklist_id}/{task_id}")
+async def delete_task(
+    routine_service: RoutineServiceDep, tasklist_id: str, task_id: str
+) -> None:
+    return routine_service.delete_task(tasklist_id, task_id)
+
 
 @router.get("/events/calendars")
 async def get_calendars(
