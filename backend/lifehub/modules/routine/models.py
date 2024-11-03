@@ -9,6 +9,7 @@ class TaskResponse:
     id: str
     title: str
     due: Optional[str]
+    completed: Optional[str]
 
 
 @dataclass

@@ -12,18 +12,16 @@ router = APIRouter(
 
 @router.get("/tasks")
 async def get_tasks(
-    routine_service: RoutineServiceDep,
+    routine_service: RoutineServiceDep, show_completed: bool = False
 ) -> list[TaskListResponse]:
-    return routine_service.get_tasks()
+    return routine_service.get_tasks(show_completed)
 
 
-@router.post("/tasks/{tasklist_id}/{task_id}/complete")
-async def complete_task(
-    routine_service: RoutineServiceDep,
-    tasklist_id: str,
-    task_id: str,
+@router.patch("/tasks/{tasklist_id}/{task_id}/toggle")
+async def toggle_task(
+    routine_service: RoutineServiceDep, tasklist_id: str, task_id: str
 ) -> TaskResponse:
-    return routine_service.complete_task(tasklist_id, task_id)
+    return routine_service.toggle_task(tasklist_id, task_id)
 
 
 @router.get("/events/calendars")

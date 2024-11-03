@@ -68,9 +68,9 @@ class RoutineService(BaseUserService):
     def get_task(self, tasklist_id: str, task_id: str) -> TaskResponse:
         api_client = GoogleTasksAPIClient(self.user, self.session)
         task = api_client.get_task(tasklist_id, task_id)
-        return TaskResponse(id=task.id, title=task.title, due=task.due)
+        return TaskResponse(id=task.id, title=task.title, due=task.due, completed=task.completed)
 
-    def get_tasks(self) -> list[TaskListResponse]:
+    def get_tasks(self, show_completed: bool = False) -> list[TaskListResponse]:
         api_client = GoogleTasksAPIClient(self.user, self.session)
 
         tasklists = []
@@ -80,19 +80,29 @@ class RoutineService(BaseUserService):
                 TaskListResponse(id=tasklist.id, title=tasklist.title, tasks=[])
             )
 
-            for task in api_client.list_tasks(tasklist.id, show_completed=False):
+            for task in api_client.list_tasks(tasklist.id, show_completed=show_completed):
                 tasklists[-1].tasks.append(
-                    TaskResponse(id=task.id, title=task.title, due=task.due)
+                    TaskResponse(
+                        id=task.id,
+                        title=task.title,
+                        due=task.due,
+                        completed=task.completed,
+                    )
                 )
 
         return tasklists
 
-    def complete_task(self, tasklist_id: str, task_id: str) -> TaskResponse:
+    def toggle_task(
+        self, tasklist_id: str, task_id: str
+    ) -> TaskResponse:
         api_client = GoogleTasksAPIClient(self.user, self.session)
+        task = api_client.get_task(tasklist_id, task_id)
         updated_task = api_client.update_task(
             tasklist_id,
             task_id,
-            gt_models.TaskCompleteRequest(),
+            gt_models.TaskCompleteRequest(
+                status="completed" if task.completed is None else "needsAction"
+            ),
         )
         if updated_task.completed is None:
             raise RoutineServiceException(500, "Failed to complete task")
