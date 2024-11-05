@@ -2,9 +2,10 @@
 	import type { TaskList, Event } from '@/lib/types/routine';
 	import * as Card from '@/components/ui/card';
   import { Separator } from '@/components/ui/separator';
-  import { Checkbox } from '@/components/ui/checkbox';
-  import { Label } from '@/components/ui/label';
+  import { Button } from '@/components/ui/button';
   import { formatDate } from '@/lib/utils';
+  import CircleCheckBig from 'lucide-svelte/icons/circle-check-big';
+  import Trash2 from 'lucide-svelte/icons/trash-2';
 
 	interface Props {
 		data: { tasks: TaskList[], events: Event[] };
@@ -31,12 +32,23 @@
             <Separator class="my-2"/>
             <div class="flex flex-col space-y-2">
               {#each taskList.tasks as task}
-                <div class="flex items-center">
-                  <Checkbox
+            <div class="flex items-center gap-2 hover:bg-accent p-2 rounded">
+              <p class="w-full text-balance break-words">{task.title}</p>
+              <Button
                     id={task.id}
-                    onclick={ () => { toggleTask(task.id) }}
-                  />
-                  <Label for={task.id} class="ml-2 text-balance break-words">{task.title}</Label>
+              variant="outline"
+              size="icon"
+              class="hover:bg-green-500 hover:text-white"
+              >
+                <CircleCheckBig class="w-6 h-6 text-balance"/>
+              </Button>
+              <Button
+              variant="outline"
+              size="icon"
+              class="hover:bg-red-500 hover:text-white"
+              >
+                <Trash2 class="w-6 h-6"/>
+              </Button>
                 </div>
               {/each}
             </div>
