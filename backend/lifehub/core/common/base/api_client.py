@@ -129,8 +129,8 @@ class APIException(Exception):
 class APIClient(ABC):
     provider_name: str
     base_url: str
-    headers: Optional[dict[str, str]]
-    cookies: Optional[dict[str, str]]
+    headers: Optional[dict[str, str]] = None
+    cookies: Optional[dict[str, str]] = None
 
     @property
     @abstractmethod
