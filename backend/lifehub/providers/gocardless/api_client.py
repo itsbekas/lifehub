@@ -15,9 +15,12 @@ from lifehub.core.provider.repository.provider_token import ProviderTokenReposit
 from lifehub.core.user.schema import User
 
 from .models import (
+    AccountBalance,
     EndUserAcceptanceDetailsRequest,
     EndUserAgreementRequest,
     EndUserAgreementResponse,
+    InstitutionResponse,
+    InstitutionsRequest,
     JWTObtainPairRequest,
     JWTRefreshRequest,
     RequisitionRequest,
@@ -25,6 +28,7 @@ from .models import (
     SpectacularJWTObtainResponse,
     SpectacularJWTRefreshResponse,
     SpectacularRequisitionResponse,
+    TransactionsRequest,
 )
 
 
@@ -58,6 +62,25 @@ class GoCardlessAPIClient(APIClient):
         res = self._post("token/refresh/", data=req)
         return SpectacularJWTRefreshResponse(**res)
 
+    def get_account_metadata(self, account_id: str) -> Any:
+        return self._get(f"accounts/{account_id}/")
+
+    def get_account_balances(self, account_id: str) -> list[AccountBalance]:
+        res = self._get(f"accounts/{account_id}/balances/")
+        return [AccountBalance(**balance) for balance in res.get("balances")]
+
+    def get_account_details(self, account_id: str) -> Any:
+        return self._get(f"accounts/{account_id}/details/")
+
+    def get_account_transactions(
+        self, account_id: str, date_from: str, date_to: str
+    ) -> Any:
+        req = TransactionsRequest(
+            date_from=date_from,
+            date_to=date_to,
+        )
+        return self._get(f"accounts/{account_id}/transactions/", params=req)
+
     def create_agreement(self) -> EndUserAgreementResponse:
         req = EndUserAgreementRequest(
             institution_id=GOCARDLESS_BANK_ID,
@@ -75,6 +98,15 @@ class GoCardlessAPIClient(APIClient):
         res = self._put(f"agreements/enduser/{agreement_id}/accept/", data=req)
         return EndUserAgreementResponse(**res)
 
+    def get_institutions(self, country: str = "PT") -> list[InstitutionResponse]:
+        req = InstitutionsRequest(country=country)
+        res = self._get("institutions", params=req)
+        return [InstitutionResponse(**inst) for inst in res]
+
+    def get_institution(self, institution_id: str) -> InstitutionResponse:
+        res = self._get(f"institutions/{institution_id}/")
+        return InstitutionResponse(**res)
+
     def get_requisitions(self, limit: int = 100, offset: int = 0) -> Any:
         params = RequisitionsRequest(
             limit=limit,
@@ -82,22 +114,16 @@ class GoCardlessAPIClient(APIClient):
         )
         return self._get("requisitions", params=params)
 
-    def create_requisition(self, agreement_id: str, user_id: str) -> Any:
+    def create_requisition(self) -> SpectacularRequisitionResponse:
         req = RequisitionRequest(
-            redirect=REDIRECT_URI_BASE,
-            institution_id=GOCARDLESS_BANK_ID,
-            agreement=agreement_id,
-            reference=user_id,
-            user_language="en",
-            ssn=None,
-            account_selection=False,
-            redirect_immediate=False,
+            redirect=REDIRECT_URI_BASE, institution_id=GOCARDLESS_BANK_ID
         )
-        res = self._post("requisitions", data=req)
+        res = self._post("requisitions", data=req).get("results")[0]
         return SpectacularRequisitionResponse(**res)
 
-    def get_institution(self, institution_id: str) -> Any:
-        return self._get(f"institutions/{institution_id}/")
+    def get_requisition(self, requisition_id: str) -> SpectacularRequisitionResponse:
+        res = self._get(f"requisitions/{requisition_id}/")
+        return SpectacularRequisitionResponse(**res)
 
     def _test(self) -> None:
         self.get_institution(GOCARDLESS_BANK_ID)

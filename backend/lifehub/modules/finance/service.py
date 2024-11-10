@@ -8,6 +8,7 @@ from lifehub.modules.finance.models import (
     T212DataResponse,
     T212TransactionResponse,
 )
+from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.trading212.repository.t212_balance import T212BalanceRepository
 from lifehub.providers.trading212.repository.t212_dividend import T212DividendRepository
 from lifehub.providers.trading212.repository.t212_order import T212OrderRepository
@@ -15,6 +16,9 @@ from lifehub.providers.trading212.repository.t212_transaction import (
     T212TransactionRepository,
 )
 from lifehub.providers.trading212.schema import T212Balance
+
+from .repository import BankAccountRepository
+from .schema import BankAccount
 
 
 class FinanceServiceException(ServiceException):
@@ -84,3 +88,22 @@ class FinanceService(BaseUserService):
         balance = self.get_t212_balance()
         history = self.get_t212_history()
         return T212DataResponse(balance=balance, history=history)
+
+    def get_bank_login(self) -> str:
+        api = GoCardlessAPIClient(self.user, self.session)
+        return api.create_requisition().link
+
+    def confirm_bank_login(self, ref: str) -> None:
+        api = GoCardlessAPIClient(self.user, self.session)
+        requisition = api.get_requisition(ref)
+        bank_account_repo = BankAccountRepository(self.session)
+        for account_id in requisition.accounts:
+            bank_account_repo.add(
+                BankAccount(
+                    user_id=self.user.id,
+                    account_id=account_id,
+                    institution_id=requisition.institution_id,
+                )
+            )
+
+        self.session.commit()
