@@ -24,3 +24,9 @@ class T212TransactionResponse:
 class T212DataResponse:
     balance: T212BalanceResponse
     history: list[T212TransactionResponse]
+
+
+@dataclass
+class BankBalanceResponse:
+    bank: str
+    balance: float

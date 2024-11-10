@@ -3,11 +3,6 @@ from sqlalchemy.orm import Session
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.user.schema import User
-from lifehub.modules.finance.models import (
-    T212BalanceResponse,
-    T212DataResponse,
-    T212TransactionResponse,
-)
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.trading212.repository.t212_balance import T212BalanceRepository
 from lifehub.providers.trading212.repository.t212_dividend import T212DividendRepository
@@ -17,6 +12,12 @@ from lifehub.providers.trading212.repository.t212_transaction import (
 )
 from lifehub.providers.trading212.schema import T212Balance
 
+from .models import (
+    BankBalanceResponse,
+    T212BalanceResponse,
+    T212DataResponse,
+    T212TransactionResponse,
+)
 from .repository import BankAccountRepository
 from .schema import BankAccount
 
@@ -107,3 +108,22 @@ class FinanceService(BaseUserService):
             )
 
         self.session.commit()
+
+    def get_bank_balances(self) -> list[BankBalanceResponse]:
+        api = GoCardlessAPIClient(self.user, self.session)
+        ba_repo = BankAccountRepository(self.session)
+        balances = []
+        for account in ba_repo.get_by_user_id(self.user.id):
+            api_balances = api.get_account_balances(account.account_id)
+            # get the balance that has balanceType == "interimAvailable"
+            balance = next(
+                (b for b in api_balances if b.balanceType == "interimAvailable"), None
+            )
+            if balance is not None:
+                balances.append(
+                    BankBalanceResponse(
+                        bank=account.institution_id,
+                        balance=float(balance.balanceAmount.amount),
+                    )
+                )
+        return balances
