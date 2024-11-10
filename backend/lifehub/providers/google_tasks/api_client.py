@@ -32,6 +32,13 @@ class GoogleTasksAPIClient(APIClient):
         params = ListTasklistsRequest(maxResults=limit, pageToken=next_token)
         task_lists = self._get("users/@me/lists", params=params).get("items", [])
         return [TaskListResponse(**item) for item in task_lists]
+    
+    def delete_task(
+        self,
+        tasklist_id: str,
+        task_id: str,
+    ) -> None:
+        self._delete(f"lists/{tasklist_id}/tasks/{task_id}")
 
     def get_task(
         self,

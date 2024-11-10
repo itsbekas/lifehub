@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import * as Card from '@/components/ui/card/index';
+    import * as Card from '@/components/ui/card';
     interface Props {
         children?: import('svelte').Snippet;
     }

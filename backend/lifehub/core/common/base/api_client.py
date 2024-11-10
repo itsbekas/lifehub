@@ -100,6 +100,8 @@ def request_handler(func: T) -> T:
                     raise APIException(
                         type(self).__name__, url, res.status_code, self._error_msg(res)
                     )
+                if res.status_code == 204:
+                    return None
                 return res.json()
             except requests.exceptions.RequestException as e:
                 if attempt == max_retries - 1:
@@ -127,8 +129,8 @@ class APIException(Exception):
 class APIClient(ABC):
     provider_name: str
     base_url: str
-    headers: Optional[dict[str, str]]
-    cookies: Optional[dict[str, str]]
+    headers: Optional[dict[str, str]] = None
+    cookies: Optional[dict[str, str]] = None
 
     @property
     @abstractmethod
