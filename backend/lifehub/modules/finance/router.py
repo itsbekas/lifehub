@@ -20,8 +20,9 @@ async def get_trading212_data(
 @router.get("/bank/login")
 async def get_bank_login(
     finance_service: FinanceServiceDep,
+    bank_id: str,
 ) -> str:
-    return finance_service.get_bank_login()
+    return finance_service.get_bank_login(bank_id)
 
 
 @router.get("/bank/confirm-login")

@@ -139,9 +139,9 @@ class FinanceService(BaseUserService):
         history = self.get_t212_history()
         return T212DataResponse(balance=balance, history=history)
 
-    def get_bank_login(self) -> str:
+    def get_bank_login(self, bank_id: str) -> str:
         api = GoCardlessAPIClient(self.user, self.session)
-        return api.create_requisition().link
+        return api.create_requisition(bank_id).link
 
     def confirm_bank_login(self, ref: str) -> None:
         api = GoCardlessAPIClient(self.user, self.session)
@@ -166,11 +166,11 @@ class FinanceService(BaseUserService):
         balances = []
         for account in bank_account_repo.get_all():
             balances.append(
-                self.fetch_gocardless_balance(account.institution_id, account.account_id)
+                self.fetch_gocardless_balance(
+                    account.institution_id, account.account_id
+                )
             )
-        
-        balances.append(
-            self.fetch_t212_balance()
-        )
+
+        balances.append(self.fetch_t212_balance())
 
         return balances
