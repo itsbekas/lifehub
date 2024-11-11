@@ -16,6 +16,7 @@ from lifehub.core.user.schema import User
 
 from .models import (
     AccountBalance,
+    AccountBalances,
     EndUserAcceptanceDetailsRequest,
     EndUserAgreementRequest,
     EndUserAgreementResponse,
@@ -65,9 +66,13 @@ class GoCardlessAPIClient(APIClient):
     def get_account_metadata(self, account_id: str) -> Any:
         return self._get(f"accounts/{account_id}/")
 
-    def get_account_balances(self, account_id: str) -> list[AccountBalance]:
+    def get_account_balances(self, account_id: str) -> AccountBalances:
         res = self._get(f"accounts/{account_id}/balances/")
-        return [AccountBalance(**balance) for balance in res.get("balances")]
+        if res is None:
+            return AccountBalances(balances=[])
+        return AccountBalances(
+            balances=[AccountBalance(**balance) for balance in res.get("balances")]
+        )
 
     def get_account_details(self, account_id: str) -> Any:
         return self._get(f"accounts/{account_id}/details/")

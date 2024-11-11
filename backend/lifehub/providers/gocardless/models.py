@@ -141,3 +141,14 @@ class AccountBalance:
     balanceAmount: BalanceAmount
     balanceType: str
     lastChangeDateTime: Optional[str] = None
+
+@dataclass
+class AccountBalances:
+    balances: list[AccountBalance]
+
+    @property
+    def available_amount(self) -> str | None:
+        return next(
+            (b.balanceAmount.amount for b in self.balances if b.balanceType == "interimAvailable"),
+            None,
+        )

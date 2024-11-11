@@ -1,28 +1,24 @@
-import uuid
-
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base.repository.base import BaseRepository
+from lifehub.core.common.base.repository.fetch_base import FetchBaseRepository
+from lifehub.core.common.base.repository.user_base import UserBaseRepository
+from lifehub.core.user.schema import User
 
 from .schema import AccountBalance, BankAccount
 
 
-class BankAccountRepository(BaseRepository[BankAccount]):
-    def __init__(self, session: Session):
-        super().__init__(BankAccount, session=session)
-
-    def get_by_user_id(self, user_id: uuid.UUID) -> list[BankAccount]:
-        query = select(BankAccount).filter(BankAccount.user_id == user_id)
-        accounts = self.session.execute(query).scalars().all()
-        return list(accounts)
+class BankAccountRepository(UserBaseRepository[BankAccount]):
+    def __init__(self, user: User, session: Session):
+        super().__init__(BankAccount, user=user, session=session)
 
 
-class AccountBalanceRepository(BaseRepository[AccountBalance]):
-    def __init__(self, session: Session):
-        super().__init__(AccountBalance, session=session)
+class AccountBalanceRepository(FetchBaseRepository[AccountBalance]):
+    def __init__(self, user: User, session: Session):
+        super().__init__(AccountBalance, user=user, session=session)
 
-    def get_by_user_id(self, user_id: uuid.UUID) -> list[AccountBalance]:
-        query = select(AccountBalance).filter(AccountBalance.user_id == user_id)
-        balances = self.session.execute(query).scalars().all()
-        return list(balances)
+    def get_by_account_id(self, account_id: str) -> AccountBalance | None:
+        return (
+            self.session.query(AccountBalance)
+            .filter_by(account_id=account_id)
+            .one_or_none()
+        )
