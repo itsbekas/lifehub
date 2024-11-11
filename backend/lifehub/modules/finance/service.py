@@ -53,9 +53,9 @@ class FinanceService(BaseUserService):
                 db_balance.amount = Decimal(api_balance.free)
                 balance = db_balance
 
+        res = BankBalanceResponse(bank="trading212", balance=float(balance.amount))
         self.session.commit()
-
-        return BankBalanceResponse(bank="trading212", balance=float(balance.amount))
+        return res
 
     def fetch_gocardless_balance(
         self, institution_id: str, account_id: str
@@ -91,9 +91,9 @@ class FinanceService(BaseUserService):
                 db_balance.amount = Decimal(api_balance)
                 balance = db_balance
 
+        res = BankBalanceResponse(bank=institution_id, balance=float(balance.amount))
         self.session.commit()
-
-        return BankBalanceResponse(bank=institution_id, balance=float(balance.amount))
+        return res
 
     def get_t212_history(self) -> list[T212TransactionResponse]:
         transactions = T212TransactionRepository(self.user, self.session).get_all()
@@ -165,14 +165,12 @@ class FinanceService(BaseUserService):
         bank_account_repo = BankAccountRepository(self.user, self.session)
         balances = []
         for account in bank_account_repo.get_all():
-            match account.institution_id:
-                case "trading212":
-                    balance = self.fetch_t212_balance()
-                case _:
-                    balance = self.fetch_gocardless_balance(
-                        account.institution_id, account.account_id
-                    )
-
-            balances.append(balance)
+            balances.append(
+                self.fetch_gocardless_balance(account.institution_id, account.account_id)
+            )
+        
+        balances.append(
+            self.fetch_t212_balance()
+        )
 
         return balances
