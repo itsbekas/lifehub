@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, Depends
 
 from lifehub.core.user.api.dependencies import user_is_authenticated
@@ -35,3 +37,10 @@ async def get_bank_balances(
     finance_service: FinanceServiceDep,
 ) -> list[BankBalanceResponse]:
     return finance_service.get_bank_balances()
+
+
+@router.get("/bank/transactions")
+async def get_bank_transactions(
+    finance_service: FinanceServiceDep,
+) -> list[Any]:
+    return finance_service.get_bank_transactions()

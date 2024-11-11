@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import field
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 from pydantic.dataclasses import dataclass
 
@@ -125,12 +125,6 @@ class InstitutionResponse:
 
 
 @dataclass
-class TransactionsRequest:
-    date_from: str
-    date_to: str
-
-
-@dataclass
 class BalanceAmount:
     amount: str
     currency: str
@@ -142,6 +136,7 @@ class AccountBalance:
     balanceType: str
     lastChangeDateTime: Optional[str] = None
 
+
 @dataclass
 class AccountBalances:
     balances: list[AccountBalance]
@@ -149,6 +144,76 @@ class AccountBalances:
     @property
     def available_amount(self) -> str | None:
         return next(
-            (b.balanceAmount.amount for b in self.balances if b.balanceType == "interimAvailable"),
+            (
+                b.balanceAmount.amount
+                for b in self.balances
+                if b.balanceType == "interimAvailable"
+            ),
             None,
         )
+
+
+@dataclass
+class CurrencyExchange:
+    sourceCurrency: str
+    exchangeRate: str
+    unitCurrency: str
+    targetCurrency: str
+    quotationDate: str
+    contractIdentification: str
+
+
+@dataclass
+class DebtorAccount:
+    iban: Optional[str] = None
+    bban: Optional[str] = None
+    pan: Optional[str] = None
+    maskedPan: Optional[str] = None
+    msisdn: Optional[str] = None
+    currency: Optional[str] = None
+
+
+CreditorAccount = DebtorAccount
+
+
+@dataclass
+class Transaction:
+    transactionAmount: BalanceAmount
+    transactionId: Optional[str] = None
+    entryReference: Optional[str] = None
+    endToEndId: Optional[str] = None
+    mandateId: Optional[str] = None
+    checkId: Optional[str] = None
+    creditorId: Optional[str] = None
+    bookingDate: Optional[str] = None
+    valueDate: Optional[str] = None
+    bookingDateTime: Optional[str] = None
+    valueDateTime: Optional[str] = None
+    currencyExchange: Optional[list[CurrencyExchange]] = None
+    creditorName: Optional[str] = None
+    creditorAccount: Optional[CreditorAccount] = None
+    ultimateCreditor: Optional[str] = None
+    debtorName: Optional[str] = None
+    debtorAccount: Optional[DebtorAccount] = None
+    ultimateDebtor: Optional[str] = None
+    remittanceInformationUnstructured: Optional[str] = None
+    remittanceInformationUnstructuredArray: Optional[list[str]] = None
+    remittanceInformationStructured: Optional[str] = None
+    remittanceInformationStructuredArray: Optional[list[str]] = None
+    additionalInformation: Optional[str] = None
+    purposeCode: Optional[str] = None
+    bankTransactionCode: Optional[str] = None
+    proprietaryBankTransactionCode: Optional[str] = None
+    internalTransactionId: Optional[str] = None
+
+
+@dataclass
+class TransactionsResponse:
+    booked: list[Transaction]
+    pending: List[Transaction] = field(default_factory=list)
+
+
+@dataclass
+class TransactionsRequest:
+    date_from: Optional[str] = None  # format: YYYY-MM-DD
+    date_to: Optional[str] = None  # format: YYYY-MM-DD

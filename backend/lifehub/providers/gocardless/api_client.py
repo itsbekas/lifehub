@@ -1,5 +1,5 @@
 import datetime as dt
-from typing import Any
+from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
@@ -30,6 +30,7 @@ from .models import (
     SpectacularJWTRefreshResponse,
     SpectacularRequisitionResponse,
     TransactionsRequest,
+    TransactionsResponse,
 )
 
 
@@ -78,13 +79,19 @@ class GoCardlessAPIClient(APIClient):
         return self._get(f"accounts/{account_id}/details/")
 
     def get_account_transactions(
-        self, account_id: str, date_from: str, date_to: str
-    ) -> Any:
+        self,
+        account_id: str,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+    ) -> TransactionsResponse:
         req = TransactionsRequest(
             date_from=date_from,
             date_to=date_to,
         )
-        return self._get(f"accounts/{account_id}/transactions/", params=req)
+        res = self._get(f"accounts/{account_id}/transactions/", params=req).get(
+            "transactions"
+        )
+        return TransactionsResponse(**res)
 
     def create_agreement(self) -> EndUserAgreementResponse:
         req = EndUserAgreementRequest(

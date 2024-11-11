@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -13,9 +14,18 @@ from lifehub.providers.trading212.repository.t212_transaction import (
     T212TransactionRepository,
 )
 
-from .models import BankBalanceResponse, T212DataResponse, T212TransactionResponse
-from .repository import AccountBalanceRepository, BankAccountRepository
-from .schema import AccountBalance, BankAccount
+from .models import (
+    BankBalanceResponse,
+    BankTransactionResponse,
+    T212DataResponse,
+    T212TransactionResponse,
+)
+from .repository import (
+    AccountBalanceRepository,
+    BankAccountRepository,
+    BankTransactionRepository,
+)
+from .schema import AccountBalance, BankAccount, BankTransaction
 
 
 class FinanceServiceException(ServiceException):
@@ -174,3 +184,70 @@ class FinanceService(BaseUserService):
         balances.append(self.fetch_t212_balance())
 
         return balances
+
+    def get_bank_transactions(self) -> list[Any]:
+        """
+        Fetches the latest transactions from the bank accounts.
+        """
+        gc_api = GoCardlessAPIClient(self.user, self.session)
+        bank_account_repo = BankAccountRepository(self.user, self.session)
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+
+        transactions = []
+
+        for account in bank_account_repo.get_all():
+            account_transactions = gc_api.get_account_transactions(
+                account.account_id
+            ).booked
+
+            for transaction in account_transactions:
+                if transaction.transactionId is None:
+                    continue
+
+                db_transaction = bank_transaction_repo.get_by_id(
+                    account.account_id, transaction.transactionId
+                )
+
+                if db_transaction is None:
+                    bank_transaction_repo.add(
+                        BankTransaction(
+                            user_id=self.user.id,
+                            transaction_id=transaction.transactionId,
+                            account_id=account.account_id,
+                            amount=Decimal(transaction.transactionAmount.amount),
+                            date=transaction.valueDateTime
+                            if transaction.valueDateTime
+                            else transaction.valueDate,
+                            description=transaction.remittanceInformationUnstructured,
+                            debtor=transaction.debtorName,
+                        )
+                    )
+
+                    transactions.append(
+                        BankTransactionResponse(
+                            transaction_id=transaction.transactionId,
+                            account_id=account.account_id,
+                            amount=float(transaction.transactionAmount.amount),
+                            date=transaction.valueDateTime
+                            if transaction.valueDateTime
+                            else transaction.valueDate,
+                            description=transaction.remittanceInformationUnstructured,
+                            debtor=transaction.debtorName,
+                        )
+                    )
+
+                else:
+                    transactions.append(
+                        BankTransactionResponse(
+                            transaction_id=db_transaction.transaction_id,
+                            account_id=db_transaction.account_id,
+                            amount=float(db_transaction.amount),
+                            date=db_transaction.date,
+                            description=db_transaction.description,
+                            debtor=db_transaction.debtor,
+                        )
+                    )
+
+        self.session.commit()
+
+        return transactions

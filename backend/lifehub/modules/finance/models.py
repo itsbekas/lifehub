@@ -30,3 +30,13 @@ class T212DataResponse:
 class BankBalanceResponse:
     bank: str
     balance: float
+
+
+@dataclass
+class BankTransactionResponse:
+    transaction_id: str
+    account_id: str
+    amount: float
+    date: Optional[str]
+    description: Optional[str]
+    debtor: Optional[str]
