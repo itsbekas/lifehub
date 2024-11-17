@@ -39,4 +39,4 @@ class BankTransactionResponse:
     amount: float
     date: Optional[str]
     description: Optional[str]
-    debtor: Optional[str]
+    counterparty: Optional[str]

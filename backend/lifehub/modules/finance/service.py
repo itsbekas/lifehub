@@ -209,17 +209,35 @@ class FinanceService(BaseUserService):
                 )
 
                 if db_transaction is None:
+                    description = ""
+                    if transaction.remittanceInformationUnstructured is not None:
+                        description = transaction.remittanceInformationUnstructured
+                    elif transaction.remittanceInformationUnstructuredArray is not None:
+                        description = " ".join(
+                            transaction.remittanceInformationUnstructuredArray
+                        )
+
+                    date = (
+                        transaction.valueDateTime
+                        if transaction.valueDateTime
+                        else transaction.valueDate
+                    )
+
+                    counterparty = (
+                        transaction.debtorName
+                        if transaction.debtorName
+                        else transaction.creditorName
+                    )
+
                     bank_transaction_repo.add(
                         BankTransaction(
                             user_id=self.user.id,
                             transaction_id=transaction.transactionId,
                             account_id=account.account_id,
                             amount=Decimal(transaction.transactionAmount.amount),
-                            date=transaction.valueDateTime
-                            if transaction.valueDateTime
-                            else transaction.valueDate,
-                            description=transaction.remittanceInformationUnstructured,
-                            debtor=transaction.debtorName,
+                            date=date,
+                            description=description,
+                            counterparty=counterparty,
                         )
                     )
 
@@ -228,11 +246,9 @@ class FinanceService(BaseUserService):
                             transaction_id=transaction.transactionId,
                             account_id=account.account_id,
                             amount=float(transaction.transactionAmount.amount),
-                            date=transaction.valueDateTime
-                            if transaction.valueDateTime
-                            else transaction.valueDate,
-                            description=transaction.remittanceInformationUnstructured,
-                            debtor=transaction.debtorName,
+                            date=date,
+                            description=description,
+                            counterparty=counterparty,
                         )
                     )
 
@@ -244,7 +260,7 @@ class FinanceService(BaseUserService):
                             amount=float(db_transaction.amount),
                             date=db_transaction.date,
                             description=db_transaction.description,
-                            debtor=db_transaction.debtor,
+                            counterparty=db_transaction.counterparty,
                         )
                     )
 

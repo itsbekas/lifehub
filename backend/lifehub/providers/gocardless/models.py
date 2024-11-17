@@ -155,12 +155,12 @@ class AccountBalances:
 
 @dataclass
 class CurrencyExchange:
-    sourceCurrency: str
-    exchangeRate: str
-    unitCurrency: str
-    targetCurrency: str
-    quotationDate: str
-    contractIdentification: str
+    sourceCurrency: Optional[str] = None
+    exchangeRate: Optional[str] = None
+    unitCurrency: Optional[str] = None
+    targetCurrency: Optional[str] = None
+    quotationDate: Optional[str] = None
+    contractIdentification: Optional[str] = None
 
 
 @dataclass
@@ -189,7 +189,7 @@ class Transaction:
     valueDate: Optional[str] = None
     bookingDateTime: Optional[str] = None
     valueDateTime: Optional[str] = None
-    currencyExchange: Optional[list[CurrencyExchange]] = None
+    currencyExchange: Optional[CurrencyExchange] = None
     creditorName: Optional[str] = None
     creditorAccount: Optional[CreditorAccount] = None
     ultimateCreditor: Optional[str] = None
