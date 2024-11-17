@@ -29,7 +29,7 @@ class Trading212APIClient(APIClient):
     def _test(self) -> None:
         self.get_account_metadata()
 
-    def get_account_cash(self) -> AccountCash | None:
+    def get_account_cash(self) -> AccountCash:
         res = self._get("equity/account/cash")
         return AccountCash.from_response(res)
 

@@ -23,7 +23,6 @@ from lifehub.core.utils.auth import (
     hash_password,
     verify_password,
 )
-from lifehub.core.utils.mail.api_client import MailAPIClient
 
 
 class UserServiceException(ServiceException):
@@ -51,16 +50,16 @@ class UserService(BaseService):
         )
         self.user_repository.add(new_user)
 
-        verification_token = create_jwt_token(
-            username, dt.datetime.now() + dt.timedelta(days=1)
-        )
+        # verification_token = create_jwt_token(
+        #     username, dt.datetime.now() + dt.timedelta(days=1)
+        # )
 
-        mail_client = MailAPIClient()
-        mail_client.send_verification_email(
-            email,
-            name,
-            verification_token,
-        )
+        # mail_client = MailAPIClient()
+        # mail_client.send_verification_email(
+        #     email,
+        #     name,
+        #     verification_token,
+        # )
 
         self.user_repository.commit()
         self.user_repository.refresh(new_user)
@@ -279,7 +278,7 @@ class UserService(BaseService):
         provider_token = self.provider_token_repository.get(user, provider)
         if provider_token is None:
             raise UserServiceException(404, "Token not found")
-        
+
         if not provider.config.allow_custom_url and custom_url is not None:
             raise UserServiceException(400, "Provider does not allow custom URLs")
 

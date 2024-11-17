@@ -24,6 +24,26 @@ class TimeBaseModel(BaseModel):
         default=dt.datetime.now, primary_key=True
     )
 
+    def older_than(
+        self,
+        weeks: int = 0,
+        days: int = 0,
+        hours: int = 0,
+        minutes: int = 0,
+        seconds: int = 0,
+        milliseconds: int = 0,
+        microseconds: int = 0,
+    ) -> bool:
+        return self.timestamp < dt.datetime.now() - dt.timedelta(
+            weeks=weeks,
+            days=days,
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds,
+            milliseconds=milliseconds,
+            microseconds=microseconds,
+        )
+
 
 class FetchBaseModel(UserBaseModel, TimeBaseModel):
     __abstract__ = True
