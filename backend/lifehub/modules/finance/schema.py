@@ -1,3 +1,4 @@
+import datetime as dt
 from decimal import Decimal
 from typing import Optional
 
@@ -12,6 +13,7 @@ class BankAccount(UserBaseModel):
 
     account_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     institution_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    last_synced: Mapped[dt.datetime] = mapped_column(default=dt.datetime.min)
 
 
 class AccountBalance(FetchBaseModel):

@@ -1,3 +1,4 @@
+import datetime as dt
 from decimal import Decimal
 from typing import Any
 
@@ -196,6 +197,23 @@ class FinanceService(BaseUserService):
         transactions = []
 
         for account in bank_account_repo.get_all():
+            # If the last sync was less than 6 hours ago, get the transactions from the database
+            if account.last_synced > dt.datetime.now() - dt.timedelta(hours=6):
+                for synced_transaction in bank_transaction_repo.get_by_account_id(
+                    account.account_id
+                ):
+                    transactions.append(
+                        BankTransactionResponse(
+                            transaction_id=synced_transaction.transaction_id,
+                            account_id=synced_transaction.account_id,
+                            amount=float(synced_transaction.amount),
+                            date=synced_transaction.date,
+                            description=synced_transaction.description,
+                            counterparty=synced_transaction.counterparty,
+                        )
+                    )
+                continue
+
             account_transactions = gc_api.get_account_transactions(
                 account.account_id
             ).booked
