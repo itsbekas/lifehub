@@ -236,11 +236,14 @@ class FinanceService(BaseUserService):
                             transaction.remittanceInformationUnstructuredArray
                         )
 
-                    date = (
-                        transaction.valueDateTime
-                        if transaction.valueDateTime
-                        else transaction.valueDate
-                    )
+                    if transaction.valueDateTime is not None:
+                        date = dt.datetime.fromisoformat(transaction.valueDateTime)
+                    elif transaction.valueDate is not None:
+                        date = dt.datetime.strptime(
+                            transaction.valueDate, "%Y-%m-%d"
+                        ).replace(hour=0, minute=0, second=0)
+                    else:
+                        date = dt.datetime.max
 
                     counterparty = (
                         transaction.debtorName
