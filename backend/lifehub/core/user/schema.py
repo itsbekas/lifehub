@@ -49,6 +49,4 @@ class User(BaseModel):
         secondary=user_provider, back_populates="users"
     )
     provider_tokens: Mapped[list["ProviderToken"]] = relationship(back_populates="user")
-    budget_categories: Mapped[list["BudgetCategory"]] = relationship(
-        back_populates="user"
-    )
+    budget_categories: Mapped[list["BudgetCategory"]] = relationship()
