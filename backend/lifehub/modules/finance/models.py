@@ -37,6 +37,6 @@ class BankTransactionResponse:
     transaction_id: str
     account_id: str
     amount: float
-    date: Optional[str]
+    date: Optional[dt.datetime]
     description: Optional[str]
     counterparty: Optional[str]

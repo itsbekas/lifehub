@@ -176,13 +176,14 @@ class FinanceService(BaseUserService):
         bank_account_repo = BankAccountRepository(self.user, self.session)
         balances = []
         for account in bank_account_repo.get_all():
-            balances.append(
-                self.fetch_gocardless_balance(
-                    account.institution_id, account.account_id
-                )
-            )
-
-        balances.append(self.fetch_t212_balance())
+            match account.institution_id:
+                case "trading212":
+                    balance = self.fetch_t212_balance()
+                case _:
+                    balance = self.fetch_gocardless_balance(
+                        account.institution_id, account.account_id
+                    )
+            balances.append(balance)
 
         return balances
 
@@ -235,11 +236,14 @@ class FinanceService(BaseUserService):
                             transaction.remittanceInformationUnstructuredArray
                         )
 
-                    date = (
-                        transaction.valueDateTime
-                        if transaction.valueDateTime
-                        else transaction.valueDate
-                    )
+                    if transaction.valueDateTime is not None:
+                        date = dt.datetime.fromisoformat(transaction.valueDateTime)
+                    elif transaction.valueDate is not None:
+                        date = dt.datetime.strptime(
+                            transaction.valueDate, "%Y-%m-%d"
+                        ).replace(hour=0, minute=0, second=0)
+                    else:
+                        date = dt.datetime.max
 
                     counterparty = (
                         transaction.debtorName

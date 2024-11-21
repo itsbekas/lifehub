@@ -33,6 +33,6 @@ class BankTransaction(UserBaseModel):
         String(64), ForeignKey("bank_account.account_id"), primary_key=True
     )
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2))
-    date: Mapped[str] = mapped_column(String(64))
+    date: Mapped[dt.datetime] = mapped_column()
     description: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
     counterparty: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)

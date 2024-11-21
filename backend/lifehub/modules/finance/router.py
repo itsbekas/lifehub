@@ -44,3 +44,10 @@ async def get_bank_transactions(
     finance_service: FinanceServiceDep,
 ) -> list[Any]:
     return finance_service.get_bank_transactions()
+
+
+@router.get("/bank/banks")
+async def get_banks(
+    finance_service: FinanceServiceDep,
+) -> list[Any]:
+    return []
