@@ -40,3 +40,21 @@ class BankTransactionResponse:
     date: Optional[dt.datetime]
     description: Optional[str]
     counterparty: Optional[str]
+
+
+@dataclass
+class BudgetSubCategoryResponse:
+    id: str
+    name: str
+    category_id: str
+    category_name: str
+    budgeted: float
+    spent: float
+    available: float
+
+
+@dataclass
+class BudgetCategoryResponse:
+    id: str
+    name: str
+    subcategories: list[BudgetSubCategoryResponse]

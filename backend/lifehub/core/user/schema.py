@@ -10,6 +10,7 @@ from lifehub.core.common.base.db_model import BaseModel
 if TYPE_CHECKING:
     from lifehub.core.module.schema import Module
     from lifehub.core.provider.schema import Provider, ProviderToken
+    from lifehub.modules.finance.schema import BudgetCategory
 
 
 user_provider = Table(
@@ -48,3 +49,6 @@ class User(BaseModel):
         secondary=user_provider, back_populates="users"
     )
     provider_tokens: Mapped[list["ProviderToken"]] = relationship(back_populates="user")
+    budget_categories: Mapped[list["BudgetCategory"]] = relationship(
+        back_populates="user"
+    )
