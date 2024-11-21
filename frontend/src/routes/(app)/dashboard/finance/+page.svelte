@@ -1,11 +1,12 @@
 <script lang="ts">
-    import type { BankBalance, BankTransaction } from "@/lib/types/finance";
+    import type { BankBalance, BankTransaction, BudgetCategory } from "@/lib/types/finance";
     import * as Table from "@/components/ui/table";
     import * as Card from "@/components/ui/card";
+    import { Button } from "@/components/ui/button";
 
     // Define the Props interface as requested
     interface Props {
-        data: { balances: BankBalance[], transactions: BankTransaction[], banks: string[] };
+        data: { balances: BankBalance[], transactions: BankTransaction[], banks: string[], budgetCategories: BudgetCategory[] };
     }
 
     // Use the $props rune to destructure the props based on the defined interface
@@ -16,6 +17,7 @@
 
     // Reactive state for managing modal visibility using $state
     let addBankModalVisible = $state(false);
+    let addCategoryModalVisible = $state(false);
     let activeTab = $state("budget");
 
     function openAddBankModal() {
@@ -26,9 +28,22 @@
         addBankModalVisible = false;
     }
 
+    function openAddCategoryModal() {
+        addCategoryModalVisible = true;
+    }
+
+    function closeAddCategoryModal() {
+        addCategoryModalVisible = false;
+    }
+
     function addBank() {
         // Logic to add bank goes here
         closeAddBankModal();
+    }
+
+    function addCategory() {
+        // Logic to add category goes here
+        closeAddCategoryModal();
     }
 
     // Custom wrapper function for event.preventDefault
@@ -41,14 +56,39 @@
 </script>
 
 <div class="tabs mb-6">
-    <button class="tab px-4 py-2 text-lg font-semibold" class:active={activeTab === 'budget'} onclick={() => activeTab = 'budget'}>Budget</button>
-    <button class="tab px-4 py-2 text-lg font-semibold" class:active={activeTab === 'transactions'} onclick={() => activeTab = 'transactions'}>Transactions</button>
+    <button class="tab px-4 py-2 text-lg font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 focus:outline-none" class:active={activeTab === 'budget'} onclick={() => activeTab = 'budget'}>Budget</button>
+    <button class="tab px-4 py-2 text-lg font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 focus:outline-none" class:active={activeTab === 'transactions'} onclick={() => activeTab = 'transactions'}>Transactions</button>
 </div>
 
 {#if activeTab === 'budget'}
     <div class="budget-section mb-6">
         <h2 class="text-xl font-bold mb-4">Budget Overview</h2>
-        <p class="text-gray-700">This is where the budget information will be displayed.</p>
+        <Button class="mb-4" onclick={openAddCategoryModal}>Add Category</Button>
+        <div class="budget-categories grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {#each data.budgetCategories as category (category.id)}
+                <Card.Root class="w-full">
+                    <Card.Header>
+                        <Card.Title>{category.name}</Card.Title>
+                    </Card.Header>
+                    <Card.Content>
+                        <ul class="space-y-2">
+                            {#each category.subcategories as subcategory (subcategory.id)}
+                                <li class="border-b border-gray-200 pb-2">
+                                    <div class="flex justify-between">
+                                        <span class="font-medium text-gray-800">{subcategory.name}</span>
+                                        <span class="text-gray-600">Budgeted: {subcategory.budgeted}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-gray-600">
+                                        <span>Spent: {subcategory.spent}</span>
+                                        <span>Available: {subcategory.available}</span>
+                                    </div>
+                                </li>
+                            {/each}
+                        </ul>
+                    </Card.Content>
+                </Card.Root>
+            {/each}
+        </div>
     </div>
 {/if}
 
@@ -121,12 +161,26 @@
                     <input type="number" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
                 </label>
                 <div class="mt-4 flex justify-end gap-2">
-                    <button type="button" class="px-4 py-2 bg-gray-400 text-white rounded-lg shadow-md hover:bg-gray-500" onclick={closeAddBankModal}>
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600">
-                        Add Bank
-                    </button>
+                    <Button variant="secondary" onclick={closeAddBankModal}>Cancel</Button>
+                    <Button type="submit">Add Bank</Button>
+                </div>
+            </form>
+        </div>
+    </div>
+{/if}
+
+{#if addCategoryModalVisible}
+    <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 class="text-lg font-bold mb-4">Add a New Category</h3>
+            <form onsubmit={preventDefault(addCategory)}>
+                <label class="block mb-2">
+                    Category Name:
+                    <input type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                </label>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onclick={closeAddCategoryModal}>Cancel</Button>
+                    <Button type="submit">Add Category</Button>
                 </div>
             </form>
         </div>
