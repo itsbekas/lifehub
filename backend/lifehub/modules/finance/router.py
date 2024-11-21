@@ -103,8 +103,9 @@ async def create_budget_subcategory(
     finance_service: FinanceServiceDep,
     category_id: str,
     name: str,
+    amount: float,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.create_budget_subcategory(category_id, name)
+    return finance_service.create_budget_subcategory(category_id, name, amount)
 
 
 @router.put("/budget/subcategories/{subcategory_id}")
@@ -112,14 +113,14 @@ async def update_budget_subcategory(
     finance_service: FinanceServiceDep,
     subcategory_id: str,
     name: str,
+    amount: float,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.update_budget_subcategory(subcategory_id, name)
+    return finance_service.update_budget_subcategory(subcategory_id, name, amount)
 
 
 @router.delete("/budget/subcategories/{subcategory_id}")
 async def delete_budget_subcategory(
     finance_service: FinanceServiceDep,
-    category_id: str,
     subcategory_id: str,
 ) -> None:
     finance_service.delete_budget_subcategory(subcategory_id)

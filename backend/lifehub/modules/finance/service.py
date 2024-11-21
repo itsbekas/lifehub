@@ -306,9 +306,9 @@ class FinanceService(BaseUserService):
                         name=subcategory.name,
                         category_id=str(category.id),
                         category_name=category.name,
-                        budgeted=float(0),
-                        spent=float(0),
-                        available=float(0),
+                        budgeted=float(200),
+                        spent=float(100),
+                        available=float(100),
                     )
                 )
             categories.append(
@@ -347,9 +347,9 @@ class FinanceService(BaseUserService):
                     name=subcategory.name,
                     category_id=str(category.id),
                     category_name=category.name,
-                    budgeted=float(0),
-                    spent=float(0),
-                    available=float(0),
+                    budgeted=float(200),
+                    spent=float(100),
+                    available=float(100),
                 )
             )
         return BudgetCategoryResponse(
@@ -398,15 +398,15 @@ class FinanceService(BaseUserService):
                     name=subcategory.name,
                     category_id=str(category.id),
                     category_name=category.name,
-                    budgeted=float(0),
-                    spent=float(0),
-                    available=float(0),
+                    budgeted=float(200),
+                    spent=float(100),
+                    available=float(100),
                 )
             )
         return subcategories
 
     def create_budget_subcategory(
-        self, category_id: str, name: str
+        self, category_id: str, name: str, amount: float
     ) -> BudgetSubCategoryResponse:
         """
         Creates a new budget subcategory.
@@ -418,6 +418,7 @@ class FinanceService(BaseUserService):
             user_id=self.user.id,
             category_id=category_id,
             name=name,
+            amount=Decimal(amount),
         )
         category.subcategories.append(subcategory)
         self.session.commit()
@@ -426,13 +427,13 @@ class FinanceService(BaseUserService):
             name=subcategory.name,
             category_id=str(category.id),
             category_name=category.name,
-            budgeted=float(0),
-            spent=float(0),
-            available=float(0),
+            budgeted=float(200),
+            spent=float(100),
+            available=float(100),
         )
 
     def update_budget_subcategory(
-        self, subcategory_id: str, name: str
+        self, subcategory_id: str, name: str, amount: float
     ) -> BudgetSubCategoryResponse:
         """
         Updates a budget subcategory by ID.
@@ -441,15 +442,16 @@ class FinanceService(BaseUserService):
         if subcategory is None:
             raise FinanceServiceException(404, "Subcategory not found")
         subcategory.name = name
+        subcategory.amount = Decimal(amount)
         self.session.commit()
         return BudgetSubCategoryResponse(
             id=str(subcategory.id),
             name=subcategory.name,
             category_id=str(subcategory.category_id),
             category_name=subcategory.category.name,
-            budgeted=float(0),
-            spent=float(0),
-            available=float(0),
+            budgeted=float(200),
+            spent=float(100),
+            available=float(100),
         )
 
     def delete_budget_subcategory(self, subcategory_id: str) -> None:
