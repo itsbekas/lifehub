@@ -1,12 +1,12 @@
 <script lang="ts">
-    import type { BankBalance, BankTransaction, BudgetCategory } from "@/lib/types/finance";
+    import type { BankBalance, BankInstitution, BankTransaction, BudgetCategory } from "@/lib/types/finance";
     import * as Table from "@/components/ui/table";
     import * as Card from "@/components/ui/card";
     import { Button } from "@/components/ui/button";
 
     // Define the Props interface as requested
     interface Props {
-        data: { balances: BankBalance[], transactions: BankTransaction[], banks: string[], budgetCategories: BudgetCategory[] };
+        data: { balances: BankBalance[], transactions: BankTransaction[], banks: BankInstitution[], budgetCategories: BudgetCategory[] };
     }
 
     // Use the $props rune to destructure the props based on the defined interface
@@ -107,9 +107,9 @@
                             <p class="text-gray-600 text-sm">Balance: {balance.balance}</p>
                         </div>
                     {/each}
-                    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100" onclick={openAddBankModal}>
+                    <button class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 focus:outline-none" onclick={openAddBankModal}>
                         <h3 class="text-md font-medium text-gray-800">Add a Bank</h3>
-                    </div>
+                    </button>
                 </div>
             </Card.Content>
         </Card.Root>
@@ -149,17 +149,19 @@
 
 {#if addBankModalVisible}
     <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
-        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/4">
             <h3 class="text-lg font-bold mb-4">Add a New Bank</h3>
-            <form onsubmit={preventDefault(addBank)}>
+            <form method="POST" action="?/addBank">
                 <label class="block mb-2">
                     Bank Name:
-                    <input type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                    <select name="bankId" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required>
+                        <option value="" disabled selected>Select a bank</option>
+                        {#each data.banks as bank}
+                            <option value="{bank.id}">{bank.name}</option>
+                        {/each}
+                    </select>
                 </label>
-                <label class="block mb-2">
-                    Initial Balance:
-                    <input type="number" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
-                </label>
+                
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeAddBankModal}>Cancel</Button>
                     <Button type="submit">Add Bank</Button>

@@ -27,3 +27,9 @@ export interface BudgetCategory {
     name: string;
     subcategories: BudgetSubCategory[];
 }
+
+export interface BankInstitution {
+    id: string;
+    name: string;
+    logo: string;
+}

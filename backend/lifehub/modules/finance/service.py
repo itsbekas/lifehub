@@ -1,4 +1,5 @@
 import datetime as dt
+import uuid
 from decimal import Decimal
 from typing import Any
 
@@ -17,6 +18,7 @@ from lifehub.providers.trading212.repository.t212_transaction import (
 
 from .models import (
     BankBalanceResponse,
+    BankInstitutionResponse,
     BankTransactionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
@@ -189,6 +191,20 @@ class FinanceService(BaseUserService):
 
         return balances
 
+    def get_institutions(self) -> list[BankInstitutionResponse]:
+        """
+        Fetches the available institutions for bank connections.
+        """
+        gc_api = GoCardlessAPIClient(self.user, self.session)
+        return [
+            BankInstitutionResponse(
+                id=inst.id,
+                name=inst.name,
+                logo=inst.logo,
+            )
+            for inst in gc_api.get_institutions()
+        ]
+
     def get_bank_transactions(self) -> list[Any]:
         """
         Fetches the latest transactions from the bank accounts.
@@ -217,9 +233,7 @@ class FinanceService(BaseUserService):
                     )
                 continue
 
-            account_transactions = gc_api.get_account_transactions(
-                account.id
-            ).booked
+            account_transactions = gc_api.get_account_transactions(account.id).booked
 
             for transaction in account_transactions:
                 if transaction.transactionId is None:
@@ -411,7 +425,9 @@ class FinanceService(BaseUserService):
         """
         Creates a new budget subcategory.
         """
-        category = self.session.query(BudgetCategory).get(category_id)
+        category = self.session.query(BudgetCategory).get(
+            (uuid.UUID(category_id), self.user.id)
+        )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
         subcategory = BudgetSubCategory(

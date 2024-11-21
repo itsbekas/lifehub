@@ -117,10 +117,10 @@ class InstitutionResponse:
     name: str
     max_access_valid_for_days: Optional[str]
     countries: list[str]
-    logo = str
-    supported_payments: dict[str, list[str]]
-    supported_features: list[str]
-    identification_codes: list[str]
+    logo: str
+    # supported_payments: Optional[dict[str, list[str]]]
+    # supported_features: Optional[list[str]]
+    # identification_codes: list[str]
     transaction_total_days: Optional[str] = "90"
 
 

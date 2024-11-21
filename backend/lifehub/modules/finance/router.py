@@ -7,6 +7,7 @@ from lifehub.core.user.api.dependencies import user_is_authenticated
 from .dependencies import FinanceServiceDep
 from .models import (
     BankBalanceResponse,
+    BankInstitutionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
 )
@@ -46,8 +47,8 @@ async def get_bank_transactions(
 @router.get("/bank/banks")
 async def get_banks(
     finance_service: FinanceServiceDep,
-) -> list[Any]:
-    return []
+) -> list[BankInstitutionResponse]:
+    return finance_service.get_institutions()
 
 
 @router.get("/budget/categories")

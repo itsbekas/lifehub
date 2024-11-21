@@ -43,6 +43,13 @@ class BankTransactionResponse:
 
 
 @dataclass
+class BankInstitutionResponse:
+    id: str
+    name: str
+    logo: str
+
+
+@dataclass
 class BudgetSubCategoryResponse:
     id: str
     name: str
