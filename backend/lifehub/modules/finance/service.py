@@ -183,7 +183,7 @@ class FinanceService(BaseUserService):
                     balance = self.fetch_t212_balance()
                 case _:
                     balance = self.fetch_gocardless_balance(
-                        account.institution_id, account.account_id
+                        account.institution_id, account.id
                     )
             balances.append(balance)
 
@@ -203,12 +203,12 @@ class FinanceService(BaseUserService):
             # If the last sync was less than 6 hours ago, get the transactions from the database
             if account.last_synced > dt.datetime.now() - dt.timedelta(hours=6):
                 for synced_transaction in bank_transaction_repo.get_by_account_id(
-                    account.account_id
+                    account.id
                 ):
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=synced_transaction.transaction_id,
-                            account_id=synced_transaction.account.account_id,
+                            transaction_id=synced_transaction.id,
+                            account_id=synced_transaction.account.id,
                             amount=float(synced_transaction.amount),
                             date=synced_transaction.date,
                             description=synced_transaction.description,
@@ -218,7 +218,7 @@ class FinanceService(BaseUserService):
                 continue
 
             account_transactions = gc_api.get_account_transactions(
-                account.account_id
+                account.id
             ).booked
 
             for transaction in account_transactions:
@@ -226,7 +226,7 @@ class FinanceService(BaseUserService):
                     continue
 
                 db_transaction = bank_transaction_repo.get_by_id(
-                    account.account_id, transaction.transactionId
+                    account.id, transaction.transactionId
                 )
 
                 if db_transaction is None:
@@ -257,7 +257,7 @@ class FinanceService(BaseUserService):
                         BankTransaction(
                             user_id=self.user.id,
                             transaction_id=transaction.transactionId,
-                            account_id=account.account_id,
+                            account_id=account.id,
                             amount=Decimal(transaction.transactionAmount.amount),
                             date=date,
                             description=description,
@@ -268,7 +268,7 @@ class FinanceService(BaseUserService):
                     transactions.append(
                         BankTransactionResponse(
                             transaction_id=transaction.transactionId,
-                            account_id=account.account_id,
+                            account_id=account.id,
                             amount=float(transaction.transactionAmount.amount),
                             date=date,
                             description=description,
@@ -279,8 +279,8 @@ class FinanceService(BaseUserService):
                 else:
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=db_transaction.transaction_id,
-                            account_id=account.account_id,
+                            transaction_id=db_transaction.id,
+                            account_id=account.id,
                             amount=float(db_transaction.amount),
                             date=db_transaction.date,
                             description=db_transaction.description,
