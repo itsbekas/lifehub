@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { BankBalance, BankTransaction } from "@/lib/types/finance";
     import * as Table from "@/components/ui/table";
+    import * as Card from "@/components/ui/card";
 
     // Define the Props interface as requested
     interface Props {
@@ -9,6 +10,9 @@
 
     // Use the $props rune to destructure the props based on the defined interface
     let { data }: Props = $props();
+
+    // Sort transactions by date
+    data.transactions = data.transactions.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 
     // Reactive state for managing modal visibility using $state
     let addBankModalVisible = $state(false);
@@ -37,47 +41,53 @@
 
 <div class="balances-section mb-6">
     <h2 class="text-xl font-bold mb-4">Bank Balances</h2>
-    <div class="balances flex flex-col gap-4">
+    <div class="balances flex flex-row gap-4">
         {#each data.balances as balance (balance.bank)}
-            <div class="card border border-gray-300 rounded-lg p-4 w-48 shadow-md">
-                <h3 class="text-lg font-semibold mb-2">{balance.bank}</h3>
-                <p class="text-gray-700">Balance: {balance.balance}</p>
-            </div>
+            <Card.Root class="w-48">
+                <Card.Content class="p-4">
+                    <h3 class="text-lg font-semibold mb-2 truncate">{balance.bank}</h3>
+                    <p class="text-gray-700">Balance: {balance.balance}</p>
+                </Card.Content>
+            </Card.Root>
         {/each}
+        <Card.Root class="w-48 cursor-pointer hover:bg-gray-100" onclick={openAddBankModal}>
+            <Card.Content class="p-4 flex items-center justify-center">
+                <h3 class="text-lg font-semibold">Add a Bank</h3>
+            </Card.Content>
+        </Card.Root>
     </div>
 </div>
 
 <div class="transactions-section">
-    <h2 class="text-xl font-bold mb-4">Recent Transactions</h2>
-    <Table.Root>
-        <Table.Caption>A list of your recent transactions.</Table.Caption>
-        <Table.Header>
-            <Table.Row>
-                <Table.Head class="w-[100px]">Description</Table.Head>
-                <Table.Head>Counterparty</Table.Head>
-                <Table.Head>Amount</Table.Head>
-                <Table.Head class="text-right">Date</Table.Head>
-            </Table.Row>
-        </Table.Header>
-        <Table.Body>
-            {#each data.transactions as transaction (transaction.transaction_id)}
-                <Table.Row>
-                    <Table.Cell class="font-medium">{transaction.description}</Table.Cell>
-                    <Table.Cell>{transaction.counterparty}</Table.Cell>
-                    <Table.Cell>{transaction.amount}</Table.Cell>
-                    <Table.Cell class="text-right">{transaction.date}</Table.Cell>
-                </Table.Row>
-            {/each}
-        </Table.Body>
-    </Table.Root>
+    <Card.Root class="w-full">
+        <Card.Header>
+            <Card.Title>Recent Transactions</Card.Title>
+            <Card.Description>A list of your recent transactions.</Card.Description>
+        </Card.Header>
+        <Card.Content>
+            <Table.Root>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.Head class="w-[100px]">Description</Table.Head>
+                        <Table.Head>Counterparty</Table.Head>
+                        <Table.Head>Amount</Table.Head>
+                        <Table.Head class="text-right">Date</Table.Head>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {#each data.transactions as transaction (transaction.transaction_id)}
+                        <Table.Row>
+                            <Table.Cell class="font-medium">{transaction.description}</Table.Cell>
+                            <Table.Cell>{transaction.counterparty}</Table.Cell>
+                            <Table.Cell>{transaction.amount}</Table.Cell>
+                            <Table.Cell class="text-right">{new Date(transaction.date).toLocaleDateString()}</Table.Cell>
+                        </Table.Row>
+                    {/each}
+                </Table.Body>
+            </Table.Root>
+        </Card.Content>
+    </Card.Root>
 </div>
-
-<button
-    class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600"
-    onclick={openAddBankModal}
->
-    Add Bank
-</button>
 
 {#if addBankModalVisible}
     <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">

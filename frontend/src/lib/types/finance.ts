@@ -7,7 +7,7 @@ export interface BankTransaction {
     transaction_id: string;
     account_id: string;
     amount: number;
-    date: string | null;
+    date: string;
     description: string | null;
     counterparty: string | null;
 }
