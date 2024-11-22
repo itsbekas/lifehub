@@ -168,6 +168,7 @@ class FinanceService(BaseUserService):
                     user_id=self.user.id,
                     account_id=account_id,
                     institution_id=requisition.institution_id,
+                    requisition_id=ref,
                 )
             )
 

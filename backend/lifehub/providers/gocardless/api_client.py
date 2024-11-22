@@ -127,8 +127,9 @@ class GoCardlessAPIClient(APIClient):
         return self._get("requisitions", params=params)
 
     def create_requisition(self, bank_id: str) -> SpectacularRequisitionResponse:
-        req = RequisitionRequest(redirect=REDIRECT_URI_BASE, institution_id=bank_id)
-        res = self._post("requisitions", data=req).get("results")[0]
+        redirect_uri = f"{REDIRECT_URI_BASE}/dashboard/finance/callback"
+        req = RequisitionRequest(redirect=redirect_uri, institution_id=bank_id)
+        res = self._post("requisitions/", data=req)
         return SpectacularRequisitionResponse(**res)
 
     def get_requisition(self, requisition_id: str) -> SpectacularRequisitionResponse:

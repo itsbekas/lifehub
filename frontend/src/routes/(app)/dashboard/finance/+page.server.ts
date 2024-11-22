@@ -33,6 +33,8 @@ export const actions = {
         errors: { bank_id: 'Bank ID is required' }
       };
     }
+    
+    let url;
 
     try {
       const response = await fetch(api_url(`/finance/bank/login?bank_id=${bank_id}`));
@@ -44,20 +46,21 @@ export const actions = {
         };
       }
 
-      const url = await response.text();
+      url = await response.json();
 
-      if (url) {
-        throw redirect(303, url);
-      } else {
-        return {
-          status: 500,
-          errors: { general: 'Invalid response from server' }
-        };
-      }
     } catch (error) {
       return {
         status: 500,
         errors: { general: 'An error occurred while processing your request' }
+      };
+    }
+
+    if (url) {
+      throw redirect(303, url);
+    } else {
+      return {
+        status: 500,
+        errors: { general: 'Invalid response from server' }
       };
     }
   }
