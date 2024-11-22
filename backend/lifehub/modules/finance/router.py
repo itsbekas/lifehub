@@ -25,7 +25,7 @@ async def get_bank_login(
     return finance_service.get_bank_login(bank_id)
 
 
-@router.get("/bank/confirm-login")
+@router.post("/bank/callback")
 async def confirm_bank_login(finance_service: FinanceServiceDep, ref: str) -> None:
     return finance_service.confirm_bank_login(ref)
 

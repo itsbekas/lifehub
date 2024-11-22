@@ -33,7 +33,7 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
             self.session.query(BankTransaction)
             .filter_by(
                 user_id=self.user.id,
-                transaction_id=transaction_id,
+                id=transaction_id,
                 account_id=account_id,
             )
             .one_or_none()

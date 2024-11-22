@@ -16,6 +16,7 @@ class BankAccount(UserBaseModel):
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     institution_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    requisition_id: Mapped[str] = mapped_column(String(64))
     last_synced: Mapped[dt.datetime] = mapped_column(default=dt.datetime.min)
     transactions: Mapped[list[BankTransaction]] = relationship(back_populates="account")
 

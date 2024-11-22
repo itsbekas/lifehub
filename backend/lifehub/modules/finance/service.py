@@ -166,7 +166,7 @@ class FinanceService(BaseUserService):
             bank_account_repo.add(
                 BankAccount(
                     user_id=self.user.id,
-                    account_id=account_id,
+                    id=account_id,
                     institution_id=requisition.institution_id,
                     requisition_id=ref,
                 )
@@ -271,7 +271,7 @@ class FinanceService(BaseUserService):
                     bank_transaction_repo.add(
                         BankTransaction(
                             user_id=self.user.id,
-                            transaction_id=transaction.transactionId,
+                            id=transaction.transactionId,
                             account_id=account.id,
                             amount=Decimal(transaction.transactionAmount.amount),
                             date=date,
