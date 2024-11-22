@@ -73,7 +73,9 @@ class FinanceService(BaseUserService):
                 db_balance.amount = Decimal(api_balance.free)
                 balance = db_balance
 
-        res = BankBalanceResponse(bank="trading212", balance=float(balance.amount))
+        res = BankBalanceResponse(
+            bank="trading212", account_id="trading212", balance=float(balance.amount)
+        )
         self.session.commit()
         return res
 
@@ -111,7 +113,9 @@ class FinanceService(BaseUserService):
                 db_balance.amount = Decimal(api_balance)
                 balance = db_balance
 
-        res = BankBalanceResponse(bank=institution_id, balance=float(balance.amount))
+        res = BankBalanceResponse(
+            bank=institution_id, account_id=account_id, balance=float(balance.amount)
+        )
         self.session.commit()
         return res
 
@@ -224,7 +228,7 @@ class FinanceService(BaseUserService):
                 ):
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=synced_transaction.id,
+                            id=synced_transaction.id,
                             account_id=synced_transaction.account.id,
                             amount=float(synced_transaction.amount),
                             date=synced_transaction.date,
@@ -282,7 +286,7 @@ class FinanceService(BaseUserService):
 
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=transaction.transactionId,
+                            id=transaction.transactionId,
                             account_id=account.id,
                             amount=float(transaction.transactionAmount.amount),
                             date=date,
@@ -294,7 +298,7 @@ class FinanceService(BaseUserService):
                 else:
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=db_transaction.id,
+                            id=db_transaction.id,
                             account_id=account.id,
                             amount=float(db_transaction.amount),
                             date=db_transaction.date,
@@ -302,6 +306,8 @@ class FinanceService(BaseUserService):
                             counterparty=db_transaction.counterparty,
                         )
                     )
+
+            account.last_synced = dt.datetime.now()
 
         self.session.commit()
 
@@ -326,7 +332,7 @@ class FinanceService(BaseUserService):
             transaction.subcategory_id = uuid.UUID(subcategory_id)
         self.session.commit()
         return BankTransactionResponse(
-            transaction_id=transaction.id,
+            id=transaction.id,
             account_id=transaction.account.id,
             amount=float(transaction.amount),
             date=transaction.date,
