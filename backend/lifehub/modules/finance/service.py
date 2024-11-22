@@ -1,7 +1,7 @@
 import datetime as dt
 import uuid
 from decimal import Decimal
-from typing import Any
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -206,7 +206,7 @@ class FinanceService(BaseUserService):
             for inst in gc_api.get_institutions()
         ]
 
-    def get_bank_transactions(self) -> list[Any]:
+    def get_bank_transactions(self) -> list[BankTransactionResponse]:
         """
         Fetches the latest transactions from the bank accounts.
         """
@@ -306,6 +306,33 @@ class FinanceService(BaseUserService):
         self.session.commit()
 
         return transactions
+
+    def update_bank_transaction(
+        self,
+        account_id: str,
+        transaction_id: str,
+        user_description: Optional[str],
+        subcategory_id: Optional[str],
+    ) -> BankTransactionResponse:
+        """
+        Updates a bank transaction with user description and subcategory.
+        """
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+        transaction = bank_transaction_repo.get_by_id(account_id, transaction_id)
+        if transaction is None:
+            raise FinanceServiceException(404, "Transaction not found")
+        transaction.user_description = user_description
+        if subcategory_id is not None:
+            transaction.subcategory_id = uuid.UUID(subcategory_id)
+        self.session.commit()
+        return BankTransactionResponse(
+            transaction_id=transaction.id,
+            account_id=transaction.account.id,
+            amount=float(transaction.amount),
+            date=transaction.date,
+            description=transaction.description,
+            counterparty=transaction.counterparty,
+        )
 
     def get_budget_categories(self) -> list[BudgetCategoryResponse]:
         """

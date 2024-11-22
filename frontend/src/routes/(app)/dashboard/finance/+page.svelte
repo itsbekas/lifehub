@@ -126,7 +126,7 @@
                     <Table.Header>
                         <Table.Row>
                             <Table.Head class="w-[100px]">Description</Table.Head>
-                            <Table.Head>Counterparty</Table.Head>
+                            <Table.Head>Sub-category</Table.Head>
                             <Table.Head>Amount</Table.Head>
                             <Table.Head class="text-right">Date</Table.Head>
                         </Table.Row>
@@ -134,8 +134,8 @@
                     <Table.Body>
                         {#each data.transactions as transaction (transaction.transaction_id)}
                             <Table.Row>
-                                <Table.Cell class="font-medium">{transaction.description}</Table.Cell>
-                                <Table.Cell>{transaction.counterparty}</Table.Cell>
+                                <Table.Cell class="font-medium">{transaction.user_description ? transaction.user_description : `${transaction.description} (${transaction.counterparty})`}</Table.Cell>
+                                <Table.Cell>{#each data.budgetCategories as category}{#each category.subcategories as subcategory}{#if subcategory.id === transaction.subcategory_id}{subcategory.name}{/if}{/each}{/each}</Table.Cell>
                                 <Table.Cell>{transaction.amount}</Table.Cell>
                                 <Table.Cell class="text-right">{new Date(transaction.date).toLocaleDateString()}</Table.Cell>
                             </Table.Row>
@@ -151,13 +151,13 @@
     <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
         <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/4">
             <h3 class="text-lg font-bold mb-4">Add a New Bank</h3>
-            <form method="POST" action="?/addBank">
+            <form method="POST" action="?/add-bank" onsubmit={preventDefault(addBank)}>
                 <label class="block mb-2">
                     Bank Name:
                     <select name="bankId" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required>
                         <option value="" disabled selected>Select a bank</option>
                         {#each data.banks as bank}
-                            <option value="{bank.id}">{bank.name}</option>
+                            <option value="{bank}">{bank.name}</option>
                         {/each}
                     </select>
                 </label>

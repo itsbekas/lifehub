@@ -10,6 +10,8 @@ export interface BankTransaction {
     date: string;
     description: string | null;
     counterparty: string | null;
+    user_description: string | null;
+    subcategory_id: string | null;
 }
 
 export interface BudgetSubCategory {

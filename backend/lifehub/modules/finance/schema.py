@@ -41,6 +41,7 @@ class BankTransaction(UserBaseModel):
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2))
     date: Mapped[dt.datetime] = mapped_column()
     description: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
+    user_description: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, default=None)
     counterparty: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     subcategory_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True

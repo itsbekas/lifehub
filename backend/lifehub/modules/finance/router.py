@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 
@@ -8,6 +8,7 @@ from .dependencies import FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
+    BankTransactionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
 )
@@ -40,8 +41,21 @@ async def get_bank_balances(
 @router.get("/bank/transactions")
 async def get_bank_transactions(
     finance_service: FinanceServiceDep,
-) -> list[Any]:
+) -> list[BankTransactionResponse]:
     return finance_service.get_bank_transactions()
+
+
+@router.put("/bank/{account_id}/transactions/{transaction_id}")
+async def update_bank_transaction(
+    finance_service: FinanceServiceDep,
+    account_id: str,
+    transaction_id: str,
+    user_description: Optional[str],
+    subcategory_id: Optional[str],
+) -> BankTransactionResponse:
+    return finance_service.update_bank_transaction(
+        account_id, transaction_id, user_description, subcategory_id
+    )
 
 
 @router.get("/bank/banks")
