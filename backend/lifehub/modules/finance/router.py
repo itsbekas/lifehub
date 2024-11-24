@@ -9,6 +9,7 @@ from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
     BankTransactionResponse,
+    BudgetCategoryRequest,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
 )
@@ -62,7 +63,11 @@ async def update_bank_transaction(
 async def get_banks(
     finance_service: FinanceServiceDep,
 ) -> list[BankInstitutionResponse]:
-    return finance_service.get_institutions()
+    return [
+        BankInstitutionResponse(
+            id="SANDBOXFINANCE_SFIN0000", name="Sandbox Finance", logo=""
+        )
+    ] + finance_service.get_institutions()
 
 
 @router.get("/budget/categories")
@@ -75,9 +80,9 @@ async def get_budget_categories(
 @router.post("/budget/categories")
 async def create_budget_category(
     finance_service: FinanceServiceDep,
-    name: str,
+    budget_category: BudgetCategoryRequest,
 ) -> BudgetCategoryResponse:
-    return finance_service.create_budget_category(name)
+    return finance_service.create_budget_category(budget_category.name)
 
 
 @router.get("/budget/categories/{category_id}")

@@ -175,10 +175,10 @@
     <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
         <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h3 class="text-lg font-bold mb-4">Add a New Category</h3>
-            <form onsubmit={preventDefault(addCategory)}>
+            <form method="POST" action="?/addCategory">
                 <label class="block mb-2">
                     Category Name:
-                    <input type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                    <input name="name" type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
                 </label>
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeAddCategoryModal}>Cancel</Button>

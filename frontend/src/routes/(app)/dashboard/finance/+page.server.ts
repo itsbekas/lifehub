@@ -63,5 +63,44 @@ export const actions = {
         errors: { general: 'Invalid response from server' }
       };
     }
+  },
+  addCategory: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const name = formData.get('name');
+
+    if (!name) {
+      return {
+        status: 400,
+        errors: { name: 'Name is required' }
+      };
+    }
+
+    try {
+      const response = await fetch(api_url('/finance/budget/categories'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name })
+      });
+
+      if (!response.ok) {
+        return {
+          status: response.status,
+          errors: { general: 'Failed to add the category' }
+        };
+      }
+
+    } catch (error) {
+      return {
+        status: 500,
+        errors: { general: 'An error occurred while processing your request' }
+      };
+    }
+
+    return {
+      status: 200,
+      message: 'Category added successfully'
+    };
   }
 };

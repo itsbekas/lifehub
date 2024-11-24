@@ -60,6 +60,9 @@ class BudgetSubCategoryResponse:
     spent: float
     available: float
 
+@dataclass
+class BudgetCategoryRequest:
+    name: str
 
 @dataclass
 class BudgetCategoryResponse:
