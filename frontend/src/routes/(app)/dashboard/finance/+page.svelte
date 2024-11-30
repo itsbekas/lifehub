@@ -18,7 +18,9 @@
     // Reactive state for managing modal visibility using $state
     let addBankModalVisible = $state(false);
     let addCategoryModalVisible = $state(false);
+    let addSubCategoryModalVisible = $state(false);
     let activeTab = $state("budget");
+    let selectedCategoryId = $state<string | null>(null);
 
     function openAddBankModal() {
         addBankModalVisible = true;
@@ -36,22 +38,14 @@
         addCategoryModalVisible = false;
     }
 
-    function addBank() {
-        // Logic to add bank goes here
-        closeAddBankModal();
+    function openAddSubCategoryModal(categoryId: string) {
+        selectedCategoryId = categoryId;
+        addSubCategoryModalVisible = true;
     }
 
-    function addCategory() {
-        // Logic to add category goes here
-        closeAddCategoryModal();
-    }
-
-    // Custom wrapper function for event.preventDefault
-    function preventDefault(fn: (event: Event) => void) {
-        return function (event: Event) {
-            event.preventDefault();
-            fn.call(this, event);
-        };
+    function closeAddSubCategoryModal() {
+        addSubCategoryModalVisible = false;
+        selectedCategoryId = null;
     }
 </script>
 
@@ -85,6 +79,7 @@
                                 </li>
                             {/each}
                         </ul>
+                        <Button class="mt-2" onclick={openAddSubCategoryModal.bind(null, category.id)}>Add Sub-category</Button>
                     </Card.Content>
                 </Card.Root>
             {/each}
@@ -178,11 +173,34 @@
             <form method="POST" action="?/addCategory">
                 <label class="block mb-2">
                     Category Name:
-                    <input name="name" type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                    <input type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
                 </label>
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeAddCategoryModal}>Cancel</Button>
                     <Button type="submit">Add Category</Button>
+                </div>
+            </form>
+        </div>
+    </div>
+{/if}
+
+{#if addSubCategoryModalVisible}
+    <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 class="text-lg font-bold mb-4">Add a New Sub-category</h3>
+            <form method="POST" action="?/addSubCategory">
+                <input type="hidden" name="categoryId" value={selectedCategoryId} />
+                <label class="block mb-2">
+                    Sub-category Name:
+                    <input name="name" type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                </label>
+                <label class="block mb-2">
+                    Budgeted Amount:
+                    <input name="amount" type="number" step="0.01" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                </label>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onclick={closeAddSubCategoryModal}>Cancel</Button>
+                    <Button type="submit">Add Sub-category</Button>
                 </div>
             </form>
         </div>

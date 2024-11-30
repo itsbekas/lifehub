@@ -11,6 +11,7 @@ from .models import (
     BankTransactionResponse,
     BudgetCategoryRequest,
     BudgetCategoryResponse,
+    BudgetSubCategoryRequest,
     BudgetSubCategoryResponse,
 )
 
@@ -122,20 +123,22 @@ async def get_budget_subcategories(
 async def create_budget_subcategory(
     finance_service: FinanceServiceDep,
     category_id: str,
-    name: str,
-    amount: float,
+    data: BudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.create_budget_subcategory(category_id, name, amount)
+    return finance_service.create_budget_subcategory(
+        category_id, data.name, data.amount
+    )
 
 
 @router.put("/budget/subcategories/{subcategory_id}")
 async def update_budget_subcategory(
     finance_service: FinanceServiceDep,
     subcategory_id: str,
-    name: str,
-    amount: float,
+    data: BudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.update_budget_subcategory(subcategory_id, name, amount)
+    return finance_service.update_budget_subcategory(
+        subcategory_id, data.name, data.amount
+    )
 
 
 @router.delete("/budget/subcategories/{subcategory_id}")

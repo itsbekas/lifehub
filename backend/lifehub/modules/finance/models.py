@@ -69,3 +69,8 @@ class BudgetCategoryResponse:
     id: str
     name: str
     subcategories: list[BudgetSubCategoryResponse]
+
+@dataclass
+class BudgetSubCategoryRequest:
+    name: str
+    amount: float

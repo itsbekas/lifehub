@@ -25,82 +25,37 @@ export async function load({ fetch }) {
 export const actions = {
   addBank: async ({ request, fetch }) => {
     const formData = await request.formData();
-    const bank_id = formData.get('bankId');
+    const bankId = formData.get('bankId');
+  
+    const response = await fetch(api_url(`/finance/bank/login?bank_id=${bankId}`));
+    const url = await response.json();
 
-    if (!bank_id) {
-      return {
-        status: 400,
-        errors: { bank_id: 'Bank ID is required' }
-      };
-    }
-    
-    let url;
-
-    try {
-      const response = await fetch(api_url(`/finance/bank/login?bank_id=${bank_id}`));
-
-      if (!response.ok) {
-        return {
-          status: response.status,
-          errors: { general: 'Failed to fetch the login URL' }
-        };
-      }
-
-      url = await response.json();
-
-    } catch (error) {
-      return {
-        status: 500,
-        errors: { general: 'An error occurred while processing your request' }
-      };
-    }
-
-    if (url) {
-      throw redirect(303, url);
-    } else {
-      return {
-        status: 500,
-        errors: { general: 'Invalid response from server' }
-      };
-    }
+    throw redirect(303, url);
   },
   addCategory: async ({ request, fetch }) => {
     const formData = await request.formData();
     const name = formData.get('name');
 
-    if (!name) {
-      return {
-        status: 400,
-        errors: { name: 'Name is required' }
-      };
-    }
+    const response = await fetch(api_url('/finance/budget/categories'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
+    });
+  },
+  addSubCategory: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const name = formData.get('name');
+    const categoryId = formData.get('categoryId');
+    const amount = formData.get('amount');
 
-    try {
-      const response = await fetch(api_url('/finance/budget/categories'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name })
-      });
-
-      if (!response.ok) {
-        return {
-          status: response.status,
-          errors: { general: 'Failed to add the category' }
-        };
-      }
-
-    } catch (error) {
-      return {
-        status: 500,
-        errors: { general: 'An error occurred while processing your request' }
-      };
-    }
-
-    return {
-      status: 200,
-      message: 'Category added successfully'
-    };
+    const response = await fetch(api_url(`/finance/budget/categories/${categoryId}/subcategories`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name, amount })
+    });
   }
-};
+}
