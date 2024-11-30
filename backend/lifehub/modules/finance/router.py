@@ -1,4 +1,4 @@
-from typing import Optional
+import uuid
 
 from fastapi import APIRouter, Depends
 
@@ -91,7 +91,7 @@ async def get_budget_category(
     finance_service: FinanceServiceDep,
     category_id: str,
 ) -> BudgetCategoryResponse:
-    return finance_service.get_budget_category(category_id)
+    return finance_service.get_budget_category(uuid.UUID(category_id))
 
 
 @router.put("/budget/categories/{category_id}")
@@ -100,7 +100,7 @@ async def update_budget_category(
     category_id: str,
     name: str,
 ) -> BudgetCategoryResponse:
-    return finance_service.update_budget_category(category_id, name)
+    return finance_service.update_budget_category(uuid.UUID(category_id), name)
 
 
 @router.delete("/budget/categories/{category_id}")
@@ -108,7 +108,7 @@ async def delete_budget_category(
     finance_service: FinanceServiceDep,
     category_id: str,
 ) -> None:
-    finance_service.delete_budget_category(category_id)
+    finance_service.delete_budget_category(uuid.UUID(category_id))
 
 
 @router.get("/budget/categories/{category_id}/subcategories")
@@ -116,7 +116,7 @@ async def get_budget_subcategories(
     finance_service: FinanceServiceDep,
     category_id: str,
 ) -> list[BudgetSubCategoryResponse]:
-    return finance_service.get_budget_subcategories(category_id)
+    return finance_service.get_budget_subcategories(uuid.UUID(category_id))
 
 
 @router.post("/budget/categories/{category_id}/subcategories")
@@ -126,7 +126,7 @@ async def create_budget_subcategory(
     data: BudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
     return finance_service.create_budget_subcategory(
-        category_id, data.name, data.amount
+        uuid.UUID(category_id), data.name, data.amount
     )
 
 
@@ -137,7 +137,7 @@ async def update_budget_subcategory(
     data: BudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
     return finance_service.update_budget_subcategory(
-        subcategory_id, data.name, data.amount
+        uuid.UUID(subcategory_id), data.name, data.amount
     )
 
 
@@ -146,4 +146,4 @@ async def delete_budget_subcategory(
     finance_service: FinanceServiceDep,
     subcategory_id: str,
 ) -> None:
-    finance_service.delete_budget_subcategory(subcategory_id)
+    finance_service.delete_budget_subcategory(uuid.UUID(subcategory_id))

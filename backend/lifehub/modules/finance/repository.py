@@ -8,7 +8,13 @@ from lifehub.core.common.base.repository.fetch_base import FetchBaseRepository
 from lifehub.core.common.base.repository.user_base import UserBaseRepository
 from lifehub.core.user.schema import User
 
-from .schema import AccountBalance, BankAccount, BankTransaction, BudgetSubCategory
+from .schema import (
+    AccountBalance,
+    BankAccount,
+    BankTransaction,
+    BudgetCategory,
+    BudgetSubCategory,
+)
 
 
 class BankAccountRepository(UserBaseRepository[BankAccount]):
@@ -58,6 +64,18 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
         if subcategory_id:
             query = query.filter(BankTransaction.subcategory_id == subcategory_id)
         return query.all()
+
+
+class BudgetCategoryRepository(UserBaseRepository[BudgetCategory]):
+    def __init__(self, user: User, session: Session):
+        super().__init__(BudgetCategory, user=user, session=session)
+
+    def get_by_id(self, category_id: uuid.UUID) -> BudgetCategory | None:
+        return (
+            self.session.query(BudgetCategory)
+            .filter_by(user_id=self.user.id, id=category_id)
+            .one_or_none()
+        )
 
 
 class BudgetSubCategoryRepository(UserBaseRepository[BudgetSubCategory]):

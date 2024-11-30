@@ -28,6 +28,7 @@ from .repository import (
     AccountBalanceRepository,
     BankAccountRepository,
     BankTransactionRepository,
+    BudgetCategoryRepository,
     BudgetSubCategoryRepository,
 )
 from .schema import (
@@ -307,7 +308,9 @@ class FinanceService(BaseUserService):
                             date=db_transaction.date,
                             description=db_transaction.description,
                             counterparty=db_transaction.counterparty,
-                            subcategory_id=str(db_transaction.subcategory_id) if db_transaction.subcategory_id else None,
+                            subcategory_id=str(db_transaction.subcategory_id)
+                            if db_transaction.subcategory_id
+                            else None,
                         )
                     )
 
@@ -345,7 +348,9 @@ class FinanceService(BaseUserService):
             date=transaction.date,
             description=transaction.description,
             counterparty=transaction.counterparty,
-            subcategory_id=str(transaction.subcategory_id) if transaction.subcategory_id else None,
+            subcategory_id=str(transaction.subcategory_id)
+            if transaction.subcategory_id
+            else None,
         )
 
     def get_budget_categories(self) -> list[BudgetCategoryResponse]:
@@ -390,11 +395,13 @@ class FinanceService(BaseUserService):
             id=str(category.id), name=category.name, subcategories=[]
         )
 
-    def get_budget_category(self, category_id: str) -> BudgetCategoryResponse:
+    def get_budget_category(self, category_id: uuid.UUID) -> BudgetCategoryResponse:
         """
         Fetches a budget category by ID, dynamically calculating the budgeted, spent, and available amounts for each subcategory.
         """
-        category = self.session.query(BudgetCategory).get(category_id)
+        category = BudgetCategoryRepository(self.user, self.session).get_by_id(
+            category_id
+        )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
 
@@ -419,12 +426,14 @@ class FinanceService(BaseUserService):
         )
 
     def update_budget_category(
-        self, category_id: str, name: str
+        self, category_id: uuid.UUID, name: str
     ) -> BudgetCategoryResponse:
         """
         Updates a budget category by ID.
         """
-        category = self.session.query(BudgetCategory).get(category_id)
+        category = BudgetCategoryRepository(self.user, self.session).get_by_id(
+            category_id
+        )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
         category.name = name
@@ -433,23 +442,27 @@ class FinanceService(BaseUserService):
             id=str(category.id), name=category.name, subcategories=[]
         )
 
-    def delete_budget_category(self, category_id: str) -> None:
+    def delete_budget_category(self, category_id: uuid.UUID) -> None:
         """
         Deletes a budget category by ID.
         """
-        category = self.session.query(BudgetCategory).get(category_id)
+        category = BudgetCategoryRepository(self.user, self.session).get_by_id(
+            category_id
+        )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
         self.session.delete(category)
         self.session.commit()
 
     def get_budget_subcategories(
-        self, category_id: str
+        self, category_id: uuid.UUID
     ) -> list[BudgetSubCategoryResponse]:
         """
         Fetches the subcategories of a budget category, dynamically calculating the budgeted, spent, and available amounts.
         """
-        category = self.session.query(BudgetCategory).get(category_id)
+        category = BudgetCategoryRepository(self.user, self.session).get_by_id(
+            category_id
+        )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
 
@@ -471,13 +484,13 @@ class FinanceService(BaseUserService):
         return subcategories
 
     def create_budget_subcategory(
-        self, category_id: str, name: str, amount: float
+        self, category_id: uuid.UUID, name: str, amount: float
     ) -> BudgetSubCategoryResponse:
         """
         Creates a new budget subcategory with the specified budgeted amount.
         """
-        category = self.session.query(BudgetCategory).get(
-            (uuid.UUID(category_id), self.user.id)
+        category = BudgetCategoryRepository(self.user, self.session).get_by_id(
+            category_id
         )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
@@ -509,12 +522,14 @@ class FinanceService(BaseUserService):
         )
 
     def update_budget_subcategory(
-        self, subcategory_id: str, name: str, amount: float
+        self, subcategory_id: uuid.UUID, name: str, amount: float
     ) -> BudgetSubCategoryResponse:
         """
         Updates a budget subcategory by ID.
         """
-        subcategory = self.session.query(BudgetSubCategory).get(subcategory_id)
+        subcategory = BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+            subcategory_id
+        )
         if subcategory is None:
             raise FinanceServiceException(404, "Subcategory not found")
         subcategory.name = name
@@ -533,11 +548,13 @@ class FinanceService(BaseUserService):
             available=available,
         )
 
-    def delete_budget_subcategory(self, subcategory_id: str) -> None:
+    def delete_budget_subcategory(self, subcategory_id: uuid.UUID) -> None:
         """
         Deletes a budget subcategory by ID.
         """
-        subcategory = self.session.query(BudgetSubCategory).get(subcategory_id)
+        subcategory = BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+            subcategory_id
+        )
         if subcategory is None:
             raise FinanceServiceException(404, "Subcategory not found")
         self.session.delete(subcategory)
@@ -561,7 +578,9 @@ class FinanceService(BaseUserService):
                 date=transaction.date,
                 description=transaction.description,
                 counterparty=transaction.counterparty,
-                subcategory_id=str(transaction.subcategory_id) if transaction.subcategory_id else None,
+                subcategory_id=str(transaction.subcategory_id)
+                if transaction.subcategory_id
+                else None,
             )
             for transaction in transactions
         ]
