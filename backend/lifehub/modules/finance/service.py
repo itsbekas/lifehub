@@ -1,6 +1,7 @@
 import datetime as dt
+import uuid
 from decimal import Decimal
-from typing import Any
+from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -17,16 +18,25 @@ from lifehub.providers.trading212.repository.t212_transaction import (
 
 from .models import (
     BankBalanceResponse,
+    BankInstitutionResponse,
     BankTransactionResponse,
-    T212DataResponse,
+    BudgetCategoryResponse,
+    BudgetSubCategoryResponse,
     T212TransactionResponse,
 )
 from .repository import (
     AccountBalanceRepository,
     BankAccountRepository,
     BankTransactionRepository,
+    BudgetSubCategoryRepository,
 )
-from .schema import AccountBalance, BankAccount, BankTransaction
+from .schema import (
+    AccountBalance,
+    BankAccount,
+    BankTransaction,
+    BudgetCategory,
+    BudgetSubCategory,
+)
 
 
 class FinanceServiceException(ServiceException):
@@ -64,7 +74,9 @@ class FinanceService(BaseUserService):
                 db_balance.amount = Decimal(api_balance.free)
                 balance = db_balance
 
-        res = BankBalanceResponse(bank="trading212", balance=float(balance.amount))
+        res = BankBalanceResponse(
+            bank="trading212", account_id="trading212", balance=float(balance.amount)
+        )
         self.session.commit()
         return res
 
@@ -102,7 +114,9 @@ class FinanceService(BaseUserService):
                 db_balance.amount = Decimal(api_balance)
                 balance = db_balance
 
-        res = BankBalanceResponse(bank=institution_id, balance=float(balance.amount))
+        res = BankBalanceResponse(
+            bank=institution_id, account_id=account_id, balance=float(balance.amount)
+        )
         self.session.commit()
         return res
 
@@ -145,11 +159,6 @@ class FinanceService(BaseUserService):
 
         return history
 
-    def get_t212_data(self) -> T212DataResponse:
-        balance = self.fetch_t212_balance()
-        history = self.get_t212_history()
-        return T212DataResponse(balance=balance, history=history)
-
     def get_bank_login(self, bank_id: str) -> str:
         api = GoCardlessAPIClient(self.user, self.session)
         return api.create_requisition(bank_id).link
@@ -162,8 +171,9 @@ class FinanceService(BaseUserService):
             bank_account_repo.add(
                 BankAccount(
                     user_id=self.user.id,
-                    account_id=account_id,
+                    id=account_id,
                     institution_id=requisition.institution_id,
+                    requisition_id=ref,
                 )
             )
 
@@ -181,13 +191,27 @@ class FinanceService(BaseUserService):
                     balance = self.fetch_t212_balance()
                 case _:
                     balance = self.fetch_gocardless_balance(
-                        account.institution_id, account.account_id
+                        account.institution_id, account.id
                     )
             balances.append(balance)
 
         return balances
 
-    def get_bank_transactions(self) -> list[Any]:
+    def get_institutions(self) -> list[BankInstitutionResponse]:
+        """
+        Fetches the available institutions for bank connections.
+        """
+        gc_api = GoCardlessAPIClient(self.user, self.session)
+        return [
+            BankInstitutionResponse(
+                id=inst.id,
+                name=inst.name,
+                logo=inst.logo,
+            )
+            for inst in gc_api.get_institutions()
+        ]
+
+    def get_bank_transactions(self) -> list[BankTransactionResponse]:
         """
         Fetches the latest transactions from the bank accounts.
         """
@@ -201,30 +225,29 @@ class FinanceService(BaseUserService):
             # If the last sync was less than 6 hours ago, get the transactions from the database
             if account.last_synced > dt.datetime.now() - dt.timedelta(hours=6):
                 for synced_transaction in bank_transaction_repo.get_by_account_id(
-                    account.account_id
+                    account.id
                 ):
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=synced_transaction.transaction_id,
-                            account_id=synced_transaction.account_id,
+                            id=synced_transaction.id,
+                            account_id=synced_transaction.account.id,
                             amount=float(synced_transaction.amount),
                             date=synced_transaction.date,
                             description=synced_transaction.description,
                             counterparty=synced_transaction.counterparty,
+                            subcategory_id=str(synced_transaction.subcategory_id),
                         )
                     )
                 continue
 
-            account_transactions = gc_api.get_account_transactions(
-                account.account_id
-            ).booked
+            account_transactions = gc_api.get_account_transactions(account.id).booked
 
             for transaction in account_transactions:
                 if transaction.transactionId is None:
                     continue
 
                 db_transaction = bank_transaction_repo.get_by_id(
-                    account.account_id, transaction.transactionId
+                    account.id, transaction.transactionId
                 )
 
                 if db_transaction is None:
@@ -254,8 +277,8 @@ class FinanceService(BaseUserService):
                     bank_transaction_repo.add(
                         BankTransaction(
                             user_id=self.user.id,
-                            transaction_id=transaction.transactionId,
-                            account_id=account.account_id,
+                            id=transaction.transactionId,
+                            account_id=account.id,
                             amount=Decimal(transaction.transactionAmount.amount),
                             date=date,
                             description=description,
@@ -265,27 +288,320 @@ class FinanceService(BaseUserService):
 
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=transaction.transactionId,
-                            account_id=account.account_id,
+                            id=transaction.transactionId,
+                            account_id=account.id,
                             amount=float(transaction.transactionAmount.amount),
                             date=date,
                             description=description,
                             counterparty=counterparty,
+                            subcategory_id=None,
                         )
                     )
 
                 else:
                     transactions.append(
                         BankTransactionResponse(
-                            transaction_id=db_transaction.transaction_id,
-                            account_id=db_transaction.account_id,
+                            id=db_transaction.id,
+                            account_id=account.id,
                             amount=float(db_transaction.amount),
                             date=db_transaction.date,
                             description=db_transaction.description,
                             counterparty=db_transaction.counterparty,
+                            subcategory_id=str(db_transaction.subcategory_id) if db_transaction.subcategory_id else None,
                         )
                     )
+
+            account.last_synced = dt.datetime.now()
 
         self.session.commit()
 
         return transactions
+
+    def update_bank_transaction(
+        self,
+        account_id: str,
+        transaction_id: str,
+        user_description: Optional[str],
+        subcategory_id: Optional[str],
+        amount: Optional[float],
+    ) -> BankTransactionResponse:
+        """
+        Updates a bank transaction with user description and subcategory.
+        """
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+        transaction = bank_transaction_repo.get_by_id(account_id, transaction_id)
+        if transaction is None:
+            raise FinanceServiceException(404, "Transaction not found")
+        transaction.user_description = user_description
+        if subcategory_id is not None:
+            transaction.subcategory_id = uuid.UUID(subcategory_id)
+        if amount is not None:
+            transaction.amount = Decimal(amount)
+        self.session.commit()
+        return BankTransactionResponse(
+            id=transaction.id,
+            account_id=transaction.account.id,
+            amount=float(transaction.amount),
+            date=transaction.date,
+            description=transaction.description,
+            counterparty=transaction.counterparty,
+            subcategory_id=str(transaction.subcategory_id) if transaction.subcategory_id else None,
+        )
+
+    def get_budget_categories(self) -> list[BudgetCategoryResponse]:
+        """
+        Fetches the budget categories and subcategories, dynamically calculating the budgeted, spent, and available amounts.
+        """
+        categories = []
+        for category in self.user.budget_categories:
+            subcategories = []
+            for subcategory in category.subcategories:
+                budgeted, spent, available = self._get_budget_status(subcategory.id)
+
+                subcategories.append(
+                    BudgetSubCategoryResponse(
+                        id=str(subcategory.id),
+                        name=subcategory.name,
+                        category_id=str(category.id),
+                        category_name=category.name,
+                        budgeted=budgeted,
+                        spent=spent,
+                        available=available,
+                    )
+                )
+            categories.append(
+                BudgetCategoryResponse(
+                    id=str(category.id), name=category.name, subcategories=subcategories
+                )
+            )
+        return categories
+
+    def create_budget_category(self, name: str) -> BudgetCategoryResponse:
+        """
+        Creates a new budget category.
+        """
+        category = BudgetCategory(
+            user_id=self.user.id,
+            name=name,
+        )
+        self.user.budget_categories.append(category)
+        self.session.commit()
+        return BudgetCategoryResponse(
+            id=str(category.id), name=category.name, subcategories=[]
+        )
+
+    def get_budget_category(self, category_id: str) -> BudgetCategoryResponse:
+        """
+        Fetches a budget category by ID, dynamically calculating the budgeted, spent, and available amounts for each subcategory.
+        """
+        category = self.session.query(BudgetCategory).get(category_id)
+        if category is None:
+            raise FinanceServiceException(404, "Category not found")
+
+        subcategories = []
+        for subcategory in category.subcategories:
+            budgeted, spent, available = self._get_budget_status(subcategory.id)
+
+            subcategories.append(
+                BudgetSubCategoryResponse(
+                    id=str(subcategory.id),
+                    name=subcategory.name,
+                    category_id=str(category.id),
+                    category_name=category.name,
+                    budgeted=budgeted,
+                    spent=spent,
+                    available=available,
+                )
+            )
+
+        return BudgetCategoryResponse(
+            id=str(category.id), name=category.name, subcategories=subcategories
+        )
+
+    def update_budget_category(
+        self, category_id: str, name: str
+    ) -> BudgetCategoryResponse:
+        """
+        Updates a budget category by ID.
+        """
+        category = self.session.query(BudgetCategory).get(category_id)
+        if category is None:
+            raise FinanceServiceException(404, "Category not found")
+        category.name = name
+        self.session.commit()
+        return BudgetCategoryResponse(
+            id=str(category.id), name=category.name, subcategories=[]
+        )
+
+    def delete_budget_category(self, category_id: str) -> None:
+        """
+        Deletes a budget category by ID.
+        """
+        category = self.session.query(BudgetCategory).get(category_id)
+        if category is None:
+            raise FinanceServiceException(404, "Category not found")
+        self.session.delete(category)
+        self.session.commit()
+
+    def get_budget_subcategories(
+        self, category_id: str
+    ) -> list[BudgetSubCategoryResponse]:
+        """
+        Fetches the subcategories of a budget category, dynamically calculating the budgeted, spent, and available amounts.
+        """
+        category = self.session.query(BudgetCategory).get(category_id)
+        if category is None:
+            raise FinanceServiceException(404, "Category not found")
+
+        subcategories = []
+        for subcategory in category.subcategories:
+            budgeted, spent, available = self._get_budget_status(subcategory.id)
+
+            subcategories.append(
+                BudgetSubCategoryResponse(
+                    id=str(subcategory.id),
+                    name=subcategory.name,
+                    category_id=str(category.id),
+                    category_name=category.name,
+                    budgeted=budgeted,
+                    spent=spent,
+                    available=available,
+                )
+            )
+        return subcategories
+
+    def create_budget_subcategory(
+        self, category_id: str, name: str, amount: float
+    ) -> BudgetSubCategoryResponse:
+        """
+        Creates a new budget subcategory with the specified budgeted amount.
+        """
+        category = self.session.query(BudgetCategory).get(
+            (uuid.UUID(category_id), self.user.id)
+        )
+        if category is None:
+            raise FinanceServiceException(404, "Category not found")
+
+        subcategory = BudgetSubCategory(
+            user_id=self.user.id,
+            category_id=category.id,
+            name=name,
+            amount=Decimal(amount),
+        )
+        category.subcategories.append(subcategory)
+        self.session.commit()
+
+        # Fetch budgeted amount
+        budgeted = float(subcategory.amount)
+
+        # Initially, there are no transactions, so spent is 0 and available equals the budgeted amount
+        spent = 0.0
+        available = budgeted - spent
+
+        return BudgetSubCategoryResponse(
+            id=str(subcategory.id),
+            name=subcategory.name,
+            category_id=str(category.id),
+            category_name=category.name,
+            budgeted=budgeted,
+            spent=spent,
+            available=available,
+        )
+
+    def update_budget_subcategory(
+        self, subcategory_id: str, name: str, amount: float
+    ) -> BudgetSubCategoryResponse:
+        """
+        Updates a budget subcategory by ID.
+        """
+        subcategory = self.session.query(BudgetSubCategory).get(subcategory_id)
+        if subcategory is None:
+            raise FinanceServiceException(404, "Subcategory not found")
+        subcategory.name = name
+        subcategory.amount = Decimal(amount)
+        self.session.commit()
+
+        budgeted, spent, available = self._get_budget_status(subcategory.id)
+
+        return BudgetSubCategoryResponse(
+            id=str(subcategory.id),
+            name=subcategory.name,
+            category_id=str(subcategory.category_id),
+            category_name=subcategory.category.name,
+            budgeted=budgeted,
+            spent=spent,
+            available=available,
+        )
+
+    def delete_budget_subcategory(self, subcategory_id: str) -> None:
+        """
+        Deletes a budget subcategory by ID.
+        """
+        subcategory = self.session.query(BudgetSubCategory).get(subcategory_id)
+        if subcategory is None:
+            raise FinanceServiceException(404, "Subcategory not found")
+        self.session.delete(subcategory)
+        self.session.commit()
+
+    def get_transactions_for_current_month(self) -> list[BankTransactionResponse]:
+        """
+        Fetches the user's transactions for the current month.
+        """
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+        start_of_month = dt.datetime.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        transactions = bank_transaction_repo.get_transactions_since(start_of_month)
+
+        return [
+            BankTransactionResponse(
+                id=transaction.id,
+                account_id=transaction.account.id,
+                amount=float(transaction.amount),
+                date=transaction.date,
+                description=transaction.description,
+                counterparty=transaction.counterparty,
+                subcategory_id=str(transaction.subcategory_id) if transaction.subcategory_id else None,
+            )
+            for transaction in transactions
+        ]
+
+    def _get_current_month_transactions_by_subcategory(
+        self, subcategory_id: uuid.UUID
+    ) -> list[BankTransaction]:
+        """
+        Fetches all transactions related to a specific subcategory for the current month.
+        """
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+        start_of_month = dt.datetime.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        return bank_transaction_repo.get_transactions_since(
+            start_of_month, subcategory_id=subcategory_id
+        )
+
+    def _get_budget_status(
+        self, subcategory_id: uuid.UUID
+    ) -> tuple[float, float, float]:
+        """
+        Fetches the budgeted, spent, and available amounts for a specific subcategory.
+        """
+        subcategory = BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+            subcategory_id
+        )
+
+        if subcategory is None:
+            raise FinanceServiceException(404, "Subcategory not found")
+
+        # Fetch budgeted amount
+        budgeted = float(subcategory.amount)
+
+        # Calculate spent amount
+        transactions = self._get_current_month_transactions_by_subcategory(
+            subcategory_id
+        )
+        spent = -float(sum(transaction.amount for transaction in transactions))
+
+        # Calculate available amount
+        available = budgeted - spent
+        return round(budgeted, 2), round(spent, 2), round(available, 2)

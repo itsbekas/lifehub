@@ -29,14 +29,59 @@ class T212DataResponse:
 @dataclass
 class BankBalanceResponse:
     bank: str
+    account_id: str
     balance: float
 
 
 @dataclass
 class BankTransactionResponse:
-    transaction_id: str
+    id: str
     account_id: str
     amount: float
     date: Optional[dt.datetime]
     description: Optional[str]
     counterparty: Optional[str]
+    subcategory_id: Optional[str]
+
+
+@dataclass
+class BankInstitutionResponse:
+    id: str
+    name: str
+    logo: str
+
+
+@dataclass
+class BudgetSubCategoryResponse:
+    id: str
+    name: str
+    category_id: str
+    category_name: str
+    budgeted: float
+    spent: float
+    available: float
+
+
+@dataclass
+class BudgetCategoryRequest:
+    name: str
+
+
+@dataclass
+class BudgetCategoryResponse:
+    id: str
+    name: str
+    subcategories: list[BudgetSubCategoryResponse]
+
+
+@dataclass
+class BudgetSubCategoryRequest:
+    name: str
+    amount: float
+
+
+@dataclass
+class UpdateBankTransactionRequest:
+    description: Optional[str]
+    subcategory_id: Optional[str]
+    amount: Optional[float]
