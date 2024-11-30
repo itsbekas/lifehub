@@ -97,11 +97,11 @@ function closeEditTransactionModal() {
                                 <li class="border-b border-gray-200 pb-2">
                                     <div class="flex justify-between">
                                         <span class="font-medium text-gray-800">{subcategory.name}</span>
-                                        <span class="text-gray-600">Budgeted: {subcategory.budgeted}</span>
+                                        <span class="text-gray-600">Budgeted: {subcategory.budgeted.toFixed(2)}€</span>
                                     </div>
                                     <div class="flex justify-between text-sm text-gray-600">
-                                        <span>Spent: {subcategory.spent}</span>
-                                        <span>Available: {subcategory.available}</span>
+                                        <span>Spent: {subcategory.spent.toFixed(2)}€</span>
+                                        <span>Available: {subcategory.available.toFixed(2)}€</span>
                                     </div>
                                 </li>
                             {/each}
@@ -126,7 +126,7 @@ function closeEditTransactionModal() {
                     {#each data.balances as balance (balance.account_id)}
                         <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
                             <h3 class="text-md font-medium mb-1 truncate text-gray-800">{balance.bank}</h3>
-                            <p class="text-gray-600 text-sm">Balance: {balance.balance}</p>
+                            <p class="text-gray-600 text-sm">Balance: {balance.balance.toFixed(2)}€</p>
                         </div>
                     {/each}
                     <button class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 focus:outline-none" onclick={openAddBankModal}>
@@ -158,7 +158,7 @@ function closeEditTransactionModal() {
                             <Table.Row>
                                 <Table.Cell class="font-medium whitespace-normal break-words">{transaction.user_description ? transaction.user_description : `${transaction.description} (${transaction.counterparty})`}</Table.Cell>
                                 <Table.Cell>{getSubcategoryById(transaction.subcategory_id!)?.name}</Table.Cell>
-                                <Table.Cell>{transaction.amount}</Table.Cell>
+                                <Table.Cell>{transaction.amount.toFixed(2)}€</Table.Cell>
                                 <Table.Cell class="text-right">{new Date(transaction.date).toLocaleDateString()}</Table.Cell>
                             <Table.Cell>
                                 <Button variant="outline" onclick={() => openEditTransactionModal(transaction)}>Edit</Button>

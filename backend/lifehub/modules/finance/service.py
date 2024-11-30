@@ -604,5 +604,4 @@ class FinanceService(BaseUserService):
 
         # Calculate available amount
         available = budgeted - spent
-
-        return budgeted, spent, available
+        return round(budgeted, 2), round(spent, 2), round(available, 2)
