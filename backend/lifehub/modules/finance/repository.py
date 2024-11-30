@@ -1,10 +1,14 @@
+import datetime as dt
+import uuid
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from lifehub.core.common.base.repository.fetch_base import FetchBaseRepository
 from lifehub.core.common.base.repository.user_base import UserBaseRepository
 from lifehub.core.user.schema import User
 
-from .schema import AccountBalance, BankAccount, BankTransaction
+from .schema import AccountBalance, BankAccount, BankTransaction, BudgetSubCategory
 
 
 class BankAccountRepository(UserBaseRepository[BankAccount]):
@@ -42,4 +46,27 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
     def get_by_account_id(self, account_id: str) -> list[BankTransaction]:
         return (
             self.session.query(BankTransaction).filter_by(account_id=account_id).all()
+        )
+
+    def get_transactions_since(
+        self, since_date: dt.datetime, subcategory_id: Optional[uuid.UUID] = None
+    ) -> list[BankTransaction]:
+        query = self.session.query(BankTransaction).filter(
+            BankTransaction.user_id == self.user.id,
+            BankTransaction.date >= since_date,
+        )
+        if subcategory_id:
+            query = query.filter(BankTransaction.subcategory_id == subcategory_id)
+        return query.all()
+
+
+class BudgetSubCategoryRepository(UserBaseRepository[BudgetSubCategory]):
+    def __init__(self, user: User, session: Session):
+        super().__init__(BudgetSubCategory, user=user, session=session)
+
+    def get_by_id(self, subcategory_id: uuid.UUID) -> BudgetSubCategory | None:
+        return (
+            self.session.query(BudgetSubCategory)
+            .filter_by(user_id=self.user.id, id=subcategory_id)
+            .one_or_none()
         )

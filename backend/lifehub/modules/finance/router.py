@@ -13,6 +13,7 @@ from .models import (
     BudgetCategoryResponse,
     BudgetSubCategoryRequest,
     BudgetSubCategoryResponse,
+    UpdateBankTransactionRequest,
 )
 
 router = APIRouter(
@@ -52,11 +53,10 @@ async def update_bank_transaction(
     finance_service: FinanceServiceDep,
     account_id: str,
     transaction_id: str,
-    user_description: Optional[str],
-    subcategory_id: Optional[str],
+    data: UpdateBankTransactionRequest,
 ) -> BankTransactionResponse:
     return finance_service.update_bank_transaction(
-        account_id, transaction_id, user_description, subcategory_id
+        account_id, transaction_id, data.description, data.subcategory_id, data.amount
     )
 
 

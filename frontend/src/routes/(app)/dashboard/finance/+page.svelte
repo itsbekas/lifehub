@@ -47,6 +47,33 @@
         addSubCategoryModalVisible = false;
         selectedCategoryId = null;
     }
+
+    function getSubcategoryById(subcategoryId: string) {
+        for (const category of data.budgetCategories) {
+            for (const subcategory of category.subcategories) {
+                if (subcategory.id === subcategoryId) {
+                    return subcategory;
+                }
+            }
+        }
+    }
+
+    function getTransactionById(transactionId: string) {
+        return data.transactions.find(transaction => transaction.id === transactionId);
+    }
+
+let editTransactionModalVisible = $state(false);
+let selectedTransaction = $state<BankTransaction | null>(null);
+
+function openEditTransactionModal(transaction: BankTransaction) {
+    selectedTransaction = transaction;
+    editTransactionModalVisible = true;
+}
+
+function closeEditTransactionModal() {
+    editTransactionModalVisible = false;
+    selectedTransaction = null;
+}
 </script>
 
 <div class="tabs mb-6">
@@ -130,10 +157,13 @@
                         {#each data.transactions as transaction (transaction.id)}
                             <Table.Row>
                                 <Table.Cell class="font-medium whitespace-normal break-words">{transaction.user_description ? transaction.user_description : `${transaction.description} (${transaction.counterparty})`}</Table.Cell>
-                                <Table.Cell>{transaction.subcategory_id}</Table.Cell>
+                                <Table.Cell>{getSubcategoryById(transaction.subcategory_id!)?.name}</Table.Cell>
                                 <Table.Cell>{transaction.amount}</Table.Cell>
                                 <Table.Cell class="text-right">{new Date(transaction.date).toLocaleDateString()}</Table.Cell>
-                            </Table.Row>
+                            <Table.Cell>
+                                <Button variant="outline" onclick={() => openEditTransactionModal(transaction)}>Edit</Button>
+                            </Table.Cell>
+                        </Table.Row>
                         {/each}
                     </Table.Body>
                 </Table.Root>
@@ -173,11 +203,46 @@
             <form method="POST" action="?/addCategory">
                 <label class="block mb-2">
                     Category Name:
-                    <input type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                    <input name="name" type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
                 </label>
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeAddCategoryModal}>Cancel</Button>
                     <Button type="submit">Add Category</Button>
+                </div>
+            </form>
+        </div>
+    </div>
+{/if}
+
+{#if editTransactionModalVisible}
+    <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 class="text-lg font-bold mb-4">Edit Transaction</h3>
+            <form method="POST" action="?/editTransaction">
+                <input type="hidden" name="transactionId" value={selectedTransaction?.id} />
+                <input type="hidden" name="accountId" value={selectedTransaction?.account_id} />
+                <label class="block mb-2">
+                    Description:
+                    <input name="description" type="text" class="border border-gray-300 rounded-lg w-full p-2 mt-1" value={getTransactionById(selectedTransaction!.id)?.user_description || ''} />
+                </label>
+                <label class="block mb-2">
+                    Sub-category:
+                    <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
+                        <option value="" disabled selected>Select a sub-category</option>
+                        {#each data.budgetCategories as category}
+                            {#each category.subcategories as subcategory}
+                                <option value={subcategory.id} selected={subcategory.id === getTransactionById(selectedTransaction!.id)?.subcategory_id}>{subcategory.name}</option>
+                            {/each}
+                        {/each}
+                    </select>
+                </label>
+                <label class="block mb-2">
+                    Amount:
+                    <input name="amount" type="number" step="0.01" class="border border-gray-300 rounded-lg w-full p-2 mt-1" value={getTransactionById(selectedTransaction!.id)?.amount || 0} />
+                </label>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onclick={closeEditTransactionModal}>Cancel</Button>
+                    <Button type="submit">Save Changes</Button>
                 </div>
             </form>
         </div>

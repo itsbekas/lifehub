@@ -41,6 +41,7 @@ class BankTransactionResponse:
     date: Optional[dt.datetime]
     description: Optional[str]
     counterparty: Optional[str]
+    subcategory_id: Optional[str]
 
 
 @dataclass
@@ -60,9 +61,11 @@ class BudgetSubCategoryResponse:
     spent: float
     available: float
 
+
 @dataclass
 class BudgetCategoryRequest:
     name: str
+
 
 @dataclass
 class BudgetCategoryResponse:
@@ -70,7 +73,15 @@ class BudgetCategoryResponse:
     name: str
     subcategories: list[BudgetSubCategoryResponse]
 
+
 @dataclass
 class BudgetSubCategoryRequest:
     name: str
     amount: float
+
+
+@dataclass
+class UpdateBankTransactionRequest:
+    description: Optional[str]
+    subcategory_id: Optional[str]
+    amount: Optional[float]

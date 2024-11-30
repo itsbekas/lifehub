@@ -57,5 +57,21 @@ export const actions = {
       },
       body: JSON.stringify({ name, amount })
     });
+  },
+  editTransaction: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const transactionId = formData.get('transactionId');
+    const accountId = formData.get('accountId');
+    const subcategoryId = formData.get('subcategoryId');
+    const amount = formData.get('amount');
+    const description = formData.get('description');
+
+    const response = await fetch(api_url(`/finance/bank/${accountId}/transactions/${transactionId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ description, subcategory_id: subcategoryId, amount })
+    });
   }
 }
