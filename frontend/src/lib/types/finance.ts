@@ -36,3 +36,10 @@ export interface BankInstitution {
     name: string;
     logo: string;
 }
+
+export interface BankTransactionFilter {
+    id: string;
+    filter: string;
+    subcategory_id: string | null;
+    description: string | null;
+}

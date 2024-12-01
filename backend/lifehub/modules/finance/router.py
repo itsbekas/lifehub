@@ -15,6 +15,7 @@ from .models import (
     BudgetCategoryResponse,
     BudgetSubCategoryRequest,
     BudgetSubCategoryResponse,
+    EditBankTransactionFilterRequest,
     UpdateBankTransactionRequest,
 )
 
@@ -66,7 +67,7 @@ async def create_bank_transactions_filter(
 
 @router.put("/bank/transactions/filters")
 async def update_bank_transactions_filter(
-    finance_service: FinanceServiceDep, data: BankTransactionFilterRequest
+    finance_service: FinanceServiceDep, data: EditBankTransactionFilterRequest
 ) -> BankTransactionFilterResponse:
     return finance_service.update_bank_transactions_filter(data)
 

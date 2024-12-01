@@ -87,7 +87,7 @@ class BankTransactionFilter(UserBaseModel):
     )
     filter: Mapped[str] = mapped_column(String(64))
     subcategory_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("budget_subcategory.id")
+        UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True
     )
     subcategory: Mapped[BudgetSubCategory] = relationship(single_parent=True)
-    description: Mapped[str] = mapped_column(String(64))
+    description: Mapped[str] = mapped_column(String(64), nullable=True)

@@ -24,6 +24,7 @@ from .models import (
     BankTransactionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
+    EditBankTransactionFilterRequest,
     T212TransactionResponse,
 )
 from .repository import (
@@ -227,8 +228,15 @@ class FinanceService(BaseUserService):
 
         for filter in filters:
             # Check if the transaction description or counterparty matches the filter
-            if (filter.filter.lower() in transaction.description.lower() if transaction.description else False) or \
-               (filter.filter.lower() in transaction.counterparty.lower() if transaction.counterparty else False):
+            if (
+                filter.filter.lower() in transaction.description.lower()
+                if transaction.description
+                else False
+            ) or (
+                filter.filter.lower() in transaction.counterparty.lower()
+                if transaction.counterparty
+                else False
+            ):
                 # Update the transaction's subcategory_id and user_description
                 transaction.subcategory_id = filter.subcategory_id
                 transaction.user_description = filter.description
@@ -660,8 +668,10 @@ class FinanceService(BaseUserService):
         )
         filter = BankTransactionFilter(
             user_id=self.user.id,
-            description=data.description,
-            subcategory_id=uuid.UUID(data.subcategory_id),
+            description=data.description if data.description else None,
+            subcategory_id=uuid.UUID(data.subcategory_id)
+            if data.subcategory_id
+            else None,
             filter=data.filter,
         )
         bank_transaction_filters_repo.add(filter)
@@ -669,12 +679,14 @@ class FinanceService(BaseUserService):
         return BankTransactionFilterResponse(
             id=str(filter.id),
             description=filter.description,
-            subcategory_id=str(filter.subcategory_id),
+            subcategory_id=str(filter.subcategory_id)
+            if filter.subcategory_id
+            else None,
             filter=filter.filter,
         )
 
     def update_bank_transactions_filter(
-        self, data: BankTransactionFilterRequest
+        self, data: EditBankTransactionFilterRequest
     ) -> BankTransactionFilterResponse:
         bank_transaction_filters_repo = BankTransactionFilterRepository(
             self.user, self.session
@@ -682,13 +694,21 @@ class FinanceService(BaseUserService):
         filter = bank_transaction_filters_repo.get_by_id(uuid.UUID(data.id))
         if filter is None:
             raise FinanceServiceException(404, "Filter not found")
-        filter.description = data.description
-        filter.subcategory_id = uuid.UUID(data.subcategory_id)
+        filter.description = (
+            data.description if data.description else filter.description
+        )
+        filter.subcategory_id = (
+            uuid.UUID(data.subcategory_id)
+            if data.subcategory_id
+            else filter.subcategory_id
+        )
         filter.filter = data.filter
         self.session.commit()
         return BankTransactionFilterResponse(
             id=str(filter.id),
             description=filter.description,
-            subcategory_id=str(filter.subcategory_id),
+            subcategory_id=str(filter.subcategory_id)
+            if filter.subcategory_id
+            else None,
             filter=filter.filter,
         )
