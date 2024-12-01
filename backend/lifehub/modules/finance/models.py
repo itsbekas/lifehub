@@ -42,6 +42,7 @@ class BankTransactionResponse:
     description: Optional[str]
     counterparty: Optional[str]
     subcategory_id: Optional[str]
+    user_description: Optional[str]
 
 
 @dataclass
@@ -85,3 +86,18 @@ class UpdateBankTransactionRequest:
     description: Optional[str]
     subcategory_id: Optional[str]
     amount: Optional[float]
+
+
+@dataclass
+class BankTransactionFilterRequest:
+    filter: str
+    subcategory_id: Optional[str]
+    description: Optional[str]
+
+
+@dataclass
+class BankTransactionFilterResponse:
+    id: str
+    filter: str
+    subcategory_id: Optional[str]
+    description: Optional[str]

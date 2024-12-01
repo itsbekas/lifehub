@@ -41,7 +41,9 @@ class BankTransaction(UserBaseModel):
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2))
     date: Mapped[dt.datetime] = mapped_column()
     description: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
-    user_description: Mapped[Optional[str]] = mapped_column(String(256), nullable=True, default=None)
+    user_description: Mapped[Optional[str]] = mapped_column(
+        String(256), nullable=True, default=None
+    )
     counterparty: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     subcategory_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True
@@ -75,3 +77,17 @@ class BudgetSubCategory(UserBaseModel):
     )
     name: Mapped[str] = mapped_column(String(64))
     amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2))
+
+
+class BankTransactionFilter(UserBaseModel):
+    __tablename__ = "bank_transaction_rule"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    filter: Mapped[str] = mapped_column(String(64))
+    subcategory_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True
+    )
+    subcategory: Mapped[BudgetSubCategory] = relationship(single_parent=True)
+    description: Mapped[str] = mapped_column(String(64), nullable=True)

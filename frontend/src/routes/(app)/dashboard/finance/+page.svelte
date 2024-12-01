@@ -1,12 +1,18 @@
 <script lang="ts">
-    import type { BankBalance, BankInstitution, BankTransaction, BudgetCategory } from "@/lib/types/finance";
+    import type { BankBalance, BankInstitution, BankTransaction, BankTransactionFilter, BudgetCategory } from "@/lib/types/finance";
     import * as Table from "@/components/ui/table";
     import * as Card from "@/components/ui/card";
     import { Button } from "@/components/ui/button";
 
     // Define the Props interface as requested
     interface Props {
-        data: { balances: BankBalance[], transactions: BankTransaction[], banks: BankInstitution[], budgetCategories: BudgetCategory[] };
+        data: {
+            balances: BankBalance[],
+            transactions: BankTransaction[],
+            banks: BankInstitution[],
+            budgetCategories: BudgetCategory[],
+            filters: BankTransactionFilter[],
+        };
     }
 
     // Use the $props rune to destructure the props based on the defined interface
@@ -74,11 +80,33 @@ function closeEditTransactionModal() {
     editTransactionModalVisible = false;
     selectedTransaction = null;
 }
+let addFilterModalVisible = $state(false);
+let editFilterModalVisible = $state(false);
+let selectedFilterId = $state<string | null>(null);
+
+function openAddFilterModal() {
+    addFilterModalVisible = true;
+}
+
+function closeAddFilterModal() {
+    addFilterModalVisible = false;
+}
+
+function openEditFilterModal(filterId: string) {
+    selectedFilterId = filterId;
+    editFilterModalVisible = true;
+}
+
+function closeEditFilterModal() {
+    editFilterModalVisible = false;
+    selectedFilterId = null;
+}
 </script>
 
 <div class="tabs mb-6">
     <button class="tab px-4 py-2 text-lg font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 focus:outline-none" class:active={activeTab === 'budget'} onclick={() => activeTab = 'budget'}>Budget</button>
     <button class="tab px-4 py-2 text-lg font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 focus:outline-none" class:active={activeTab === 'transactions'} onclick={() => activeTab = 'transactions'}>Transactions</button>
+    <button class="tab ml-auto px-4 py-2 text-lg font-medium text-gray-700 border-b-2 border-transparent hover:text-gray-900 focus:outline-none" class:active={activeTab === 'settings'} onclick={() => activeTab = 'settings'}>Settings</button>
 </div>
 
 {#if activeTab === 'budget'}
@@ -242,6 +270,102 @@ function closeEditTransactionModal() {
                 </label>
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeEditTransactionModal}>Cancel</Button>
+                    <Button type="submit">Save Changes</Button>
+                </div>
+            </form>
+        </div>
+    </div>
+{/if}
+
+{#if activeTab === 'settings'}
+    <div class="settings-section mb-6">
+        <h2 class="text-xl font-bold mb-4">Settings</h2>
+        <div class="filters-section mb-6">
+            <h3 class="text-lg font-semibold mb-2">Manage Filters</h3>
+            <p class="text-gray-700 mb-4">Create filters to help auto-categorize and auto-rename transactions based on their descriptions.</p>
+            <Button onclick={() => openAddFilterModal()}>Add Filter</Button>
+            <div class="filters-list mt-4">
+                {#each data.filters as filter (filter.id)}
+                    <div class="filter-item border border-gray-300 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="font-medium">Filter: {filter.filter}</p>
+                                {#if filter.subcategory_id}
+                                    <p class="text-sm text-gray-600">Sub-category ID: {getSubcategoryById(filter.subcategory_id)?.name}</p>
+                                {/if}
+                                {#if filter.description}
+                                    <p class="text-sm text-gray-600">Rename to: {filter.description}</p>
+                                {/if}
+                            </div>
+                            <Button variant="outline" onclick={() => openEditFilterModal(filter.id)}>Edit</Button>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        </div>
+    </div>
+{/if}
+
+{#if addFilterModalVisible}
+    <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 class="text-lg font-bold mb-4">Add a New Filter</h3>
+            <form method="POST" action="?/addFilter">
+                <label class="block mb-2">
+                    Filter:
+                    <input type="text" name="filter" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
+                </label>
+                <label class="block mb-2">
+                    Sub-category:
+                    <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
+                        <option value="" disabled selected>Select a sub-category</option>
+                        {#each data.budgetCategories as category}
+                            {#each category.subcategories as subcategory}
+                                <option value={subcategory.id}>{subcategory.name}</option>
+                            {/each}
+                        {/each}
+                    </select>
+                </label>
+                <label class="block mb-2">
+                    Rename to (optional):
+                    <input type="text" name="description" class="border border-gray-300 rounded-lg w-full p-2 mt-1" />
+                </label>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onclick={closeAddFilterModal}>Cancel</Button>
+                    <Button type="submit">Add Filter</Button>
+                </div>
+            </form>
+        </div>
+    </div>
+{/if}
+
+{#if editFilterModalVisible}
+    <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
+            <h3 class="text-lg font-bold mb-4">Edit Filter</h3>
+            <form method="POST" action="?/editFilter">
+                <input type="hidden" name="filterId" value={selectedFilterId} />
+                <label class="block mb-2">
+                    Filter:
+                    <input type="text" name="filter" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required value={data.filters.find(filter => filter.id === selectedFilterId)?.filter || ''} />
+                </label>
+                <label class="block mb-2">
+                    Sub-category:
+                    <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
+                        <option value="" disabled selected>Select a sub-category</option>
+                        {#each data.budgetCategories as category}
+                            {#each category.subcategories as subcategory}
+                                <option value={subcategory.id}>{subcategory.name}</option>
+                            {/each}
+                        {/each}
+                    </select>
+                </label>
+                <label class="block mb-2">
+                    Rename to (optional):
+                    <input type="text" name="description" class="border border-gray-300 rounded-lg w-full p-2 mt-1" value={data.filters.find(filter => filter.id === selectedFilterId)?.description || ''} />
+                </label>
+                <div class="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onclick={closeEditFilterModal}>Cancel</Button>
                     <Button type="submit">Save Changes</Button>
                 </div>
             </form>
