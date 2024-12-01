@@ -95,5 +95,20 @@ export const actions = {
       },
       body: JSON.stringify({ filter, subcategory_id: subcategoryId, description })
     });
+  },
+  editFilter: async ({ request, fetch }) => {
+    const formData = await request.formData();
+    const filterId = formData.get('filterId');
+    const filter = formData.get('filter');
+    const subcategoryId = formData.get('subcategoryId');
+    const description = formData.get('description');
+
+    const response = await fetch(api_url(`/finance/bank/transactions/filters/${filterId}`), {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ filter, description, subcategory_id: subcategoryId })
+    });
   }
 }

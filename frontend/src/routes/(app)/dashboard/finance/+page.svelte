@@ -285,13 +285,13 @@ function closeEditFilterModal() {
             <p class="text-gray-700 mb-4">Create filters to help auto-categorize and auto-rename transactions based on their descriptions.</p>
             <Button onclick={() => openAddFilterModal()}>Add Filter</Button>
             <div class="filters-list mt-4">
-                {#each data.transactionFilters as filter (filter.id)}
+                {#each data.filters as filter (filter.id)}
                     <div class="filter-item border border-gray-300 rounded-lg p-4 mb-4">
                         <div class="flex justify-between items-center">
                             <div>
                                 <p class="font-medium">Filter: {filter.filter}</p>
                                 {#if filter.subcategory_id}
-                                    <p class="text-sm text-gray-600">Sub-category ID: {filter.subcategory_id}</p>
+                                    <p class="text-sm text-gray-600">Sub-category ID: {getSubcategoryById(filter.subcategory_id)?.name}</p>
                                 {/if}
                                 {#if filter.description}
                                     <p class="text-sm text-gray-600">Rename to: {filter.description}</p>
@@ -317,7 +317,7 @@ function closeEditFilterModal() {
                 </label>
                 <label class="block mb-2">
                     Sub-category:
-                    <select name="subcategory_id" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
+                    <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
                         <option value="" disabled selected>Select a sub-category</option>
                         {#each data.budgetCategories as category}
                             {#each category.subcategories as subcategory}
@@ -343,15 +343,22 @@ function closeEditFilterModal() {
     <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
         <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/3">
             <h3 class="text-lg font-bold mb-4">Edit Filter</h3>
-            <form method="POST" action="editFilter">
+            <form method="POST" action="?/editFilter">
                 <input type="hidden" name="filterId" value={selectedFilterId} />
                 <label class="block mb-2">
                     Filter:
                     <input type="text" name="filter" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required value={data.filters.find(filter => filter.id === selectedFilterId)?.filter || ''} />
                 </label>
                 <label class="block mb-2">
-                    Sub-category ID:
-                    <input type="text" name="subcategory_id" class="border border-gray-300 rounded-lg w-full p-2 mt-1" value={data.filters.find(filter => filter.id === selectedFilterId)?.subcategory_id || ''} />
+                    Sub-category:
+                    <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
+                        <option value="" disabled selected>Select a sub-category</option>
+                        {#each data.budgetCategories as category}
+                            {#each category.subcategories as subcategory}
+                                <option value={subcategory.id}>{subcategory.name}</option>
+                            {/each}
+                        {/each}
+                    </select>
                 </label>
                 <label class="block mb-2">
                     Rename to (optional):

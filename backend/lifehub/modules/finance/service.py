@@ -24,7 +24,6 @@ from .models import (
     BankTransactionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
-    EditBankTransactionFilterRequest,
     T212TransactionResponse,
 )
 from .repository import (
@@ -269,6 +268,7 @@ class FinanceService(BaseUserService):
                             description=synced_transaction.description,
                             counterparty=synced_transaction.counterparty,
                             subcategory_id=str(synced_transaction.subcategory_id),
+                            user_description=synced_transaction.user_description,
                         )
                     )
                 continue
@@ -332,6 +332,7 @@ class FinanceService(BaseUserService):
                         subcategory_id=str(db_transaction.subcategory_id)
                         if db_transaction.subcategory_id
                         else None,
+                        user_description=db_transaction.user_description,
                     )
                 )
 
@@ -372,6 +373,7 @@ class FinanceService(BaseUserService):
             subcategory_id=str(transaction.subcategory_id)
             if transaction.subcategory_id
             else None,
+            user_description=transaction.user_description,
         )
 
     def get_budget_categories(self) -> list[BudgetCategoryResponse]:
@@ -602,6 +604,7 @@ class FinanceService(BaseUserService):
                 subcategory_id=str(transaction.subcategory_id)
                 if transaction.subcategory_id
                 else None,
+                user_description=transaction.user_description,
             )
             for transaction in transactions
         ]
@@ -686,12 +689,12 @@ class FinanceService(BaseUserService):
         )
 
     def update_bank_transactions_filter(
-        self, data: EditBankTransactionFilterRequest
+        self, filter_id: uuid.UUID, data: BankTransactionFilterRequest
     ) -> BankTransactionFilterResponse:
         bank_transaction_filters_repo = BankTransactionFilterRepository(
             self.user, self.session
         )
-        filter = bank_transaction_filters_repo.get_by_id(uuid.UUID(data.id))
+        filter = bank_transaction_filters_repo.get_by_id(filter_id)
         if filter is None:
             raise FinanceServiceException(404, "Filter not found")
         filter.description = (
