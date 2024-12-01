@@ -12,6 +12,7 @@ from .schema import (
     AccountBalance,
     BankAccount,
     BankTransaction,
+    BankTransactionFilter,
     BudgetCategory,
     BudgetSubCategory,
 )
@@ -86,5 +87,17 @@ class BudgetSubCategoryRepository(UserBaseRepository[BudgetSubCategory]):
         return (
             self.session.query(BudgetSubCategory)
             .filter_by(user_id=self.user.id, id=subcategory_id)
+            .one_or_none()
+        )
+
+
+class BankTransactionFilterRepository(UserBaseRepository[BankTransactionFilter]):
+    def __init__(self, user: User, session: Session):
+        super().__init__(BankTransactionFilter, user=user, session=session)
+
+    def get_by_id(self, filter_id: uuid.UUID) -> BankTransactionFilter | None:
+        return (
+            self.session.query(BankTransactionFilter)
+            .filter_by(user_id=self.user.id, id=filter_id)
             .one_or_none()
         )

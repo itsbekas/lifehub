@@ -8,6 +8,8 @@ from .dependencies import FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
+    BankTransactionFilterRequest,
+    BankTransactionFilterResponse,
     BankTransactionResponse,
     BudgetCategoryRequest,
     BudgetCategoryResponse,
@@ -46,6 +48,27 @@ async def get_bank_transactions(
     finance_service: FinanceServiceDep,
 ) -> list[BankTransactionResponse]:
     return finance_service.get_bank_transactions()
+
+
+@router.get("/bank/transactions/filters")
+async def get_bank_transactions_filters(
+    finance_service: FinanceServiceDep,
+) -> list[BankTransactionFilterResponse]:
+    return finance_service.get_bank_transactions_filters()
+
+
+@router.post("/bank/transactions/filters")
+async def create_bank_transactions_filter(
+    finance_service: FinanceServiceDep, data: BankTransactionFilterRequest
+) -> BankTransactionFilterResponse:
+    return finance_service.create_bank_transactions_filter(data)
+
+
+@router.put("/bank/transactions/filters")
+async def update_bank_transactions_filter(
+    finance_service: FinanceServiceDep, data: BankTransactionFilterRequest
+) -> BankTransactionFilterResponse:
+    return finance_service.update_bank_transactions_filter(data)
 
 
 @router.put("/bank/{account_id}/transactions/{transaction_id}")

@@ -85,3 +85,19 @@ class UpdateBankTransactionRequest:
     description: Optional[str]
     subcategory_id: Optional[str]
     amount: Optional[float]
+
+
+@dataclass
+class BankTransactionFilterRequest:
+    id: Optional[str]
+    filter: str
+    subcategory_id: str
+    description: str
+
+
+@dataclass
+class BankTransactionFilterResponse:
+    id: str
+    filter: str
+    subcategory_id: str
+    description: str

@@ -19,6 +19,8 @@ from lifehub.providers.trading212.repository.t212_transaction import (
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
+    BankTransactionFilterRequest,
+    BankTransactionFilterResponse,
     BankTransactionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
@@ -27,6 +29,7 @@ from .models import (
 from .repository import (
     AccountBalanceRepository,
     BankAccountRepository,
+    BankTransactionFilterRepository,
     BankTransactionRepository,
     BudgetCategoryRepository,
     BudgetSubCategoryRepository,
@@ -35,6 +38,7 @@ from .schema import (
     AccountBalance,
     BankAccount,
     BankTransaction,
+    BankTransactionFilter,
     BudgetCategory,
     BudgetSubCategory,
 )
@@ -212,9 +216,29 @@ class FinanceService(BaseUserService):
             for inst in gc_api.get_institutions()
         ]
 
+    def apply_filters_to_transaction(self, transaction: BankTransaction) -> None:
+        """
+        Apply user's filters to a given transaction. If a match is found, update the transaction's subcategory_id and user_description.
+        """
+        bank_transaction_filters_repo = BankTransactionFilterRepository(
+            self.user, self.session
+        )
+        filters = bank_transaction_filters_repo.get_all()
+
+        for filter in filters:
+            # Check if the transaction description or counterparty matches the filter
+            if (filter.filter.lower() in transaction.description.lower() if transaction.description else False) or \
+               (filter.filter.lower() in transaction.counterparty.lower() if transaction.counterparty else False):
+                # Update the transaction's subcategory_id and user_description
+                transaction.subcategory_id = filter.subcategory_id
+                transaction.user_description = filter.description
+
+        # Commit the changes if any updates were made
+        self.session.commit()
+
     def get_bank_transactions(self) -> list[BankTransactionResponse]:
         """
-        Fetches the latest transactions from the bank accounts.
+        Fetches the latest transactions from the bank accounts and applies any user filters.
         """
         gc_api = GoCardlessAPIClient(self.user, self.session)
         bank_account_repo = BankAccountRepository(self.user, self.session)
@@ -275,44 +299,33 @@ class FinanceService(BaseUserService):
                         else transaction.creditorName
                     )
 
-                    bank_transaction_repo.add(
-                        BankTransaction(
-                            user_id=self.user.id,
-                            id=transaction.transactionId,
-                            account_id=account.id,
-                            amount=Decimal(transaction.transactionAmount.amount),
-                            date=date,
-                            description=description,
-                            counterparty=counterparty,
-                        )
+                    db_transaction = BankTransaction(
+                        user_id=self.user.id,
+                        id=transaction.transactionId,
+                        account_id=account.id,
+                        amount=Decimal(transaction.transactionAmount.amount),
+                        date=date,
+                        description=description,
+                        counterparty=counterparty,
                     )
+                    bank_transaction_repo.add(db_transaction)
 
-                    transactions.append(
-                        BankTransactionResponse(
-                            id=transaction.transactionId,
-                            account_id=account.id,
-                            amount=float(transaction.transactionAmount.amount),
-                            date=date,
-                            description=description,
-                            counterparty=counterparty,
-                            subcategory_id=None,
-                        )
-                    )
+                # Apply filters to update subcategory_id and user_description
+                self.apply_filters_to_transaction(db_transaction)
 
-                else:
-                    transactions.append(
-                        BankTransactionResponse(
-                            id=db_transaction.id,
-                            account_id=account.id,
-                            amount=float(db_transaction.amount),
-                            date=db_transaction.date,
-                            description=db_transaction.description,
-                            counterparty=db_transaction.counterparty,
-                            subcategory_id=str(db_transaction.subcategory_id)
-                            if db_transaction.subcategory_id
-                            else None,
-                        )
+                transactions.append(
+                    BankTransactionResponse(
+                        id=db_transaction.id,
+                        account_id=account.id,
+                        amount=float(db_transaction.amount),
+                        date=db_transaction.date,
+                        description=db_transaction.description,
+                        counterparty=db_transaction.counterparty,
+                        subcategory_id=str(db_transaction.subcategory_id)
+                        if db_transaction.subcategory_id
+                        else None,
                     )
+                )
 
             account.last_synced = dt.datetime.now()
 
@@ -624,3 +637,58 @@ class FinanceService(BaseUserService):
         # Calculate available amount
         available = budgeted - spent
         return round(budgeted, 2), round(spent, 2), round(available, 2)
+
+    def get_bank_transactions_filters(self) -> list[BankTransactionFilterResponse]:
+        bank_transaction_filters_repo = BankTransactionFilterRepository(
+            self.user, self.session
+        )
+        return [
+            BankTransactionFilterResponse(
+                id=str(filter.id),
+                description=filter.description,
+                subcategory_id=str(filter.subcategory_id),
+                filter=filter.filter,
+            )
+            for filter in bank_transaction_filters_repo.get_all()
+        ]
+
+    def create_bank_transactions_filter(
+        self, data: BankTransactionFilterRequest
+    ) -> BankTransactionFilterResponse:
+        bank_transaction_filters_repo = BankTransactionFilterRepository(
+            self.user, self.session
+        )
+        filter = BankTransactionFilter(
+            user_id=self.user.id,
+            description=data.description,
+            subcategory_id=uuid.UUID(data.subcategory_id),
+            filter=data.filter,
+        )
+        bank_transaction_filters_repo.add(filter)
+        self.session.commit()
+        return BankTransactionFilterResponse(
+            id=str(filter.id),
+            description=filter.description,
+            subcategory_id=str(filter.subcategory_id),
+            filter=filter.filter,
+        )
+
+    def update_bank_transactions_filter(
+        self, data: BankTransactionFilterRequest
+    ) -> BankTransactionFilterResponse:
+        bank_transaction_filters_repo = BankTransactionFilterRepository(
+            self.user, self.session
+        )
+        filter = bank_transaction_filters_repo.get_by_id(uuid.UUID(data.id))
+        if filter is None:
+            raise FinanceServiceException(404, "Filter not found")
+        filter.description = data.description
+        filter.subcategory_id = uuid.UUID(data.subcategory_id)
+        filter.filter = data.filter
+        self.session.commit()
+        return BankTransactionFilterResponse(
+            id=str(filter.id),
+            description=filter.description,
+            subcategory_id=str(filter.subcategory_id),
+            filter=filter.filter,
+        )
