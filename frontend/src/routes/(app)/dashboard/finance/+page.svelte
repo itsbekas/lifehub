@@ -289,12 +289,12 @@ function closeEditFilterModal() {
                     <div class="filter-item border border-gray-300 rounded-lg p-4 mb-4">
                         <div class="flex justify-between items-center">
                             <div>
-                                <p class="font-medium">Filter: {filter.filter}</p>
+                                <p class="font-medium">{filter.description}</p>
                                 {#if filter.subcategory_id}
                                     <p class="text-sm text-gray-600">Sub-category ID: {getSubcategoryById(filter.subcategory_id)?.name}</p>
                                 {/if}
                                 {#if filter.description}
-                                    <p class="text-sm text-gray-600">Rename to: {filter.description}</p>
+                                    <p class="text-sm text-gray-600">Filter: {filter.filter}</p>
                                 {/if}
                             </div>
                             <Button variant="outline" onclick={() => openEditFilterModal(filter.id)}>Edit</Button>
