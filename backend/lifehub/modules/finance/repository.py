@@ -13,6 +13,7 @@ from .schema import (
     BankAccount,
     BankTransaction,
     BankTransactionFilter,
+    BankTransactionFilterMatch,
     BudgetCategory,
     BudgetSubCategory,
 )
@@ -98,6 +99,20 @@ class BankTransactionFilterRepository(UserBaseRepository[BankTransactionFilter])
     def get_by_id(self, filter_id: uuid.UUID) -> BankTransactionFilter | None:
         return (
             self.session.query(BankTransactionFilter)
+            .filter_by(user_id=self.user.id, id=filter_id)
+            .one_or_none()
+        )
+
+
+class BankTransactionFilterMatchRepository(
+    UserBaseRepository[BankTransactionFilterMatch]
+):
+    def __init__(self, user: User, session: Session):
+        super().__init__(BankTransactionFilterMatch, user=user, session=session)
+
+    def get_by_id(self, filter_id: uuid.UUID) -> BankTransactionFilterMatch | None:
+        return (
+            self.session.query(BankTransactionFilterMatch)
             .filter_by(user_id=self.user.id, id=filter_id)
             .one_or_none()
         )

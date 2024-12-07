@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime as dt
 from typing import Optional
 
@@ -98,6 +100,19 @@ class BankTransactionFilterRequest:
 @dataclass
 class BankTransactionFilterResponse:
     id: str
-    filter: str
+    matches: list[BankTransactionFilterMatchResponse]
     subcategory_id: Optional[str]
     description: Optional[str]
+
+
+@dataclass
+class BankTransactionFilterMatchRequest:
+    filter_id: str
+    match_rule: str
+
+
+@dataclass
+class BankTransactionFilterMatchResponse:
+    id: str
+    filter_id: str
+    match_rule: str

@@ -85,9 +85,22 @@ class BankTransactionFilter(UserBaseModel):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    filter: Mapped[str] = mapped_column(String(64))
+    description: Mapped[str] = mapped_column(String(64), nullable=True)
     subcategory_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True
     )
     subcategory: Mapped[BudgetSubCategory] = relationship(single_parent=True)
-    description: Mapped[str] = mapped_column(String(64), nullable=True)
+    matches: Mapped[list[BankTransactionFilterMatch]] = relationship(back_populates="filter")
+
+
+class BankTransactionFilterMatch(UserBaseModel):
+    __tablename__ = "bank_transaction_rule_match"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    filter_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("bank_transaction_rule.id")
+    )
+    filter: Mapped[BankTransactionFilter] = relationship(back_populates="matches")
+    match_string: Mapped[str] = mapped_column(String(64))
