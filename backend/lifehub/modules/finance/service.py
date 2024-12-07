@@ -686,7 +686,7 @@ class FinanceService(BaseUserService):
             subcategory_id=uuid.UUID(data.subcategory_id)
             if data.subcategory_id
             else None,
-            filter=data.filter,
+            matches=[],
         )
         bank_transaction_filters_repo.add(filter)
         self.session.commit()

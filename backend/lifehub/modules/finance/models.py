@@ -92,7 +92,6 @@ class UpdateBankTransactionRequest:
 
 @dataclass
 class BankTransactionFilterRequest:
-    filter: str
     subcategory_id: Optional[str]
     description: Optional[str]
 

@@ -84,7 +84,6 @@ export const actions = {
   },
   addFilter: async ({ request, fetch }) => {
     const formData = await request.formData();
-    const filter = formData.get('filter');
     const subcategoryId = formData.get('subcategoryId');
     const description = formData.get('description');
 
@@ -93,13 +92,12 @@ export const actions = {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ filter, subcategory_id: subcategoryId, description })
+      body: JSON.stringify({ subcategory_id: subcategoryId, description })
     });
   },
   editFilter: async ({ request, fetch }) => {
     const formData = await request.formData();
     const filterId = formData.get('filterId');
-    const filter = formData.get('filter');
     const subcategoryId = formData.get('subcategoryId');
     const description = formData.get('description');
 
@@ -108,7 +106,7 @@ export const actions = {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ filter, description, subcategory_id: subcategoryId })
+      body: JSON.stringify({ description, subcategory_id: subcategoryId })
     });
   }
 }
