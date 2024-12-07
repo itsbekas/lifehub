@@ -39,7 +39,13 @@ export interface BankInstitution {
 
 export interface BankTransactionFilter {
     id: string;
-    filter: string;
+    matches: string[];
     subcategory_id: string | null;
     description: string | null;
+}
+
+export interface BankTransactionFilterMatch {
+    id: string;
+    filter_id: string;
+    match_rule: string;
 }

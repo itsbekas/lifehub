@@ -4,6 +4,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from lifehub.core.common.base.repository.base import BaseRepository
 from lifehub.core.common.base.repository.fetch_base import FetchBaseRepository
 from lifehub.core.common.base.repository.user_base import UserBaseRepository
 from lifehub.core.user.schema import User
@@ -13,6 +14,7 @@ from .schema import (
     BankAccount,
     BankTransaction,
     BankTransactionFilter,
+    BankTransactionFilterMatch,
     BudgetCategory,
     BudgetSubCategory,
 )
@@ -99,5 +101,17 @@ class BankTransactionFilterRepository(UserBaseRepository[BankTransactionFilter])
         return (
             self.session.query(BankTransactionFilter)
             .filter_by(user_id=self.user.id, id=filter_id)
+            .one_or_none()
+        )
+
+
+class BankTransactionFilterMatchRepository(BaseRepository[BankTransactionFilterMatch]):
+    def __init__(self, session: Session):
+        super().__init__(BankTransactionFilterMatch, session=session)
+
+    def get_by_id(self, filter_id: uuid.UUID) -> BankTransactionFilterMatch | None:
+        return (
+            self.session.query(BankTransactionFilterMatch)
+            .filter_by(id=filter_id)
             .one_or_none()
         )

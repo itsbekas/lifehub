@@ -39,6 +39,7 @@ from .schema import (
     BankAccount,
     BankTransaction,
     BankTransactionFilter,
+    BankTransactionFilterMatch,
     BudgetCategory,
     BudgetSubCategory,
 )
@@ -218,7 +219,8 @@ class FinanceService(BaseUserService):
 
     def apply_filters_to_transaction(self, transaction: BankTransaction) -> None:
         """
-        Apply user's filters to a given transaction. If a match is found, update the transaction's subcategory_id and user_description.
+        Apply user's filters to a given transaction. If any match rules of a filter are met,
+        update the transaction's subcategory_id and user_description.
         """
         bank_transaction_filters_repo = BankTransactionFilterRepository(
             self.user, self.session
@@ -226,21 +228,21 @@ class FinanceService(BaseUserService):
         filters = bank_transaction_filters_repo.get_all()
 
         for filter in filters:
-            # Check if the transaction description or counterparty matches the filter
-            if (
-                filter.filter.lower() in transaction.description.lower()
-                if transaction.description
-                else False
-            ) or (
-                filter.filter.lower() in transaction.counterparty.lower()
-                if transaction.counterparty
-                else False
-            ):
-                # Update the transaction's subcategory_id and user_description
-                transaction.subcategory_id = filter.subcategory_id
-                transaction.user_description = filter.description
+            for match_rule in filter.matches:
+                if (
+                    match_rule.match_string.lower() in transaction.description.lower()
+                    if transaction.description
+                    else False
+                ) or (
+                    match_rule.match_string.lower() in transaction.counterparty.lower()
+                    if transaction.counterparty
+                    else False
+                ):
+                    # Update the transaction's subcategory_id and user_description
+                    transaction.subcategory_id = filter.subcategory_id
+                    transaction.user_description = filter.description
+                    break  # Stop checking more match rules for this filter
 
-        # Commit the changes if any updates were made
         self.session.commit()
 
     def get_bank_transactions(self) -> list[BankTransactionResponse]:
@@ -658,7 +660,7 @@ class FinanceService(BaseUserService):
                 id=str(filter.id),
                 description=filter.description,
                 subcategory_id=str(filter.subcategory_id),
-                filter=filter.filter,
+                matches=[match.match_string for match in filter.matches],
             )
             for filter in bank_transaction_filters_repo.get_all()
         ]
@@ -675,9 +677,16 @@ class FinanceService(BaseUserService):
             subcategory_id=uuid.UUID(data.subcategory_id)
             if data.subcategory_id
             else None,
-            filter=data.filter,
+            matches=[],
         )
+
+        filter.matches = [
+            BankTransactionFilterMatch(filter_id=filter.id, match_string=match)
+            for match in data.matches
+        ]
+
         bank_transaction_filters_repo.add(filter)
+
         self.session.commit()
         return BankTransactionFilterResponse(
             id=str(filter.id),
@@ -685,7 +694,7 @@ class FinanceService(BaseUserService):
             subcategory_id=str(filter.subcategory_id)
             if filter.subcategory_id
             else None,
-            filter=filter.filter,
+            matches=[match.match_string for match in filter.matches],
         )
 
     def update_bank_transactions_filter(
@@ -705,13 +714,33 @@ class FinanceService(BaseUserService):
             if data.subcategory_id
             else filter.subcategory_id
         )
-        filter.filter = data.filter
+
+        # Update matches explicitly
+        existing_matches = {match.match_string for match in filter.matches}
+        new_matches = set(data.matches)
+
+        # Add new matches
+        for match_string in new_matches - existing_matches:
+            filter.matches.append(
+                BankTransactionFilterMatch(
+                    filter_id=filter.id, match_string=match_string
+                )
+            )
+
+        # Remove old matches explicitly
+        matches_to_remove = [
+            match for match in filter.matches if match.match_string not in new_matches
+        ]
+        for match in matches_to_remove:
+            self.session.delete(match)  # Explicitly delete match from the session
+
         self.session.commit()
+
         return BankTransactionFilterResponse(
             id=str(filter.id),
             description=filter.description,
             subcategory_id=str(filter.subcategory_id)
             if filter.subcategory_id
             else None,
-            filter=filter.filter,
+            matches=[match.match_string for match in filter.matches],
         )
