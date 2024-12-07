@@ -86,13 +86,19 @@ export const actions = {
     const formData = await request.formData();
     const subcategoryId = formData.get('subcategoryId');
     const description = formData.get('description');
+    const matchesJson = formData.get('matches');
+    
+    let matches;
+    if (matchesJson) {
+      matches = JSON.parse(matchesJson.toString());
+    }
 
     const response = await fetch(api_url('/finance/bank/transactions/filters'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ subcategory_id: subcategoryId, description })
+      body: JSON.stringify({ subcategory_id: subcategoryId, description, matches })
     });
   },
   editFilter: async ({ request, fetch }) => {
@@ -100,13 +106,19 @@ export const actions = {
     const filterId = formData.get('filterId');
     const subcategoryId = formData.get('subcategoryId');
     const description = formData.get('description');
+    const matchesJson = formData.get('matches');
+
+    let matches;
+    if (matchesJson) {
+      matches = JSON.parse(matchesJson.toString());
+    }
 
     const response = await fetch(api_url(`/finance/bank/transactions/filters/${filterId}`), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ description, subcategory_id: subcategoryId })
+      body: JSON.stringify({ description, subcategory_id: subcategoryId, matches })
     });
   }
 }

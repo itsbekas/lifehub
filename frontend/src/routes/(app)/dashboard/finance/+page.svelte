@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { BankBalance, BankInstitution, BankTransaction, BankTransactionFilter, BudgetCategory } from "@/lib/types/finance";
+    import type { BankBalance, BankInstitution, BankTransaction, BankTransactionFilter, BankTransactionFilterMatch, BudgetCategory } from "@/lib/types/finance";
     import * as Table from "@/components/ui/table";
     import * as Card from "@/components/ui/card";
     import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ let editFilterModalVisible = $state(false);
 let selectedFilterId = $state<string | null>(null);
 
 function openAddFilterModal() {
+    matches = [];
     addFilterModalVisible = true;
 }
 
@@ -94,6 +95,7 @@ function closeAddFilterModal() {
 
 function openEditFilterModal(filterId: string) {
     selectedFilterId = filterId;
+    matches = data.filters.find(filter => filter.id === filterId)?.matches!;
     editFilterModalVisible = true;
 }
 
@@ -101,6 +103,14 @@ function closeEditFilterModal() {
     editFilterModalVisible = false;
     selectedFilterId = null;
 }
+
+// Add a reactive state to manage multiple matches dynamically
+let matches: string[] = $state([]);
+
+// Functions to handle adding/removing matches dynamically
+const addMatch = () => matches = [...matches, ''];
+const removeMatch = (index: number) => matches = matches.filter((_, i) => i !== index);
+
 </script>
 
 <div class="tabs mb-6">
@@ -318,10 +328,37 @@ function closeEditFilterModal() {
                     <input type="text" name="description" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required />
                 </label>
                 <label class="block mb-2">
-                    Match (optional):
-                    <input type="text" name="match" class="border border-gray-300 rounded-lg w-full p-2 mt-1" />
+                    Matches:
                 </label>
-                <label class="block mb-2">
+                {#each matches as match, index}
+                    <div class="flex items-center gap-2 mb-2">
+                        <input
+                            type="text"
+                            bind:value={matches[index]}
+                            class="border border-gray-300 rounded-lg w-full p-2"
+                            placeholder="Enter a match"
+                            required
+                        />
+                        {#if matches.length > 1}
+                            <button
+                                type="button"
+                                class="text-red-500 hover:underline"
+                                onclick={() => removeMatch(index)}
+                            >
+                                Remove
+                            </button>
+                        {/if}
+                    </div>
+                {/each}
+                <button
+                    type="button"
+                    class="text-blue-500 hover:underline"
+                    onclick={addMatch}
+                >
+                    Add Another Match
+                </button>
+
+                <label class="block mb-2 mt-4">
                     Sub-category:
                     <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
                         <option value="" disabled selected>Select a sub-category</option>
@@ -332,6 +369,10 @@ function closeEditFilterModal() {
                         {/each}
                     </select>
                 </label>
+
+                <!-- Serialize the matches array into a hidden input -->
+                <input type="hidden" name="matches" value={JSON.stringify(matches)} />
+
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeAddFilterModal}>Cancel</Button>
                     <Button type="submit">Add Match</Button>
@@ -348,15 +389,49 @@ function closeEditFilterModal() {
             <h3 class="text-lg font-bold mb-4">Edit Match</h3>
             <form method="POST" action="?/editFilter">
                 <input type="hidden" name="filterId" value={selectedFilterId} />
+
                 <label class="block mb-2">
                     Rename to:
-                    <input type="text" name="description" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required value={data.filters.find(filter => filter.id === selectedFilterId)?.description || ''} />
+                    <input
+                        type="text"
+                        name="description"
+                        class="border border-gray-300 rounded-lg w-full p-2 mt-1"
+                        required
+                        value={data.filters.find(filter => filter.id === selectedFilterId)?.description || ''}
+                    />
                 </label>
                 <label class="block mb-2">
-                    Match (optional):
-                    <input type="text" name="match" class="border border-gray-300 rounded-lg w-full p-2 mt-1" value={data.filters.find(filter => filter.id === selectedFilterId)?.filter || ''} />
+                    Matches:
                 </label>
-                <label class="block mb-2">
+                {#each matches as match, index}
+                    <div class="flex items-center gap-2 mb-2">
+                        <input
+                            type="text"
+                            bind:value={matches[index]}
+                            class="border border-gray-300 rounded-lg w-full p-2"
+                            placeholder="Enter a match"
+                            required
+                        />
+                        {#if matches.length > 1}
+                            <button
+                                type="button"
+                                class="text-red-500 hover:underline"
+                                onclick={() => removeMatch(index)}
+                            >
+                                Remove
+                            </button>
+                        {/if}
+                    </div>
+                {/each}
+                <button
+                    type="button"
+                    class="text-blue-500 hover:underline"
+                    onclick={addMatch}
+                >
+                    Add Another Match
+                </button>
+
+                <label class="block mb-2 mt-4">
                     Sub-category:
                     <select name="subcategoryId" class="border border-gray-300 rounded-lg w-full p-2 mt-1">
                         <option value="" disabled selected>Select a sub-category</option>
@@ -367,6 +442,10 @@ function closeEditFilterModal() {
                         {/each}
                     </select>
                 </label>
+
+                <!-- Serialize the matches array into a hidden input -->
+                <input type="hidden" name="matches" value={JSON.stringify(matches)} />
+
                 <div class="mt-4 flex justify-end gap-2">
                     <Button variant="secondary" onclick={closeEditFilterModal}>Cancel</Button>
                     <Button type="submit">Save Changes</Button>

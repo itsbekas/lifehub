@@ -8,7 +8,6 @@ from .dependencies import FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
-    BankTransactionFilterMatchRequest,
     BankTransactionFilterRequest,
     BankTransactionFilterResponse,
     BankTransactionResponse,
@@ -72,24 +71,6 @@ async def update_bank_transactions_filter(
     data: BankTransactionFilterRequest,
 ) -> BankTransactionFilterResponse:
     return finance_service.update_bank_transactions_filter(uuid.UUID(filter_id), data)
-
-
-@router.post("/bank/transactions/filters/{filter_id}/matches")
-async def add_filter_match(
-    finance_service: FinanceServiceDep,
-    filter_id: str,
-    data: BankTransactionFilterMatchRequest,
-) -> BankTransactionFilterResponse:
-    return finance_service.add_bank_transaction_filter_match(
-        uuid.UUID(filter_id), data.match_rule
-    )
-
-
-@router.delete("/bank/transactions/filters/matches/{match_id}")
-async def remove_filter_match(
-    finance_service: FinanceServiceDep, match_id: str
-) -> None:
-    return finance_service.remove_bank_transaction_filter_match(uuid.UUID(match_id))
 
 
 @router.put("/bank/{account_id}/transactions/{transaction_id}")

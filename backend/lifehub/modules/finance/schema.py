@@ -8,7 +8,7 @@ from typing import Optional
 from sqlalchemy import DECIMAL, UUID, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from lifehub.core.common.base.db_model import FetchBaseModel, UserBaseModel
+from lifehub.core.common.base.db_model import BaseModel, FetchBaseModel, UserBaseModel
 
 
 class BankAccount(UserBaseModel):
@@ -90,17 +90,16 @@ class BankTransactionFilter(UserBaseModel):
         UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True
     )
     subcategory: Mapped[BudgetSubCategory] = relationship(single_parent=True)
-    matches: Mapped[list[BankTransactionFilterMatch]] = relationship(back_populates="filter")
+    matches: Mapped[list[BankTransactionFilterMatch]] = relationship(
+        back_populates="filter", single_parent=True
+    )
 
 
-class BankTransactionFilterMatch(UserBaseModel):
+class BankTransactionFilterMatch(BaseModel):
     __tablename__ = "bank_transaction_rule_match"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
     filter_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("bank_transaction_rule.id")
+        UUID(as_uuid=True), ForeignKey("bank_transaction_rule.id"), primary_key=True
     )
     filter: Mapped[BankTransactionFilter] = relationship(back_populates="matches")
-    match_string: Mapped[str] = mapped_column(String(64))
+    match_string: Mapped[str] = mapped_column(String(64), primary_key=True)

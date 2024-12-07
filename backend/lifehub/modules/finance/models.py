@@ -94,24 +94,12 @@ class UpdateBankTransactionRequest:
 class BankTransactionFilterRequest:
     subcategory_id: Optional[str]
     description: Optional[str]
+    matches: list[str]
 
 
 @dataclass
 class BankTransactionFilterResponse:
     id: str
-    matches: list[BankTransactionFilterMatchResponse]
+    matches: list[str]
     subcategory_id: Optional[str]
     description: Optional[str]
-
-
-@dataclass
-class BankTransactionFilterMatchRequest:
-    filter_id: str
-    match_rule: str
-
-
-@dataclass
-class BankTransactionFilterMatchResponse:
-    id: str
-    filter_id: str
-    match_rule: str
