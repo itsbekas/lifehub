@@ -1,8 +1,9 @@
 <script lang="ts">
-    import type { BankBalance, BankInstitution, BankTransaction, BankTransactionFilter, BankTransactionFilterMatch, BudgetCategory } from "@/lib/types/finance";
+    import type { BankBalance, BankInstitution, BankTransaction, BankTransactionFilter, BudgetCategory } from "@/lib/types/finance";
     import * as Table from "@/components/ui/table";
     import * as Card from "@/components/ui/card";
     import { Button } from "@/components/ui/button";
+    import AddBankDialog from "@/components/finance/modals/AddBankDialog.svelte";
 
     // Define the Props interface as requested
     interface Props {
@@ -22,19 +23,10 @@
     data.transactions = data.transactions.sort((a, b) => Date.parse(b.date) - Date.parse(a.date));
 
     // Reactive state for managing modal visibility using $state
-    let addBankModalVisible = $state(false);
     let addCategoryModalVisible = $state(false);
     let addSubCategoryModalVisible = $state(false);
     let activeTab = $state("budget");
     let selectedCategoryId = $state<string | null>(null);
-
-    function openAddBankModal() {
-        addBankModalVisible = true;
-    }
-
-    function closeAddBankModal() {
-        addBankModalVisible = false;
-    }
 
     function openAddCategoryModal() {
         addCategoryModalVisible = true;
@@ -167,9 +159,7 @@ const removeMatch = (index: number) => matches = matches.filter((_, i) => i !== 
                             <p class="text-gray-600 text-sm">Balance: {balance.balance.toFixed(2)}€</p>
                         </div>
                     {/each}
-                    <button class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 focus:outline-none" onclick={openAddBankModal}>
-                        <h3 class="text-md font-medium text-gray-800">Add a Bank</h3>
-                    </button>
+                    <AddBankDialog banks={data.banks} />
                 </div>
             </Card.Content>
         </Card.Root>
@@ -207,30 +197,6 @@ const removeMatch = (index: number) => matches = matches.filter((_, i) => i !== 
                 </Table.Root>
             </Card.Content>
         </Card.Root>
-    </div>
-{/if}
-
-{#if addBankModalVisible}
-    <div class="modal fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
-        <div class="modal-content bg-white p-6 rounded-lg shadow-lg w-1/4">
-            <h3 class="text-lg font-bold mb-4">Add a New Bank</h3>
-            <form method="POST" action="?/addBank">
-                <label class="block mb-2">
-                    Bank Name:
-                    <select name="bankId" class="border border-gray-300 rounded-lg w-full p-2 mt-1" required>
-                        <option value="" disabled selected>Select a bank</option>
-                        {#each data.banks as bank}
-                            <option value="{bank.id}">{bank.name}</option>
-                        {/each}
-                    </select>
-                </label>
-                
-                <div class="mt-4 flex justify-end gap-2">
-                    <Button variant="secondary" onclick={closeAddBankModal}>Cancel</Button>
-                    <Button type="submit">Add Bank</Button>
-                </div>
-            </form>
-        </div>
     </div>
 {/if}
 
