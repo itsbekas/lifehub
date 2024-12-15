@@ -4,25 +4,11 @@
   import type { BankInstitution } from "@/lib/types/finance";
 
   export let banks: BankInstitution[] = []; // Prop for bank data
-  let addBankModalVisible = false;
-
-  function openAddBankModal() {
-    addBankModalVisible = true;
-  }
-
-  function closeAddBankModal() {
-    addBankModalVisible = false;
-  }
 </script>
 
-<Dialog.Root bind:open={addBankModalVisible}>
+<Dialog.Root>
   <Dialog.Trigger>
-    <button
-      class="border border-gray-200 rounded-lg p-4 bg-gray-50 flex items-center justify-center cursor-pointer hover:bg-gray-100 focus:outline-none"
-      onclick={openAddBankModal}
-    >
-      <h3 class="text-md font-medium text-gray-800">Add a Bank</h3>
-    </button>
+    Add a bank
   </Dialog.Trigger>
 
   <Dialog.Content class="sm:max-w-[425px]">
@@ -50,10 +36,7 @@
         </select>
       </label>
 
-      <div class="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" type="button" onclick={closeAddBankModal}>
-          Cancel
-        </Button>
+      <div class="mt-4">
         <Button type="submit">Add Bank</Button>
       </div>
     </form>
