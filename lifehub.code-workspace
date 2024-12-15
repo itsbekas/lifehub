@@ -26,11 +26,21 @@
       "svelte.svelte-vscode",
       "dbaeumer.vscode-eslint",
       "bradlc.vscode-tailwindcss",
+      "esbenp.prettier-vscode",
       // Backend
       "ms-python.python",
       "matangover.mypy",
       "tamasfe.even-better-toml",
       "charliermarsh.ruff",
     ]
+  },
+  "settings": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "always",
+      "source.organizeImports": "always"
+    },
+    "[svelte]": {
+      "editor.defaultFormatter": "svelte.svelte-vscode"
+    }
   }
 }
