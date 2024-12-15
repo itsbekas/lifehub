@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Dialog from "@/components/ui/dialog";
-  import { Button } from "@/components/ui/button";
+  import * as Dialog from '@/components/ui/dialog';
+  import { Button } from '@/components/ui/button';
 
   export let addCategoryModalVisible = false;
 
@@ -23,20 +23,18 @@
     </Dialog.Header>
 
     <form method="POST" action="?/addCategory">
-      <label class="block mb-2">
+      <label class="mb-2 block">
         Category Name:
         <input
           name="name"
           type="text"
-          class="border border-gray-300 rounded-lg w-full p-2 mt-1"
+          class="mt-1 w-full rounded-lg border border-gray-300 p-2"
           required
         />
       </label>
 
       <div class="mt-4 flex justify-end gap-2">
-        <Button variant="secondary" type="button" onclick={closeAddCategoryModal}>
-          Cancel
-        </Button>
+        <Button variant="secondary" type="button" onclick={closeAddCategoryModal}>Cancel</Button>
         <Button type="submit">Add Category</Button>
       </div>
     </form>

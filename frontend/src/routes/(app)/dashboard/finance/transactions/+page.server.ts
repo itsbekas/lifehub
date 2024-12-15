@@ -7,7 +7,7 @@ export async function load({ fetch }) {
   const [balancesResponse, transactionsResponse, budgetCategoriesResponse] = await Promise.all([
     fetch(api_url('/finance/bank/balances')),
     fetch(api_url('/finance/bank/transactions')),
-    fetch(api_url('/finance/budget/categories')),
+    fetch(api_url('/finance/budget/categories'))
   ]);
 
   const balances: BankBalance[] = await balancesResponse.json();

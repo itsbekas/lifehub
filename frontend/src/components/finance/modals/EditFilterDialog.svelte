@@ -18,9 +18,7 @@
 </script>
 
 <Dialog.Root>
-  <Dialog.Trigger>
-    Edit
-  </Dialog.Trigger>
+  <Dialog.Trigger>Edit</Dialog.Trigger>
   <Dialog.Content class="sm:max-w-[425px]">
     <Dialog.Header>
       <Dialog.Title>Edit Filter</Dialog.Title>
