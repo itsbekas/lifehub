@@ -19,7 +19,7 @@ class DetailedAthlete:
         state: str,
         country: str,
         sex: str,
-        premium: bool, # Deprecated, use `summit` instead
+        premium: bool,  # Deprecated, use `summit` instead
         summit: bool,
         created_at: str,
         updated_at: str,

@@ -3,6 +3,8 @@
   import MissingProviderCard from '@/components/settings/providers/MissingProviderCard.svelte';
   import SettingsSection from '@/components/settings/SettingsSection.svelte';
 
+  import type { Provider } from '@/lib/types/core';
+
   interface Props {
     /** @type {import('./$types').PageData}*/
     data: { missingProviders: Array<Provider>; userProviders: Array<Provider> };

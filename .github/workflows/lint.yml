@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/ruff-action@v2
         with:
-          src: backend
+          src: backend/lifehub
 
   frontend:
     runs-on: ubuntu-latest
@@ -20,9 +20,9 @@ jobs:
         working-directory: frontend
 
       - name: Run ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx
+        run: npx eslint src
         working-directory: frontend
 
       - name: Run Prettier
-        run: npx prettier --check .
+        run: npx prettier --check src
         working-directory: frontend

@@ -3,6 +3,8 @@
   import SettingsCard from '@/components/settings/SettingsCard.svelte';
   import Modal from '@/components/Modal.svelte';
 
+  import type { Provider } from '@/lib/types/core';
+
   interface Props {
     provider: Provider;
   }
@@ -10,7 +12,7 @@
   let { provider }: Props = $props();
 
   let isRemoveModalOpen = $state(false);
-  let canConnect: boolean = $state();
+  let canConnect: boolean | undefined = $state(undefined);
 
   function toggleRemoveModal() {
     isRemoveModalOpen = !isRemoveModalOpen;
@@ -25,7 +27,7 @@
         <form
           method="POST"
           action="?/testProvider"
-          use:enhance={({}) => {
+          use:enhance={() => {
             return async ({ result }) => {
               if (result.type === 'success') {
                 canConnect = true;

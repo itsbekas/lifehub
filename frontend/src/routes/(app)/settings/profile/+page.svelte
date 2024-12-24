@@ -2,6 +2,8 @@
   import SettingsSection from '@/components/settings/SettingsSection.svelte';
   import SettingsTextInput from '@/components/settings/SettingsTextInput.svelte';
 
+  import type { User } from '@/lib/types/core';
+
   interface Props {
     /** @type {import('./$types').PageData} */
     data: { user: User };

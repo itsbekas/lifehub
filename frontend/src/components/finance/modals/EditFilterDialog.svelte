@@ -39,12 +39,12 @@
         />
       </label>
 
-      <label class="mb-2 block">Matches:</label>
+      <p class="mb-2 block">Matches:</p>
       {#each matches as match, index}
         <div class="mb-2 flex items-center gap-2">
           <input
             type="text"
-            bind:value={matches[index]}
+            bind:value={match}
             class="w-full rounded-lg border border-gray-300 p-2"
             placeholder="Enter a match"
             required

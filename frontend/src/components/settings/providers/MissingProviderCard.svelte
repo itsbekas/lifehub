@@ -3,6 +3,8 @@
   import Modal from '@/components/Modal.svelte';
   import TextInput from '@/components/TextInput.svelte';
 
+  import type { Provider } from '@/lib/types/core';
+
   interface Props {
     provider: Provider;
   }
