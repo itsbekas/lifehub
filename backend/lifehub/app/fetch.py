@@ -7,7 +7,7 @@ from lifehub.config.checks import pre_run_checks
 
 def run() -> None:
     pre_run_checks()
-    
+
     if len(sys.argv) < 2:
         raise ValueError("Please provide a fetch script to run")
 

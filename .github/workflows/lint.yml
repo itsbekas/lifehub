@@ -1,0 +1,28 @@
+name: Linting
+
+on: [ push, pull_request ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/ruff-action@v2
+        with:
+          src: backend/lifehub
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install modules
+        run: npm install
+        working-directory: frontend
+
+      - name: Run ESLint
+        run: npx eslint src
+        working-directory: frontend
+
+      - name: Run Prettier
+        run: npx prettier --check src
+        working-directory: frontend

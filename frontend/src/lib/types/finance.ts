@@ -1,51 +1,51 @@
 export interface BankBalance {
-    bank: string;
-    account_id: string;
-    balance: number;
+  bank: string;
+  account_id: string;
+  balance: number;
 }
 
 export interface BankTransaction {
-    id: string;
-    account_id: string;
-    amount: number;
-    date: string;
-    description: string | null;
-    counterparty: string | null;
-    user_description: string | null;
-    subcategory_id: string | null;
+  id: string;
+  account_id: string;
+  amount: number;
+  date: string;
+  description: string | null;
+  counterparty: string | null;
+  user_description: string | null;
+  subcategory_id: string | null;
 }
 
 export interface BudgetSubCategory {
-    id: string;
-    name: string;
-    category_id: string;
-    category_name: string;
-    budgeted: number;
-    spent: number;
-    available: number;
+  id: string;
+  name: string;
+  category_id: string;
+  category_name: string;
+  budgeted: number;
+  spent: number;
+  available: number;
 }
 
 export interface BudgetCategory {
-    id: string;
-    name: string;
-    subcategories: BudgetSubCategory[];
+  id: string;
+  name: string;
+  subcategories: BudgetSubCategory[];
 }
 
 export interface BankInstitution {
-    id: string;
-    name: string;
-    logo: string;
+  id: string;
+  name: string;
+  logo: string;
 }
 
 export interface BankTransactionFilter {
-    id: string;
-    matches: string[];
-    subcategory_id: string | null;
-    description: string | null;
+  id: string;
+  matches: string[];
+  subcategory_id: string | null;
+  description: string | null;
 }
 
 export interface BankTransactionFilterMatch {
-    id: string;
-    filter_id: string;
-    match_rule: string;
+  id: string;
+  filter_id: string;
+  match_rule: string;
 }

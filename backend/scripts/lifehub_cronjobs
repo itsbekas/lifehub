@@ -1,5 +1,0 @@
-# 30 minutes
-0,30 * * * * FETCH networth
-1,31 * * * * FETCH qbitstats
-# 1 day
-0 2 * * * FETCH t212history

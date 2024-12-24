@@ -1,6 +1,6 @@
 <script lang="ts">
   import AddFilterDialog from '@/components/finance/modals/AddFilterDialog.svelte';
-import type { BankTransactionFilter, BudgetCategory } from '@/lib/types/finance';
+  import type { BankTransactionFilter, BudgetCategory } from '@/lib/types/finance';
 
   interface Props {
     data: {
@@ -8,7 +8,7 @@ import type { BankTransactionFilter, BudgetCategory } from '@/lib/types/finance'
       categories: BudgetCategory[];
     };
   }
-  
+
   let { data }: Props = $props();
 </script>
 
@@ -26,5 +26,5 @@ import type { BankTransactionFilter, BudgetCategory } from '@/lib/types/finance'
       </div>
     {/each}
   </div>
-  <AddFilterDialog categories={ data.categories }/>
+  <AddFilterDialog categories={data.categories} />
 </section>

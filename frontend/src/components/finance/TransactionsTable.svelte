@@ -56,7 +56,7 @@
                 {new Date(transaction.date).toLocaleDateString()}
               </Table.Cell>
               <Table.Cell>
-                <EditTransactionDialog transaction={transaction} categories={categories} />
+                <EditTransactionDialog {transaction} {categories} />
               </Table.Cell>
             </Table.Row>
           {/each}

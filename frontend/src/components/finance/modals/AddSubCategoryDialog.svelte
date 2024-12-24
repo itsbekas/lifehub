@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Dialog from '@/components/ui/dialog';
-  import { Button } from "@/components/ui/button";
+  import { Button } from '@/components/ui/button';
 
   export let categoryId: string | null = null;
 </script>

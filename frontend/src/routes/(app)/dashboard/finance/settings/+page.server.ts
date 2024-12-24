@@ -3,7 +3,6 @@ import type { BankTransactionFilter, BudgetCategory } from '$lib/types/finance';
 
 /** @type {import('./$types').PageServerLoad} */
 export async function load({ fetch }) {
-
   const [filtersResponse, categoriesResponse] = await Promise.all([
     fetch(api_url('/finance/bank/transactions/filters')),
     fetch(api_url('/finance/budget/categories'))
@@ -11,7 +10,7 @@ export async function load({ fetch }) {
 
   const filters: BankTransactionFilter[] = await filtersResponse.json();
   const categories: BudgetCategory[] = await categoriesResponse.json();
-  
+
   return { filters, categories };
 }
 
