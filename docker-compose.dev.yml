@@ -43,7 +43,9 @@ services:
       - lifehub-backend
     volumes:
       - ./frontend:/app
+      - node_modules:/usr/src/app/node_modules
 
 volumes:
+  node_modules:
   dbdata:
     driver: local
