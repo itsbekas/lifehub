@@ -1,13 +1,15 @@
-import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
-
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
-}
+import { Center, Title, Button } from "@mantine/core";
+import { useNavigate } from "react-router";
 
 export default function Home() {
-  return <Welcome />;
+  const navigate = useNavigate();
+
+  return (
+    <Center style={{ height: "100vh", flexDirection: "column" }}>
+      <Title order={1} style={{ fontSize: "8rem" }}>Lifehub</Title>
+      <Button style={{ marginTop: "2rem" }} onClick={() => navigate("/login")}>
+        Login
+      </Button>
+    </Center>
+  );
 }
