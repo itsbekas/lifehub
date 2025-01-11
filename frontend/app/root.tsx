@@ -1,4 +1,4 @@
-import '@mantine/core/styles.css';
+import "@mantine/core/styles.css";
 
 import {
   isRouteErrorResponse,
@@ -8,7 +8,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
