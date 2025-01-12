@@ -20,7 +20,7 @@ export function SubCategoryCard({ name, budgeted, spent }: SubCategoryProps) {
         {name}
       </Text>
       <Text fz="sm" fw={500} mt="xs">
-        ${spent.toFixed(2)} / ${budgeted.toFixed(2)}
+        {spent.toFixed(2)}€ / {budgeted.toFixed(2)}€
       </Text>
       <Progress value={percentage} mt="sm" size="sm" radius="lg" />
     </Card>

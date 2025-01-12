@@ -73,7 +73,10 @@ export default function FinancePage({ loaderData }: Route.ComponentProps) {
 
         {/* Transactions Column */}
         <Grid.Col span={8}>
-          <TransactionsTable transactions={transactions} />
+          <TransactionsTable
+            transactions={transactions}
+            categories={categories.flatMap((c) => c.subcategories)}
+          />
         </Grid.Col>
       </Grid>
     </Container>
