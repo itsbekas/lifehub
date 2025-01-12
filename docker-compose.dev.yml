@@ -37,6 +37,7 @@ services:
     container_name: lifehub-frontend
     environment:
       - VITE_BACKEND_URL=http://lifehub-backend:8000
+      - VITE_SESSION_SECRET=${SESSION_SECRET}
     ports:
       - "80:5173"
     depends_on:

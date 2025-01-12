@@ -1,4 +1,3 @@
-import { IconChevronDown } from "@tabler/icons-react";
 import { Burger, Center, Container, Group, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import classes from "~/styles/HeaderMenu.module.css";

@@ -9,8 +9,28 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { Form, redirect, useActionData } from "react-router";
-import { accessTokenCookie } from "~/utils/cookies";
+import { getSession, commitSession } from "~/utils/session";
 import type { ActionFunction } from "react-router";
+import { data } from "react-router";
+import type { Route } from "./+types/login";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+
+  if (session.has("access_token")) {
+    // Redirect to the home page if they are already signed in.
+    return redirect("/");
+  }
+
+  return data(
+    { error: session.get("error") },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
+}
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
@@ -34,12 +54,13 @@ export const action: ActionFunction = async ({ request }) => {
 
     const { access_token, expires_at } = await response.json();
 
-    // Set the token in cookies
-    return redirect("/dashboard", {
+    // Create a session and store the token
+    const session = await getSession();
+    session.set("access_token", access_token);
+
+    return new Response(null, {
       headers: {
-        "Set-Cookie": await accessTokenCookie.serialize(access_token, {
-          expires: new Date(expires_at),
-        }),
+        "Set-Cookie": await commitSession(session),
       },
     });
   } catch (error) {
