@@ -38,8 +38,9 @@
     "editor.codeActionsOnSave": {
       "source.fixAll": "always"
     },
-    "[svelte]": {
-      "editor.defaultFormatter": "svelte.svelte-vscode"
+    "[typescriptreact]": {
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true
     }
   }
 }

@@ -14,10 +14,11 @@ export async function fetchWithAuth(
     throw new Error("Authentication token not found");
   }
 
-  // Add the Authorization header
+  // Ensure headers exist and include the Authorization token
   const headers = {
     ...init.headers,
     Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
   };
 
   // Construct the full URL
@@ -26,6 +27,7 @@ export async function fetchWithAuth(
   // Perform the fetch
   return fetch(url, {
     ...init,
+    method: init.method || "GET", // Default to GET if no method is provided
     headers,
   });
 }

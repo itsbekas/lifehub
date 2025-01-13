@@ -31,6 +31,80 @@ export type Category = {
   subcategories: SubCategory[];
 };
 
+export async function action({ request }: { request: Request }) {
+  const contentType = request.headers.get("Content-Type");
+
+  if (contentType === "application/json") {
+    const body = await request.json();
+    const { action, name } = body;
+
+    if (action === "createCategory") {
+      if (!name || typeof name !== "string" || !name.trim()) {
+        return new Response(
+          JSON.stringify({ error: "Category name cannot be empty." }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      try {
+        const response = await fetchWithAuth(
+          "/finance/budget/categories",
+          {
+            method: "POST",
+            body: JSON.stringify({ name }),
+          },
+          request
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          return new Response(
+            JSON.stringify({
+              error: errorData.message || "Failed to add category.",
+            }),
+            {
+              status: response.status,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        const newCategory = await response.json();
+
+        return new Response(
+          JSON.stringify({ success: true, category: newCategory }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      } catch (err) {
+        console.error(err);
+        return new Response(
+          JSON.stringify({ error: "An unexpected error occurred." }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid action type." }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  return new Response(JSON.stringify({ error: "Unsupported Content-Type." }), {
+    status: 415,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
   const transactionsRes = await fetchWithAuth(
     "/finance/bank/transactions",
