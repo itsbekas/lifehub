@@ -36,67 +36,134 @@ export async function action({ request }: { request: Request }) {
 
   if (contentType === "application/json") {
     const body = await request.json();
-    const { action, name } = body;
+    const { action, name, amount, category_id } = body;
 
-    if (action === "createCategory") {
-      if (!name || typeof name !== "string" || !name.trim()) {
-        return new Response(
-          JSON.stringify({ error: "Category name cannot be empty." }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
-
-      try {
-        const response = await fetchWithAuth(
-          "/finance/budget/categories",
-          {
-            method: "POST",
-            body: JSON.stringify({ name }),
-          },
-          request
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
+    switch (action) {
+      case "createCategory": {
+        if (!name || typeof name !== "string" || !name.trim()) {
           return new Response(
-            JSON.stringify({
-              error: errorData.message || "Failed to add category.",
-            }),
+            JSON.stringify({ error: "Category name cannot be empty." }),
             {
-              status: response.status,
+              status: 400,
               headers: { "Content-Type": "application/json" },
             }
           );
         }
 
-        const newCategory = await response.json();
+        try {
+          const response = await fetchWithAuth(
+            "/finance/budget/categories",
+            {
+              method: "POST",
+              body: JSON.stringify({ name }),
+            },
+            request
+          );
 
-        return new Response(
-          JSON.stringify({ success: true, category: newCategory }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
+          if (!response.ok) {
+            const errorData = await response.json();
+            return new Response(
+              JSON.stringify({
+                error: errorData.message || "Failed to add category.",
+              }),
+              {
+                status: response.status,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
           }
-        );
-      } catch (err) {
-        console.error(err);
-        return new Response(
-          JSON.stringify({ error: "An unexpected error occurred." }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+
+          const newCategory = await response.json();
+
+          return new Response(
+            JSON.stringify({ success: true, category: newCategory }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        } catch (err) {
+          console.error(err);
+          return new Response(
+            JSON.stringify({ error: "An unexpected error occurred." }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
       }
-    }
 
-    return new Response(JSON.stringify({ error: "Invalid action type." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+      case "createSubCategory": {
+        if (
+          !name ||
+          typeof name !== "string" ||
+          !name.trim() ||
+          !amount ||
+          typeof category_id !== "string" ||
+          !category_id.trim()
+        ) {
+          return new Response(
+            JSON.stringify({
+              error: "All fields (name, amount, category_id) are required.",
+            }),
+            {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        try {
+          const response = await fetchWithAuth(
+            `/finance/budget/categories/${category_id}/subcategories`,
+            {
+              method: "POST",
+              body: JSON.stringify({ name, amount: parseFloat(amount) }),
+            },
+            request
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            return new Response(
+              JSON.stringify({
+                error: errorData.message || "Failed to add sub-category.",
+              }),
+              {
+                status: response.status,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          const newSubCategory = await response.json();
+
+          return new Response(
+            JSON.stringify({ success: true, subCategory: newSubCategory }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        } catch (err) {
+          console.error(err);
+          return new Response(
+            JSON.stringify({ error: "An unexpected error occurred." }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+
+      default:
+        return new Response(JSON.stringify({ error: "Invalid action type." }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+    }
   }
 
   return new Response(JSON.stringify({ error: "Unsupported Content-Type." }), {

@@ -41,7 +41,9 @@ export function AddCategoryModal() {
         </Group>
       </Modal>
 
-      <Button onClick={open}>Add Category</Button>
+      <Button onClick={open} size="compact-xs" variant="subtle">
+        + Add Category
+      </Button>
     </>
   );
 }

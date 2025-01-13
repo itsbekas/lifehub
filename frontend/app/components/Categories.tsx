@@ -1,6 +1,7 @@
 import { SubCategoryCard } from "~/components/SubCategoryCard";
 import { Container, Title, Stack, Group } from "@mantine/core";
 import { AddCategoryModal } from "~/components/modals/AddCategoryModal";
+import { AddSubCategoryModal } from "~/components/modals/AddSubCategoryModal";
 
 type SubCategory = {
   id: string;
@@ -31,9 +32,10 @@ export function Categories({ categories }: CategoriesProps) {
       </Group>
       {categories.map((category) => (
         <div key={category.id}>
-          <Title order={4} mt="lg" mb="md">
-            {category.name}
-          </Title>
+          <Group justify="apart" mb="md">
+            <Title order={4}>{category.name}</Title>
+            <AddSubCategoryModal categoryId={category.id} />
+          </Group>
           <Stack gap="md">
             {category.subcategories.map((subcategory) => (
               <SubCategoryCard
