@@ -1,7 +1,8 @@
 import { fetchWithAuth } from "~/utils/apiClient";
 import { TransactionsTable } from "~/components/TransactionsTable";
+import { BankBalances } from "~/components/BankBalances";
 import { Categories } from "~/components/Categories";
-import { Grid, Container, Title } from "@mantine/core";
+import { Grid, Container, Title, Stack } from "@mantine/core";
 import type { Route } from "./+types/dashboard.finance";
 
 export type Transaction = {
@@ -29,6 +30,12 @@ export type Category = {
   id: string;
   name: string;
   subcategories: SubCategory[];
+};
+
+type BankBalance = {
+  bank: string;
+  account_id: string;
+  balance: number;
 };
 
 export async function action({ request }: { request: Request }) {
@@ -195,11 +202,21 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
   const categories: Category[] = await categoriesRes.json();
 
-  return { transactions, categories };
+  const balancesRes = await fetchWithAuth(
+    "/finance/bank/balances",
+    undefined,
+    request
+  );
+  if (!balancesRes.ok) {
+    throw new Error(`Failed to fetch bank balances: ${balancesRes.statusText}`);
+  }
+  const balances: BankBalance[] = await balancesRes.json();
+
+  return { transactions, categories, balances };
 }
 
 export default function FinancePage({ loaderData }: Route.ComponentProps) {
-  const { transactions, categories } = loaderData;
+  const { transactions, categories, balances } = loaderData;
 
   return (
     <Container size="lg" mt="lg">
@@ -212,12 +229,14 @@ export default function FinancePage({ loaderData }: Route.ComponentProps) {
           <Categories categories={categories} />
         </Grid.Col>
 
-        {/* Transactions Column */}
         <Grid.Col span={8}>
-          <TransactionsTable
-            transactions={transactions}
-            categories={categories.flatMap((c) => c.subcategories)}
-          />
+          <Stack gap="md">
+            <BankBalances balances={balances} />
+            <TransactionsTable
+              transactions={transactions}
+              categories={categories.flatMap((c) => c.subcategories)}
+            />
+          </Stack>
         </Grid.Col>
       </Grid>
     </Container>

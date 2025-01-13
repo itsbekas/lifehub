@@ -1,5 +1,7 @@
-import React from "react";
+import { useState } from "react";
+import cx from "clsx";
 import { ScrollArea, Table } from "@mantine/core";
+import classes from "~/styles/TransactionsTable.module.css";
 
 type SubCategory = {
   id: string;
@@ -28,6 +30,7 @@ export function TransactionsTable({
   transactions,
   categories,
 }: TransactionsTableProps) {
+  const [scrolled, setScrolled] = useState(false);
   // Sort transactions from most recent to oldest
   const sortedTransactions = [...transactions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -60,9 +63,14 @@ export function TransactionsTable({
   });
 
   return (
-    <ScrollArea h={300}>
-      <Table miw={700}>
-        <Table.Thead>
+    <ScrollArea.Autosize
+      h={500}
+      onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+    >
+      <Table>
+        <Table.Thead
+          className={cx(classes.header, { [classes.scrolled]: scrolled })}
+        >
           <Table.Tr>
             <Table.Th>Date</Table.Th>
             <Table.Th>Description</Table.Th>
@@ -72,6 +80,6 @@ export function TransactionsTable({
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>
       </Table>
-    </ScrollArea>
+    </ScrollArea.Autosize>
   );
 }
