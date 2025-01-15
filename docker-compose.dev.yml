@@ -36,14 +36,17 @@ services:
       dockerfile: Dockerfile.dev
     container_name: lifehub-frontend
     environment:
-      - BACKEND_URL=lifehub-backend
+      - VITE_BACKEND_URL=http://lifehub-backend:8000
+      - VITE_SESSION_SECRET=${SESSION_SECRET}
     ports:
       - "80:5173"
     depends_on:
       - lifehub-backend
     volumes:
       - ./frontend:/app
+      - node_modules:/usr/src/app/node_modules
 
 volumes:
+  node_modules:
   dbdata:
     driver: local

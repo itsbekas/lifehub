@@ -33,7 +33,7 @@ services:
       dockerfile: Dockerfile
     container_name: lifehub-frontend
     environment:
-      - BACKEND_URL=lifehub-backend
+      - VITE_BACKEND_URL=lifehub-backend
     ports:
       - "80:5173"
     depends_on:

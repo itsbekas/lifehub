@@ -1,10 +1,10 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Form, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from lifehub.core.user.api.dependencies import UserDep, UserServiceDep
 from lifehub.core.user.models import (
     UpdateUserRequest,
+    UserCreateRequest,
+    UserLoginRequest,
     UserResponse,
     UserTokenResponse,
     UserVerifyRequest,
@@ -16,12 +16,11 @@ router = APIRouter()
 
 @router.post("/login")
 async def user_login(
-    username: Annotated[str, Form()],
-    password: Annotated[str, Form()],
+    user_data: UserLoginRequest,
     user_service: UserServiceDep,
 ) -> UserTokenResponse:
     try:
-        user = user_service.login_user(username, password)
+        user = user_service.login_user(user_data.username, user_data.password)
     except UserServiceException as e:
         raise HTTPException(status_code=401, detail=str(e))
     user_token = user_service.create_access_token(user)
@@ -30,14 +29,11 @@ async def user_login(
 
 @router.post("/signup")
 async def user_signup(
-    username: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-    name: Annotated[str, Form()],
-    email: Annotated[str, Form()],
+    user_data: UserCreateRequest,
     user_service: UserServiceDep,
 ) -> None:
     try:
-        user_service.create_user(username, email, password, name)
+        user_service.create_user(user_data.username, user_data.email, user_data.password, user_data.name)
     except UserServiceException as e:
         raise HTTPException(status_code=403, detail=str(e))
 
