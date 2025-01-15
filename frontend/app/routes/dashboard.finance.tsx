@@ -50,7 +50,16 @@ export async function action({ request }: { request: Request }) {
 
   if (contentType === "application/json") {
     const body = await request.json();
-    const { action, name, amount, category_id, bank_id, account_id } = body;
+    const {
+      action,
+      name,
+      amount,
+      category_id,
+      bank_id,
+      account_id,
+      transaction_id,
+      subcategory_id,
+    } = body;
 
     switch (action) {
       case "createCategory": {
@@ -220,6 +229,62 @@ export async function action({ request }: { request: Request }) {
         }
       }
 
+      case "editTransaction": {
+        if (!transaction_id || !subcategory_id) {
+          return new Response(
+            JSON.stringify({
+              error: "Transaction ID and Sub-category ID are required.",
+            }),
+            {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        try {
+          const response = await fetchWithAuth(
+            `/finance/bank/${account_id}/transactions/${transaction_id}`,
+            {
+              method: "PUT",
+              body: JSON.stringify({
+                description: "",
+                subcategory_id,
+                amount: -100,
+              }),
+            },
+            request
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            return new Response(
+              JSON.stringify({
+                error: errorData.message || "Failed to edit transaction.",
+              }),
+              {
+                status: response.status,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        } catch (err) {
+          console.error(err);
+          return new Response(
+            JSON.stringify({ error: "An unexpected error occurred." }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Invalid action type." }), {
           status: 400,
@@ -301,7 +366,7 @@ export default function FinancePage({ loaderData }: Route.ComponentProps) {
 
         <Grid.Col span={8}>
           <Stack gap="md">
-            <BankBalances balances={balances} banks={banks} />;
+            <BankBalances balances={balances} banks={banks} />
             <TransactionsTable
               transactions={transactions}
               categories={categories.flatMap((c) => c.subcategories)}

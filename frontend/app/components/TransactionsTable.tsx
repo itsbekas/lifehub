@@ -2,6 +2,7 @@ import { useState } from "react";
 import cx from "clsx";
 import { ScrollArea, Table } from "@mantine/core";
 import classes from "~/styles/TransactionsTable.module.css";
+import { EditTransactionModal } from "~/components/modals/EditTransactionModal";
 
 type SubCategory = {
   id: string;
@@ -58,6 +59,12 @@ export function TransactionsTable({
         <Table.Td>{transaction.description}</Table.Td>
         <Table.Td>{categoryName}</Table.Td>
         <Table.Td>{transaction.amount.toFixed(2)}€</Table.Td>
+        <Table.Td>
+          <EditTransactionModal
+            subCategories={categories}
+            transaction={transaction}
+          />
+        </Table.Td>
       </Table.Tr>
     );
   });
