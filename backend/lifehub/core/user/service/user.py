@@ -1,9 +1,10 @@
 import datetime as dt
 
 import argon2
-from jose import JWTError
+from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy.orm import Session
 
+from lifehub.config.constants import AUTH_ALGORITHM, AUTH_SECRET_KEY
 from lifehub.config.providers import PROVIDER_CLIENTS
 from lifehub.core.common.base.api_client import APIClient
 from lifehub.core.common.base.service.base import BaseService
@@ -17,12 +18,6 @@ from lifehub.core.provider.schema import Provider, ProviderToken
 from lifehub.core.user.models import UserResponse, UserTokenResponse
 from lifehub.core.user.repository.user import UserRepository
 from lifehub.core.user.schema import User
-from lifehub.core.utils.auth import (
-    create_jwt_token,
-    decode_jwt_token,
-    hash_password,
-    verify_password,
-)
 
 
 class UserServiceException(ServiceException):
@@ -43,7 +38,7 @@ class UserService(BaseService):
         if user is not None:
             raise UserServiceException(409, "User already exists")
 
-        hashed_password = hash_password(password)
+        hashed_password = self.hash_password(password)
 
         new_user = User(
             username=username, email=email, password=hashed_password, name=name
@@ -70,15 +65,47 @@ class UserService(BaseService):
         expires_at = dt.datetime.now() + dt.timedelta(days=30)
 
         return UserTokenResponse(
-            name=user.name,
-            access_token=create_jwt_token(user.username, expires_at),
+            name=str(user.id),
+            access_token=self.create_jwt_token(str(user.id), expires_at),
             expires_at=expires_at,
         )
+
+    def hash_password(self, password: str) -> str:
+        return argon2.PasswordHasher().hash(password)
+
+    def verify_password(self, password: str, hashed_password: str) -> bool:
+        try:
+            return argon2.PasswordHasher().verify(hashed_password, password)
+        except argon2.exceptions.VerifyMismatchError:
+            return False
+
+    def create_jwt_token(self, user_id: str, expires_at: dt.datetime) -> str:
+        return jwt.encode(
+            {"sub": user_id, "exp": expires_at, "iss": "Lifehub", "aud": "UserService"},
+            AUTH_SECRET_KEY,
+            algorithm=AUTH_ALGORITHM,
+        )
+
+    def decode_jwt_token(self, token: str) -> dict[str, str]:
+        try:
+            return jwt.decode(
+                token,
+                AUTH_SECRET_KEY,
+                algorithms=[AUTH_ALGORITHM],
+                audience="UserService",
+                issuer="Lifehub",
+                options={"verify_aud": True, "verify_iss": True},
+            )
+        except ExpiredSignatureError:
+            raise UserServiceException(401, "Token expired")
+        except JWTError as e:
+            print(e)
+            raise UserServiceException(401, "Invalid token")
 
     def login_user(self, username: str, password: str) -> User:
         user: User | None = self.user_repository.get_by_username(username)
 
-        if user is None or not verify_password(password, user.password):
+        if user is None or not self.verify_password(password, user.password):
             raise UserServiceException(401, "Invalid credentials")
 
         if not user.verified:
@@ -87,36 +114,23 @@ class UserService(BaseService):
         return user
 
     def authenticate_user(self, token: str) -> User:
-        try:
-            payload = decode_jwt_token(token)
-        except JWTError:
+        payload = self.decode_jwt_token(token)
+        user_id: str | None = payload.get("sub")
+
+        if user_id is None:
             raise UserServiceException(401, "Invalid token")
 
-        username: str = payload.get("sub")  # type: ignore
+        user = self.user_repository.get_by_id(user_id)
 
-        user: User | None = self.user_repository.get_by_username(username)
-
-        if user is None:
+        if not user:
             raise UserServiceException(404, "User not found")
-
         if not user.verified:
             raise UserServiceException(403, "User not verified")
 
         return user
 
     def verify_user(self, token: str) -> User:
-        try:
-            payload = decode_jwt_token(token)
-        except JWTError:
-            raise UserServiceException(401, "Invalid token")
-
-        username: str | None = payload.get("sub")
-        if username is None:
-            raise UserServiceException(401, "Invalid token")
-
-        user: User | None = self.user_repository.get_by_username(username)
-        if user is None:
-            raise UserServiceException(404, "User not found")
+        user = self.authenticate_user(token)
 
         user.verified = True
         self.user_repository.commit()
@@ -147,7 +161,7 @@ class UserService(BaseService):
         if email is not None:
             user.email = email
         if password is not None:
-            user.password = hash_password(password)
+            user.password = self.hash_password(password)
 
         self.session.commit()
 
