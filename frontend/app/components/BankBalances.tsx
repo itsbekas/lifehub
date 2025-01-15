@@ -1,4 +1,5 @@
 import { Container, Title, Card, Text, Group } from "@mantine/core";
+import { AddBankAccountModal } from "~/components/modals/AddBankAccountModal";
 
 type BankBalance = {
   bank: string;
@@ -6,16 +7,24 @@ type BankBalance = {
   balance: number;
 };
 
-type BankBalancesProps = {
-  balances: BankBalance[];
+type Bank = {
+  id: string;
+  name: string;
+  logo: string;
 };
 
-export function BankBalances({ balances }: BankBalancesProps) {
+type BankBalancesProps = {
+  balances: BankBalance[];
+  banks: Bank[]; // List of available banks for the modal
+};
+
+export function BankBalances({ balances, banks }: BankBalancesProps) {
   return (
     <Container size="lg" mt="lg">
-      <Title order={2} mb="md">
-        Bank Balances
-      </Title>
+      <Group justify="apart" mb="md">
+        <Title order={2}>Bank Balances</Title>
+        <AddBankAccountModal banks={banks} />
+      </Group>
       <Group gap="md" align="left">
         {balances.map((balance) => (
           <Card
