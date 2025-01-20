@@ -23,10 +23,12 @@ services:
       - DB_PASSWORD=${MARIADB_PASSWORD}
       - DB_NAME=${MARIADB_DATABASE}
       - FRONTEND_URL=http://localhost
+      - VAULT_ADDR=http://lifehub-vault:8200
     ports:
       - "8000:8000"
     depends_on:
       - lifehub-mariadb
+      - lifehub-vault
     volumes:
       - ./backend:/app
 
@@ -46,7 +48,22 @@ services:
       - ./frontend:/app
       - node_modules:/usr/src/app/node_modules
 
+  lifehub-vault:
+    image: hashicorp/vault:latest
+    container_name: lifehub-vault
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=dev-root-token
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault-data:/vault/data
+
 volumes:
   node_modules:
   dbdata:
+    driver: local
+  vault-data:
     driver: local
