@@ -42,8 +42,7 @@ def setup_admin_user() -> None:
                 ADMIN_PASSWORD,
                 "Admin",
             )
-            admin_token = user_service.create_access_token(user)
-            user_service.verify_user(admin_token.access_token)
+            user.verified = True
         except UserServiceException as e:
             if e.status_code != 409:
                 raise
