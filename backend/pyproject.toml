@@ -17,7 +17,8 @@ dependencies = [
     "argon2-cffi",
     "pytz",
     "uvicorn",
-    "python-multipart"
+    "python-multipart",
+    "hvac>=2.3.0",
 ]
 
 [tool.setuptools.packages]
@@ -41,6 +42,7 @@ exclude = '^tests/'
 dev-dependencies = [
     "mypy>=1.13.0",
     "ruff>=0.7.0",
+    "types-hvac>=2.3.0.20240621",
     "types-python-jose>=3.3.4.20240106",
     "types-pytz>=2024.2.0.20241003",
     "types-requests>=2.32.0.20241016",

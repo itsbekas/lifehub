@@ -116,7 +116,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -168,6 +168,18 @@ wheels = [
 ]
 
 [[package]]
+name = "hvac"
+version = "2.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/48/a4/c0b698a7250b7a5c2956427406560701862215c646e079a7907846608f44/hvac-2.3.0.tar.gz", hash = "sha256:1b85e3320e8642dd82f234db63253cda169a817589e823713dc5fca83119b1e2", size = 332660 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/34/56facf52e2ea14ce640f434ccf00311af6f3a1df0019d4682ba28ea09948/hvac-2.3.0-py3-none-any.whl", hash = "sha256:a3afc5710760b6ee9b3571769df87a0333da45da05a5f9f963e1d3925a84be7d", size = 155860 },
+]
+
+[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.org/simple" }
@@ -183,6 +195,7 @@ source = { editable = "." }
 dependencies = [
     { name = "argon2-cffi" },
     { name = "fastapi" },
+    { name = "hvac" },
     { name = "mariadb" },
     { name = "pydantic" },
     { name = "python-dotenv" },
@@ -194,10 +207,11 @@ dependencies = [
     { name = "uvicorn" },
 ]
 
-[package.dependency-groups]
+[package.dev-dependencies]
 dev = [
     { name = "mypy" },
     { name = "ruff" },
+    { name = "types-hvac" },
     { name = "types-python-jose" },
     { name = "types-pytz" },
     { name = "types-requests" },
@@ -207,6 +221,7 @@ dev = [
 requires-dist = [
     { name = "argon2-cffi" },
     { name = "fastapi" },
+    { name = "hvac", specifier = ">=2.3.0" },
     { name = "mariadb", specifier = "==1.1.9" },
     { name = "pydantic" },
     { name = "python-dotenv" },
@@ -218,10 +233,11 @@ requires-dist = [
     { name = "uvicorn" },
 ]
 
-[package.metadata.dependency-groups]
+[package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=1.13.0" },
     { name = "ruff", specifier = ">=0.7.0" },
+    { name = "types-hvac", specifier = ">=2.3.0.20240621" },
     { name = "types-python-jose", specifier = ">=3.3.4.20240106" },
     { name = "types-pytz", specifier = ">=2024.2.0.20241003" },
     { name = "types-requests", specifier = ">=2.32.0.20241016" },
@@ -468,6 +484,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/78/53/c3a36690a923706e7ac841f649c64f5108889ab1ec44218dac45771f252a/starlette-0.41.0.tar.gz", hash = "sha256:39cbd8768b107d68bfe1ff1672b38a2c38b49777de46d2a592841d58e3bf7c2a", size = 2573755 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/35/c6/a4443bfabf5629129512ca0e07866c4c3c094079ba4e9b2551006927253c/starlette-0.41.0-py3-none-any.whl", hash = "sha256:a0193a3c413ebc9c78bff1c3546a45bb8c8bcb4a84cae8747d650a65bd37210a", size = 73216 },
+]
+
+[[package]]
+name = "types-hvac"
+version = "2.3.0.20240621"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "types-requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3c/1e/ff22549ecfba344035b8a28477ab597e17a5a6f334ea1f17d8837069359a/types-hvac-2.3.0.20240621.tar.gz", hash = "sha256:ae168990a51caadfec84da1b6502a84fce56cc48c2fd196e555f18b52fc8bd37", size = 19323 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e3/0c/9a8d51edf7256fd5a24cd3b848852173a39958fba6a580b9c0b48d18708c/types_hvac-2.3.0.20240621-py3-none-any.whl", hash = "sha256:22e4a3834f7c4135158f23c2edc3d66c9a0bbde379db1d2c459fc47979878e96", size = 38770 },
 ]
 
 [[package]]

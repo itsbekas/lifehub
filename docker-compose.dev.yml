@@ -24,6 +24,8 @@ services:
       - DB_NAME=${MARIADB_DATABASE}
       - FRONTEND_URL=http://localhost
       - VAULT_ADDR=http://lifehub-vault:8200
+      - VAULT_TOKEN=dev-root-token
+      - ENVIRONMENT=development
     ports:
       - "8000:8000"
     depends_on:

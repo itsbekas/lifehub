@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from lifehub.config.constants import ADMIN_PASSWORD, ADMIN_USERNAME, DATABASE_URL
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
+from lifehub.config.vault import setup_vault
 from lifehub.core.common.base.db_model import BaseModel
 from lifehub.core.common.database_service import Session, engine
 from lifehub.core.provider.repository.provider import ProviderRepository
@@ -109,6 +110,7 @@ def create_db_tables() -> None:
 def pre_run_setup() -> None:
     check_mariadb()
     create_db_tables()
+    setup_vault()
     setup_providers()
     setup_admin_user()
     setup_admin_tokens()

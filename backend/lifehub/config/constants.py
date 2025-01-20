@@ -12,6 +12,7 @@ def getenv(key: str) -> str:
         raise NotImplementedError(f"{key} is not set")
     return val
 
+ENVIRONMENT = getenv("ENVIRONMENT")
 
 UVICORN_HOST = getenv("UVICORN_HOST")
 REDIRECT_URI_BASE = getenv("FRONTEND_URL")
@@ -27,6 +28,9 @@ DB_NAME = getenv("DB_NAME")
 DATABASE_URL = (
     f"mariadb+mariadbconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
 )
+
+VAULT_ADDR = getenv("VAULT_ADDR")
+VAULT_TOKEN = getenv("VAULT_TOKEN")
 
 ADMIN_USERNAME = getenv("ADMIN_USERNAME")
 ADMIN_PASSWORD = getenv("ADMIN_PASSWORD")
