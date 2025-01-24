@@ -1,14 +1,12 @@
 import datetime as dt
 import time
 
-from sqlalchemy import create_engine
-
-from lifehub.config.constants import ADMIN_PASSWORD, ADMIN_USERNAME, DATABASE_URL
+from lifehub.config.constants import ADMIN_PASSWORD, ADMIN_USERNAME
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
 from lifehub.config.vault import setup_vault
 from lifehub.core.common.base.db_model import BaseModel
-from lifehub.core.common.database_service import Session, engine
+from lifehub.core.common.database_service import get_engine, get_session
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.user.service.user import UserService, UserServiceException
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
@@ -20,7 +18,7 @@ def check_mariadb() -> None:
     start_time = time.time()
     while True:
         try:
-            connection = engine.connect()
+            connection = get_engine().connect()
             connection.close()
             print("Successfully connected to MariaDB")
             break
@@ -33,7 +31,7 @@ def check_mariadb() -> None:
 
 
 def setup_admin_user() -> None:
-    with Session() as session:
+    with get_session() as session:
         user_service = UserService(session)
 
         try:
@@ -58,7 +56,7 @@ def setup_admin_user() -> None:
 
 
 def setup_admin_tokens() -> None:
-    with Session() as session:
+    with get_session() as session:
         user_service = UserService(session)
         provider_repo = ProviderRepository(session)
 
@@ -103,8 +101,7 @@ def pre_run_checks() -> None:
 
 
 def create_db_tables() -> None:
-    engine = create_engine(DATABASE_URL, echo=True)
-    BaseModel.metadata.create_all(engine)
+    BaseModel.metadata.create_all(get_engine())
 
 
 def pre_run_setup() -> None:

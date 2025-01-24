@@ -37,8 +37,6 @@ services:
     container_name: lifehub-backend
     environment:
       - DB_HOST=lifehub-mariadb
-      - DB_USER=${MARIADB_USER}
-      - DB_PASSWORD=${MARIADB_PASSWORD}
       - DB_NAME=${MARIADB_DATABASE}
       - FRONTEND_URL=http://localhost
       - VAULT_ADDR=http://lifehub-vault:8200

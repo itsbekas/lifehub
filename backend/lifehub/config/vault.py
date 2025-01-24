@@ -2,11 +2,12 @@ import hvac
 
 from lifehub.config.constants import (
     DB_HOST,
+    DB_NAME,
     VAULT_ADDR,
     VAULT_DB_PASSWORD,
+    VAULT_DB_ROLE,
     VAULT_DB_USER,
     VAULT_TOKEN,
-    DB_NAME
 )
 
 
@@ -43,23 +44,22 @@ def setup_vault() -> None:
         )
         print("Database secrets engine enabled.")
 
-    # Configure the database secret engine 
+    # Configure the database secret engine
     client.secrets.database.configure(
-        name="mariadb",
+        name=DB_NAME,
         plugin_name="mysql-database-plugin",
         connection_url=f"{VAULT_DB_USER}:{VAULT_DB_PASSWORD}@tcp({DB_HOST}:3306)/",
-        allowed_roles="mariadb-role",
+        allowed_roles=VAULT_DB_ROLE,
     )
 
     # Define the role
     client.secrets.database.create_or_update_role(
-        name='mariadb-role',
-        db_name='mariadb',
+        name=VAULT_DB_ROLE,
+        db_name=DB_NAME,
         creation_statements=[
             "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
-            "GRANT SELECT ON *.* TO '{{name}}'@'%';",
+            "GRANT SELECT ON " + DB_NAME + ".* TO '{{name}}'@'%';",
         ],
-        default_ttl='1h',
-        max_ttl='24h'
+        default_ttl="1h",
+        max_ttl="24h",
     )
-
