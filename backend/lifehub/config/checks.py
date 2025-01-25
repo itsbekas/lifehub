@@ -16,17 +16,19 @@ def check_mariadb() -> None:
     timeout: int = 60
     interval: int = 5
     start_time = time.time()
+    engine = get_engine()
     while True:
         try:
-            connection = get_engine().connect()
+            connection = engine.connect()
             connection.close()
             print("Successfully connected to MariaDB")
             break
-        except Exception:
+        except Exception as e:
             if time.time() - start_time > timeout:
                 print("Could not connect to MariaDB within the timeout period")
                 exit(1)
             print("MariaDB not ready, waiting...")
+            print(e)
             time.sleep(interval)
 
 
@@ -101,13 +103,13 @@ def pre_run_checks() -> None:
 
 
 def create_db_tables() -> None:
-    BaseModel.metadata.create_all(get_engine())
+    BaseModel.metadata.create_all(get_engine(admin=True))
 
 
 def pre_run_setup() -> None:
+    setup_vault()  # Must run before db checks since it sets up the db credentials
     check_mariadb()
     create_db_tables()
-    setup_vault()
     setup_providers()
     setup_admin_user()
     setup_admin_tokens()

@@ -4,6 +4,7 @@ from lifehub.config.constants import (
     DB_HOST,
     DB_NAME,
     VAULT_ADDR,
+    VAULT_DB_ADMIN_ROLE,
     VAULT_DB_PASSWORD,
     VAULT_DB_ROLE,
     VAULT_DB_USER,
@@ -48,18 +49,35 @@ def setup_vault() -> None:
     client.secrets.database.configure(
         name=DB_NAME,
         plugin_name="mysql-database-plugin",
-        connection_url=f"{VAULT_DB_USER}:{VAULT_DB_PASSWORD}@tcp({DB_HOST}:3306)/",
-        allowed_roles=VAULT_DB_ROLE,
+        connection_url="{{username}}:{{password}}@tcp(" + DB_HOST + ":3306)/",
+        allowed_roles=[VAULT_DB_ROLE, VAULT_DB_ADMIN_ROLE],
+        username=VAULT_DB_USER,
+        password=VAULT_DB_PASSWORD,
     )
 
-    # Define the role
-    client.secrets.database.create_or_update_role(
+    # Create a read/write role for the database secret engine
+    client.secrets.database.create_role(
         name=VAULT_DB_ROLE,
         db_name=DB_NAME,
         creation_statements=[
             "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
-            "GRANT SELECT ON " + DB_NAME + ".* TO '{{name}}'@'%';",
+            "GRANT SELECT, INSERT, UPDATE, DELETE ON "
+            + DB_NAME
+            + ".* TO '{{name}}'@'%';",
         ],
         default_ttl="1h",
         max_ttl="24h",
+    )
+
+    # Create an admin role for the database secret engine
+    client.secrets.database.create_role(
+        name=VAULT_DB_ADMIN_ROLE,
+        db_name=DB_NAME,
+        creation_statements=[
+            "CREATE USER '{{name}}'@'%' IDENTIFIED BY '{{password}}';",
+            "GRANT ALL PRIVILEGES ON " + DB_NAME + ".* TO '{{name}}'@'%';",
+            "GRANT GRANT OPTION ON " + DB_NAME + ".* TO '{{name}}'@'%';",
+        ],
+        default_ttl="1h",
+        max_ttl="2h",
     )
