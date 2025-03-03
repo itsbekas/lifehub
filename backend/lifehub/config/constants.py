@@ -31,6 +31,8 @@ VAULT_DB_USER = getenv("VAULT_DB_USER")
 VAULT_DB_PASSWORD = getenv("VAULT_DB_PASSWORD")
 VAULT_DB_ROLE = "lifehub-app"
 VAULT_DB_ADMIN_ROLE = "lifehub-admin"
+VAULT_DB_MOUNT_POINT = "database/lifehub"
+VAULT_TRANSIT_MOUNT_POINT = "transit/lifehub"
 
 ADMIN_USERNAME = getenv("ADMIN_USERNAME")
 ADMIN_PASSWORD = getenv("ADMIN_PASSWORD")

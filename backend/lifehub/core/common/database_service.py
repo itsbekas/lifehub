@@ -11,6 +11,7 @@ from lifehub.config.constants import (
     DB_NAME,
     VAULT_ADDR,
     VAULT_DB_ADMIN_ROLE,
+    VAULT_DB_MOUNT_POINT,
     VAULT_DB_ROLE,
     VAULT_TOKEN,
 )
@@ -26,7 +27,10 @@ def get_db_credentials(admin: bool = False) -> dict[str, str]:
     """
     client = hvac.Client(url=VAULT_ADDR, token=VAULT_TOKEN)
     role = VAULT_DB_ADMIN_ROLE if admin else VAULT_DB_ROLE
-    creds = client.secrets.database.generate_credentials(name=role)
+    creds = client.secrets.database.generate_credentials(
+        name=role,
+        mount_point=VAULT_DB_MOUNT_POINT,
+    )
 
     return {
         "username": creds["data"]["username"],
