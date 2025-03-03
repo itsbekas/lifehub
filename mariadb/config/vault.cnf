@@ -1,4 +1,0 @@
-[mariadb]
-plugin-load-add = hashicorp_key_management
-hashicorp-key-management-vault-url = @VAULT_URL@/v1/mariadb
-hashicorp-key-management-token = @VAULT_TOKEN@

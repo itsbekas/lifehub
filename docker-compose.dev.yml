@@ -1,10 +1,6 @@
 services:
   lifehub-mariadb:
-    build:
-      context: mariadb/
-      args:
-        VAULT_TOKEN: ${VAULT_ROOT_TOKEN:-dev-root-token}
-        VAULT_URL: http://172.17.0.1:8200
+    image: mariadb:latest
     container_name: lifehub-mariadb
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_PASSWORD}
@@ -35,6 +31,20 @@ services:
       interval: 10s
       retries: 5
       start_period: 20s
+
+  lifehub-vault:
+    image: hashicorp/vault:latest
+    container_name: lifehub-vault
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_ROOT_TOKEN:-dev-root-token}
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    depends_on:
+      lifehub-mariadb:
+        condition: service_healthy
 
   lifehub-backend:
     build:
