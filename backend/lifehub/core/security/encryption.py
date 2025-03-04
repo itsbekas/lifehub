@@ -1,0 +1,77 @@
+import base64
+import os
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from sqlalchemy.orm import Session
+
+from lifehub.core.common.base.service.user import BaseUserService
+from lifehub.core.common.exceptions import ServiceException
+from lifehub.core.security.vault import VaultService
+from lifehub.core.user.schema import User
+
+
+class EncryptionServiceException(ServiceException):
+    def __init__(self, status_code: int, message: str):
+        super().__init__("Encryption", status_code, message)
+
+
+class EncryptionService(BaseUserService):
+    def __init__(self, session: Session, user: User) -> None:
+        super().__init__(session, user)
+        self.vault = VaultService(session, user)
+
+    def _generate_random_bytes(self, length: int) -> bytes:
+        """
+        Generate a random byte string of the specified length.
+        """
+        return os.urandom(length)
+
+    def _generate_aes_nonce(self) -> bytes:
+        """
+        Generate a random 96-bit AES nonce.
+        """
+        return self._generate_random_bytes(12)
+
+    def _generate_aes_key(self) -> bytes:
+        """
+        Generate a random 256-bit AES key.
+        """
+        return AESGCM.generate_key(256)
+
+    def generate_encrypted_data_key(self) -> str:
+        """
+        Generate a random data encryption key (DEK) and encrypt it
+        using the user's key encryption key (KEK).
+        """
+        data_key: str = base64.b64encode(self._generate_aes_key()).decode("utf-8")
+        return self.vault.encrypt_user_dek(data_key)
+
+    def encrypt_data(self, data: str) -> str:
+        """
+        Encrypt the given data using a random DEK and AES-GCM.
+        """
+        dek = self.vault.decrypt_user_dek(self.user.data_key)
+        key_version = 1  # Placeholder until key rotation is implemented
+        nonce = self._generate_aes_nonce()
+        aesgcm = AESGCM(base64.b64decode(dek))
+        ciphertext = aesgcm.encrypt(
+            nonce, data.encode("utf-8"), str(key_version).encode("utf-8")
+        )
+
+        # key_version;nonce;ciphertext
+        return f"{key_version};\
+            {base64.b64encode(nonce).decode('utf-8')};\
+            {base64.b64encode(ciphertext).decode('utf-8')}"
+
+    def decrypt_data(self, data: str) -> str:
+        """
+        Decrypt the given data using the user's DEK and AES-GCM.
+        """
+        key_version, nonce, ciphertext = data.split(";")
+        dek = self.vault.decrypt_user_dek(self.user.data_key)
+        aesgcm = AESGCM(base64.b64decode(dek))
+        return aesgcm.decrypt(
+            base64.b64decode(nonce),
+            base64.b64decode(ciphertext),
+            key_version.encode("utf-8"),
+        ).decode("utf-8")

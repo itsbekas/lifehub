@@ -16,7 +16,7 @@ from lifehub.core.provider.models import ProviderResponse, ProviderWithModulesRe
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken
-from lifehub.core.security.vault import VaultService
+from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.models import UserResponse, UserTokenResponse
 from lifehub.core.user.repository.user import UserRepository
 from lifehub.core.user.schema import User
@@ -63,8 +63,8 @@ class UserService(BaseService):
         self.user_repository.refresh(new_user)
 
         try:
-            vault_service = VaultService(self.session)
-            user_dek = vault_service.generate_user_dek(str(new_user.id))
+            encryption_service = EncryptionService(self.session, new_user)
+            user_dek = encryption_service.generate_encrypted_data_key()
         except VaultError:
             self.user_repository.delete(new_user)
             self.user_repository.commit()

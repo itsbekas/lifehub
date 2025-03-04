@@ -116,7 +116,7 @@ def setup_vault() -> None:
             logger.info(f"Database admin role '{VAULT_DB_ADMIN_ROLE}' created.")
 
         # Setup Vault policies for access control
-        setup_vault_policies(client)  # type: ignore
+        setup_vault_policies(client)
 
     except Exception as e:
         logger.error(f"Error setting up Vault: {e}")

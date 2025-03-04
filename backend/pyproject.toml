@@ -19,6 +19,7 @@ dependencies = [
     "uvicorn",
     "python-multipart",
     "hvac>=2.3.0",
+    "cryptography>=44.0.2",
 ]
 
 [tool.setuptools.packages]
@@ -42,6 +43,7 @@ exclude = '^tests/'
 dev-dependencies = [
     "mypy>=1.13.0",
     "ruff>=0.7.0",
+    "types-cryptography>=3.3.23.2",
     "types-hvac>=2.3.0.20240621",
     "types-python-jose>=3.3.4.20240106",
     "types-pytz>=2024.2.0.20241003",
