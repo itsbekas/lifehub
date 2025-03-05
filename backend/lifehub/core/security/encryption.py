@@ -16,9 +16,25 @@ class EncryptionServiceException(ServiceException):
 
 
 class EncryptionService(BaseUserService):
+    # Lazy load
+    _user_data_key: str | None = None
+    _aesgcm: AESGCM | None = None
+
     def __init__(self, session: Session, user: User) -> None:
         super().__init__(session, user)
         self.vault = VaultService(session, user)
+
+    @property
+    def user_data_key(self) -> str:
+        if self._user_data_key is None:
+            self._user_data_key = self.vault.decrypt_user_dek(self.user.data_key)
+        return self._user_data_key
+
+    @property
+    def aesgcm(self) -> AESGCM:
+        if self._aesgcm is None:
+            self._aesgcm = AESGCM(base64.b64decode(self.user_data_key))
+        return self._aesgcm
 
     def _generate_random_bytes(self, length: int) -> bytes:
         """
@@ -50,11 +66,9 @@ class EncryptionService(BaseUserService):
         """
         Encrypt the given data using a random DEK and AES-GCM.
         """
-        dek = self.vault.decrypt_user_dek(self.user.data_key)
         key_version = 1  # Placeholder until key rotation is implemented
         nonce = self._generate_aes_nonce()
-        aesgcm = AESGCM(base64.b64decode(dek))
-        ciphertext = aesgcm.encrypt(
+        ciphertext = self.aesgcm.encrypt(
             nonce, data.encode("utf-8"), str(key_version).encode("utf-8")
         )
 
@@ -66,9 +80,7 @@ class EncryptionService(BaseUserService):
         Decrypt the given data using the user's DEK and AES-GCM.
         """
         key_version, nonce, ciphertext = data.split(";")
-        dek = self.vault.decrypt_user_dek(self.user.data_key)
-        aesgcm = AESGCM(base64.b64decode(dek))
-        return aesgcm.decrypt(
+        return self.aesgcm.decrypt(
             base64.b64decode(nonce),
             base64.b64decode(ciphertext),
             key_version.encode("utf-8"),

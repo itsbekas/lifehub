@@ -301,6 +301,8 @@ class FinanceService(BaseUserService):
                             transaction.remittanceInformationUnstructuredArray
                         )
 
+                    # Convert date to datetime object
+                    # Some transactions have valueDateTime, some have valueDate
                     if transaction.valueDateTime is not None:
                         date = dt.datetime.fromisoformat(transaction.valueDateTime)
                     elif transaction.valueDate is not None:
