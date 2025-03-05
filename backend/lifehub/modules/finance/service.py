@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
+from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.trading212.api_client import Trading212APIClient
@@ -53,6 +54,7 @@ class FinanceServiceException(ServiceException):
 class FinanceService(BaseUserService):
     def __init__(self, session: Session, user: User):
         super().__init__(session, user)
+        self.encryption_service = EncryptionService(session, user)
 
     def fetch_t212_balance(self) -> BankBalanceResponse:
         """
@@ -86,9 +88,7 @@ class FinanceService(BaseUserService):
         self.session.commit()
         return res
 
-    def fetch_gocardless_balance(
-        self, institution_id: str, account_id: str
-    ) -> BankBalanceResponse:
+    def fetch_gocardless_balance(self, account: BankAccount) -> BankBalanceResponse:
         """
         Fetches the latest balance from GoCardless and stores it in the database.
         If the local balance is less than 6 hours old, it will be returned instead,
@@ -97,31 +97,38 @@ class FinanceService(BaseUserService):
         gc_api = GoCardlessAPIClient(self.user, self.session)
         balance_repo = AccountBalanceRepository(self.user, self.session)
 
-        db_balance = balance_repo.get_by_account_id(account_id)
+        db_balance = balance_repo.get_by_account_id(account.id)
 
         if db_balance is not None and not db_balance.older_than(hours=6):
             # Local balance is updated
             balance = db_balance
+            balance_amount = float(self.encryption_service.decrypt_data(balance.amount))
         else:
+            account_id = self.encryption_service.decrypt_data(account.account_id)
             api_balance = gc_api.get_account_balances(account_id).available_amount
 
             if api_balance is None:
                 # return seconds left until balance is available (check error message)
                 raise FinanceServiceException(500, "Balance not found")
+            
+            balance_amount = float(api_balance)
+            encrypted_balance = self.encryption_service.encrypt_data(api_balance)
 
             if db_balance is None:
                 balance = AccountBalance(
                     user_id=self.user.id,
-                    account_id=account_id,
-                    amount=Decimal(api_balance),
+                    account_id=account.id,
+                    amount=encrypted_balance,
                 )
                 balance_repo.add(balance)
             else:
-                db_balance.amount = Decimal(api_balance)
+                db_balance.amount = encrypted_balance
                 balance = db_balance
 
         res = BankBalanceResponse(
-            bank=institution_id, account_id=account_id, balance=float(balance.amount)
+            bank=account.institution_id,
+            account_id=str(account.id),
+            balance=balance_amount,
         )
         self.session.commit()
         return res
@@ -174,10 +181,11 @@ class FinanceService(BaseUserService):
         requisition = api.get_requisition(ref)
         bank_account_repo = BankAccountRepository(self.user, self.session)
         for account_id in requisition.accounts:
+            encrypted_account_id = self.encryption_service.encrypt_data(account_id)
             bank_account_repo.add(
                 BankAccount(
                     user_id=self.user.id,
-                    id=account_id,
+                    account_id=encrypted_account_id,
                     institution_id=requisition.institution_id,
                     requisition_id=ref,
                 )
@@ -196,9 +204,7 @@ class FinanceService(BaseUserService):
                 case "trading212":
                     balance = self.fetch_t212_balance()
                 case _:
-                    balance = self.fetch_gocardless_balance(
-                        account.institution_id, account.id
-                    )
+                    balance = self.fetch_gocardless_balance(account)
             balances.append(balance)
 
         return balances
@@ -264,7 +270,7 @@ class FinanceService(BaseUserService):
                     transactions.append(
                         BankTransactionResponse(
                             id=synced_transaction.id,
-                            account_id=synced_transaction.account.id,
+                            account_id=str(synced_transaction.account.id),
                             amount=float(synced_transaction.amount),
                             date=synced_transaction.date,
                             description=synced_transaction.description,
@@ -275,7 +281,8 @@ class FinanceService(BaseUserService):
                     )
                 continue
 
-            account_transactions = gc_api.get_account_transactions(account.id).booked
+            account_id = self.encryption_service.decrypt_data(account.account_id)
+            account_transactions = gc_api.get_account_transactions(account_id).booked
 
             for transaction in account_transactions:
                 if transaction.transactionId is None:
@@ -326,7 +333,7 @@ class FinanceService(BaseUserService):
                 transactions.append(
                     BankTransactionResponse(
                         id=db_transaction.id,
-                        account_id=account.id,
+                        account_id=str(account.id),
                         amount=float(db_transaction.amount),
                         date=db_transaction.date,
                         description=db_transaction.description,
@@ -346,7 +353,7 @@ class FinanceService(BaseUserService):
 
     def update_bank_transaction(
         self,
-        account_id: str,
+        account_id: uuid.UUID,
         transaction_id: str,
         user_description: Optional[str],
         subcategory_id: Optional[str],
@@ -367,7 +374,7 @@ class FinanceService(BaseUserService):
         self.session.commit()
         return BankTransactionResponse(
             id=transaction.id,
-            account_id=transaction.account.id,
+            account_id=str(transaction.account.id),
             amount=float(transaction.amount),
             date=transaction.date,
             description=transaction.description,
@@ -598,7 +605,7 @@ class FinanceService(BaseUserService):
         return [
             BankTransactionResponse(
                 id=transaction.id,
-                account_id=transaction.account.id,
+                account_id=str(transaction.account.id),
                 amount=float(transaction.amount),
                 date=transaction.date,
                 description=transaction.description,

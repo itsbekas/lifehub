@@ -9,12 +9,16 @@ from sqlalchemy import DECIMAL, UUID, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.core.common.base.db_model import BaseModel, FetchBaseModel, UserBaseModel
+from lifehub.core.security.encrypted_data import EncryptedDataType
 
 
 class BankAccount(UserBaseModel):
     __tablename__ = "bank_account"
 
-    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    account_id: Mapped[str] = mapped_column(EncryptedDataType)
     institution_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     requisition_id: Mapped[str] = mapped_column(String(64))
     last_synced: Mapped[dt.datetime] = mapped_column(default=dt.datetime.min)
@@ -24,17 +28,19 @@ class BankAccount(UserBaseModel):
 class AccountBalance(FetchBaseModel):
     __tablename__ = "account_balance"
 
-    account_id: Mapped[str] = mapped_column(
-        String(64), ForeignKey("bank_account.id"), primary_key=True
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("bank_account.id"), primary_key=True
     )
-    amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2))
+    amount: Mapped[str] = mapped_column(EncryptedDataType)
 
 
 class BankTransaction(UserBaseModel):
     __tablename__ = "bank_transaction"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    account_id: Mapped[str] = mapped_column(String(64), ForeignKey("bank_account.id"))
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("bank_account.id")
+    )
     account: Mapped[BankAccount] = relationship(
         back_populates="transactions", single_parent=True
     )
