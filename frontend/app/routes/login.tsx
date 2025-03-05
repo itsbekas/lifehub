@@ -135,8 +135,14 @@ const LoginPage = () => {
         </Form>
         <Text ta="center" size="sm" mt="sm">
           Forgot your password?{" "}
-          <Text component="a" href="#" color="blue">
+          <Text component="a" href="#" c="blue">
             Reset it here
+          </Text>
+        </Text>
+        <Text ta="center" size="sm" mt="sm">
+          Don't have an account?{" "}
+          <Text component="a" href="/signup" c="blue">
+            Sign up
           </Text>
         </Text>
       </Card>

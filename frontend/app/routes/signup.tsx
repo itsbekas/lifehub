@@ -126,12 +126,12 @@ const SignupPage = () => {
             mb={15}
           />
           {actionData?.error && (
-            <Text color="red" size="sm" mt={5}>
+            <Text c="red" size="sm" mt={5}>
               {actionData.error}
             </Text>
           )}
           {form.errors && (
-            <Text color="red" size="sm" mt={5}>
+            <Text c="red" size="sm" mt={5}>
               {Object.values(form.errors).join(", ")}
             </Text>
           )}
@@ -141,8 +141,8 @@ const SignupPage = () => {
         </Form>
         <Text ta="center" size="sm" mt="sm">
           Already have an account?{" "}
-          <Text component="a" href="/login" color="blue">
-            Log in here
+          <Text component="a" href="/login" c="blue">
+            Log in
           </Text>
         </Text>
       </Card>
