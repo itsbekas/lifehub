@@ -41,6 +41,7 @@ class User(BaseModel):
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     verified: Mapped[bool] = mapped_column(default=False)
+    data_key: Mapped[str] = mapped_column(String(256), nullable=True)
 
     modules: Mapped[list["Module"]] = relationship(
         secondary=user_module, back_populates="users"

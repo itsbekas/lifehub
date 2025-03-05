@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from lifehub.core.user.api.dependencies import UserDep, UserServiceDep
 from lifehub.core.user.models import (
@@ -9,7 +9,6 @@ from lifehub.core.user.models import (
     UserTokenResponse,
     UserVerifyRequest,
 )
-from lifehub.core.user.service.user import UserServiceException
 
 router = APIRouter()
 
@@ -19,10 +18,7 @@ async def user_login(
     user_data: UserLoginRequest,
     user_service: UserServiceDep,
 ) -> UserTokenResponse:
-    try:
-        user = user_service.login_user(user_data.username, user_data.password)
-    except UserServiceException as e:
-        raise HTTPException(status_code=401, detail=str(e))
+    user = user_service.login_user(user_data.username, user_data.password)
     user_token = user_service.create_access_token(user)
     return user_token
 
@@ -32,10 +28,9 @@ async def user_signup(
     user_data: UserCreateRequest,
     user_service: UserServiceDep,
 ) -> None:
-    try:
-        user_service.create_user(user_data.username, user_data.email, user_data.password, user_data.name)
-    except UserServiceException as e:
-        raise HTTPException(status_code=403, detail=str(e))
+    user_service.create_user(
+        user_data.username, user_data.email, user_data.password, user_data.name
+    )
 
 
 @router.get("/me")
@@ -64,9 +59,5 @@ async def verify_user(
     token: UserVerifyRequest,
     user_service: UserServiceDep,
 ) -> UserTokenResponse:
-    try:
-        user = user_service.verify_user(token.token)
-    except UserServiceException as e:
-        raise HTTPException(status_code=403, detail=str(e))
-
+    user = user_service.verify_user(token.token)
     return user_service.create_access_token(user)

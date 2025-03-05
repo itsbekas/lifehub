@@ -1,6 +1,7 @@
 import datetime as dt
 
 import argon2
+from hvac.exceptions import VaultError
 from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,7 @@ from lifehub.core.provider.models import ProviderResponse, ProviderWithModulesRe
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken
+from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.models import UserResponse, UserTokenResponse
 from lifehub.core.user.repository.user import UserRepository
 from lifehub.core.user.schema import User
@@ -56,8 +58,21 @@ class UserService(BaseService):
         #     verification_token,
         # )
 
-        self.user_repository.commit()
+        # Necessary to get the newly generated ID
+        self.session.commit()
         self.user_repository.refresh(new_user)
+
+        try:
+            encryption_service = EncryptionService(self.session, new_user)
+            user_dek = encryption_service.generate_encrypted_data_key()
+        except VaultError:
+            self.user_repository.delete(new_user)
+            self.user_repository.commit()
+            raise UserServiceException(500, "Failed to create user")
+
+        new_user.data_key = user_dek
+
+        self.session.commit()
 
         return new_user
 

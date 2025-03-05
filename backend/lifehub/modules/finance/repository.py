@@ -29,7 +29,7 @@ class AccountBalanceRepository(FetchBaseRepository[AccountBalance]):
     def __init__(self, user: User, session: Session):
         super().__init__(AccountBalance, user=user, session=session)
 
-    def get_by_account_id(self, account_id: str) -> AccountBalance | None:
+    def get_by_account_id(self, account_id: uuid.UUID) -> AccountBalance | None:
         return (
             self.session.query(AccountBalance)
             .filter_by(account_id=account_id)
@@ -41,7 +41,9 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
     def __init__(self, user: User, session: Session):
         super().__init__(BankTransaction, user=user, session=session)
 
-    def get_by_id(self, account_id: str, transaction_id: str) -> BankTransaction | None:
+    def get_by_id(
+        self, account_id: uuid.UUID, transaction_id: str
+    ) -> BankTransaction | None:
         return (
             self.session.query(BankTransaction)
             .filter_by(
@@ -52,7 +54,7 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
             .one_or_none()
         )
 
-    def get_by_account_id(self, account_id: str) -> list[BankTransaction]:
+    def get_by_account_id(self, account_id: uuid.UUID) -> list[BankTransaction]:
         return (
             self.session.query(BankTransaction).filter_by(account_id=account_id).all()
         )

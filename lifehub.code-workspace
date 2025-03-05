@@ -41,6 +41,10 @@
     "[typescriptreact]": {
       "editor.tabSize": 2,
       "editor.insertSpaces": true
-    }
+    },
+      "mypy.dmypyExecutable": "${workspaceFolder:backend}/.venv/bin/dmypy",
+      "mypy.mypyExecutable": "${workspaceFolder:backend}/.venv/bin/mypy",
+      "python.defaultInterpreterPath": "${workspaceFolder:backend}/.venv/bin/python",
+      "mypy.runUsingActiveInterpreter": true,
   }
 }

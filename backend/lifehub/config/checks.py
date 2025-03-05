@@ -1,13 +1,12 @@
 import datetime as dt
 import time
 
-from sqlalchemy import create_engine
-
-from lifehub.config.constants import ADMIN_PASSWORD, ADMIN_USERNAME, DATABASE_URL
+from lifehub.config.constants import ADMIN_PASSWORD, ADMIN_USERNAME
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
+from lifehub.config.vault import setup_vault
 from lifehub.core.common.base.db_model import BaseModel
-from lifehub.core.common.database_service import Session, engine
+from lifehub.core.common.database_service import get_engine, get_session
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.user.service.user import UserService, UserServiceException
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
@@ -17,22 +16,24 @@ def check_mariadb() -> None:
     timeout: int = 60
     interval: int = 5
     start_time = time.time()
+    engine = get_engine()
     while True:
         try:
             connection = engine.connect()
             connection.close()
             print("Successfully connected to MariaDB")
             break
-        except Exception:
+        except Exception as e:
             if time.time() - start_time > timeout:
                 print("Could not connect to MariaDB within the timeout period")
                 exit(1)
             print("MariaDB not ready, waiting...")
+            print(e)
             time.sleep(interval)
 
 
 def setup_admin_user() -> None:
-    with Session() as session:
+    with get_session() as session:
         user_service = UserService(session)
 
         try:
@@ -42,8 +43,7 @@ def setup_admin_user() -> None:
                 ADMIN_PASSWORD,
                 "Admin",
             )
-            admin_token = user_service.create_access_token(user)
-            user_service.verify_user(admin_token.access_token)
+            user.verified = True
         except UserServiceException as e:
             if e.status_code != 409:
                 raise
@@ -58,7 +58,7 @@ def setup_admin_user() -> None:
 
 
 def setup_admin_tokens() -> None:
-    with Session() as session:
+    with get_session() as session:
         user_service = UserService(session)
         provider_repo = ProviderRepository(session)
 
@@ -103,11 +103,11 @@ def pre_run_checks() -> None:
 
 
 def create_db_tables() -> None:
-    engine = create_engine(DATABASE_URL, echo=True)
-    BaseModel.metadata.create_all(engine)
+    BaseModel.metadata.create_all(get_engine(admin=True))
 
 
 def pre_run_setup() -> None:
+    setup_vault()  # Must run before db checks since it sets up the db credentials
     check_mariadb()
     create_db_tables()
     setup_providers()

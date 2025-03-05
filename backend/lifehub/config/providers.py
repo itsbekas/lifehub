@@ -1,7 +1,7 @@
 from typing import Any
 
 from lifehub.config.constants import getenv
-from lifehub.core.common.database_service import Session
+from lifehub.core.common.database_service import get_session
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.schema import (
     BasicProviderConfig,
@@ -97,7 +97,7 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
 def setup_providers() -> None:
     provider_configs, module_providers = init_setup_data()
 
-    session = Session()
+    session = get_session()
     providers_dict = {}
 
     provider_repo = ProviderRepository(session)
