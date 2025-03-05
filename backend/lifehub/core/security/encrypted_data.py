@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class EncryptedDataType(TypeDecorator[str]):
-    impl = String(128)
+    impl = String(1024)  # To be changed once EncryptedLargeDataType is implemented
 
     def process_bind_param(self, value: str | None, dialect: Dialect) -> str | None:
         """

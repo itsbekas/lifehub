@@ -1,5 +1,6 @@
 import base64
 import os
+from typing import overload
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from sqlalchemy.orm import Session
@@ -36,6 +37,9 @@ class EncryptionService(BaseUserService):
             self._aesgcm = AESGCM(base64.b64decode(self.user_data_key))
         return self._aesgcm
 
+    def _bytes_to_str(self, data: bytes) -> str:
+        return base64.b64encode(data).decode("utf-8")
+
     def _generate_random_bytes(self, length: int) -> bytes:
         """
         Generate a random byte string of the specified length.
@@ -59,7 +63,7 @@ class EncryptionService(BaseUserService):
         Generate a random data encryption key (DEK) and encrypt it
         using the user's key encryption key (KEK).
         """
-        data_key: str = base64.b64encode(self._generate_aes_key()).decode("utf-8")
+        data_key: str = self._bytes_to_str(self._generate_aes_key())
         return self.vault.encrypt_user_dek(data_key)
 
     def encrypt_data(self, data: str) -> str:
@@ -73,7 +77,7 @@ class EncryptionService(BaseUserService):
         )
 
         # key_version;nonce;ciphertext
-        return f"{key_version};\{base64.b64encode(nonce).decode('utf-8')};{base64.b64encode(ciphertext).decode('utf-8')}"
+        return f"{key_version};{self._bytes_to_str(nonce)};{self._bytes_to_str(ciphertext)}"
 
     def decrypt_data(self, data: str) -> str:
         """
