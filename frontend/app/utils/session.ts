@@ -21,3 +21,9 @@ export const { getSession, commitSession, destroySession } =
       secrets: [import.meta.env.VITE_SESSION_SECRET as string],
     },
   });
+
+// Check if the user is logged in
+export async function isLoggedIn(request: Request) {
+  const session = await getSession(request.headers.get("Cookie"));
+  return !!session.get("access_token");
+}

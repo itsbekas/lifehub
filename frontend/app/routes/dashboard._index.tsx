@@ -1,3 +1,10 @@
+import { redirect } from "react-router";
+
+export async function loader() {
+  // redirect to /dashboard/finance until we have a dashboard
+  return redirect("/dashboard/finance");
+}
+
 const Dashboard = () => {
   return (
     <div>
