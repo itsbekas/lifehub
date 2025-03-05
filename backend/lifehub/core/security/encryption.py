@@ -59,9 +59,7 @@ class EncryptionService(BaseUserService):
         )
 
         # key_version;nonce;ciphertext
-        return f"{key_version};\
-            {base64.b64encode(nonce).decode('utf-8')};\
-            {base64.b64encode(ciphertext).decode('utf-8')}"
+        return f"{key_version};\{base64.b64encode(nonce).decode('utf-8')};{base64.b64encode(ciphertext).decode('utf-8')}"
 
     def decrypt_data(self, data: str) -> str:
         """
