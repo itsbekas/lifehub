@@ -52,7 +52,7 @@ export const action: ActionFunction = async ({ request }) => {
       return { error: errorData.message }; // Return error to the client
     }
 
-    const { access_token, expires_at } = await response.json();
+    const { access_token } = await response.json();
 
     // Create a session and store the token
     const session = await getSession();

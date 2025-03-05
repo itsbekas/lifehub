@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Button, TextInput, Group, Select } from "@mantine/core";
+import { Modal, Button, Group, Select } from "@mantine/core";
 import { useFetcher } from "react-router";
 
 type Bank = {

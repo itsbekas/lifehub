@@ -1,6 +1,6 @@
 name: Linting
 
-on: [ push, pull_request ]
+on: [push, pull_request]
 
 jobs:
   backend:
@@ -20,9 +20,9 @@ jobs:
         working-directory: frontend
 
       - name: Run ESLint
-        run: npx eslint src
+        run: npx eslint --ext .js,.jsx,.ts,.tsx app
         working-directory: frontend
 
       - name: Run Prettier
-        run: npx prettier --check src
+        run: npx prettier --check app
         working-directory: frontend
