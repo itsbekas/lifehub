@@ -81,7 +81,11 @@ async def update_bank_transaction(
     data: UpdateBankTransactionRequest,
 ) -> BankTransactionResponse:
     return finance_service.update_bank_transaction(
-        account_id, transaction_id, data.description, data.subcategory_id, data.amount
+        uuid.UUID(account_id),
+        uuid.UUID(transaction_id),
+        data.description,
+        data.subcategory_id,
+        data.amount,
     )
 
 

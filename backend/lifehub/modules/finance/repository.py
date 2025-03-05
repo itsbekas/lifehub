@@ -41,14 +41,24 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
     def __init__(self, user: User, session: Session):
         super().__init__(BankTransaction, user=user, session=session)
 
-    def get_by_id(
-        self, account_id: uuid.UUID, transaction_id: str
+    def get_by_id(self, transaction_id: uuid.UUID) -> BankTransaction | None:
+        return (
+            self.session.query(BankTransaction)
+            .filter_by(user_id=self.user.id, id=transaction_id)
+            .one_or_none()
+        )
+
+    def get_by_original_id(
+        self, account_id: uuid.UUID, original_id: str
     ) -> BankTransaction | None:
+        """
+        Get a transaction by its original ID (the ID assigned by the bank).
+        """
         return (
             self.session.query(BankTransaction)
             .filter_by(
                 user_id=self.user.id,
-                id=transaction_id,
+                transaction_id=original_id,
                 account_id=account_id,
             )
             .one_or_none()

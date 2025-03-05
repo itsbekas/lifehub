@@ -293,7 +293,7 @@ class FinanceService(BaseUserService):
                     )
                     transactions.append(
                         BankTransactionResponse(
-                            id=synced_transaction.id,
+                            id=str(synced_transaction.id),
                             account_id=str(synced_transaction.account.id),
                             amount=synced_amount,
                             date=synced_transaction.date,
@@ -312,7 +312,7 @@ class FinanceService(BaseUserService):
                 if transaction.transactionId is None:
                     continue
 
-                db_transaction = bank_transaction_repo.get_by_id(
+                db_transaction = bank_transaction_repo.get_by_original_id(
                     account.id, transaction.transactionId
                 )
 
@@ -356,7 +356,7 @@ class FinanceService(BaseUserService):
 
                     db_transaction = BankTransaction(
                         user_id=self.user.id,
-                        id=transaction.transactionId,
+                        transaction_id=transaction.transactionId,
                         account_id=account.id,
                         amount=encrypted_amount,
                         date=date,
@@ -393,7 +393,7 @@ class FinanceService(BaseUserService):
 
                 transactions.append(
                     BankTransactionResponse(
-                        id=db_transaction.id,
+                        id=str(db_transaction.id),
                         account_id=str(account.id),
                         amount=amount,
                         date=db_transaction.date,
@@ -415,7 +415,7 @@ class FinanceService(BaseUserService):
     def update_bank_transaction(
         self,
         account_id: uuid.UUID,
-        transaction_id: str,
+        transaction_id: uuid.UUID,
         user_description: Optional[str],
         subcategory_id: Optional[str],
         amount: Optional[float],
@@ -424,7 +424,7 @@ class FinanceService(BaseUserService):
         Updates a bank transaction with user description and subcategory.
         """
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        transaction = bank_transaction_repo.get_by_id(account_id, transaction_id)
+        transaction = bank_transaction_repo.get_by_id(transaction_id)
         if transaction is None:
             raise FinanceServiceException(404, "Transaction not found")
         if user_description is not None:
@@ -437,7 +437,7 @@ class FinanceService(BaseUserService):
             transaction.amount = self.encryption_service.encrypt_data(str(amount))
         self.session.commit()
         return BankTransactionResponse(
-            id=transaction.id,
+            id=str(transaction.id),
             account_id=str(transaction.account.id),
             amount=float(transaction.amount),
             date=transaction.date,
@@ -668,7 +668,7 @@ class FinanceService(BaseUserService):
 
         return [
             BankTransactionResponse(
-                id=transaction.id,
+                id=str(transaction.id),
                 account_id=str(transaction.account.id),
                 amount=float(transaction.amount),
                 date=transaction.date,
