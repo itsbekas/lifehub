@@ -72,9 +72,7 @@ class EncryptionService(BaseUserService):
         """
         key_version = 1  # Placeholder until key rotation is implemented
         nonce = self._generate_aes_nonce()
-        ciphertext = self.aesgcm.encrypt(
-            nonce, data.encode("utf-8"), str(key_version).encode("utf-8")
-        )
+        ciphertext = self.aesgcm.encrypt(nonce, data.encode("utf-8"), None)
 
         return bytes([key_version]) + nonce + ciphertext
 
@@ -98,5 +96,5 @@ class EncryptionService(BaseUserService):
         return self.aesgcm.decrypt(
             nonce,
             ciphertext,
-            str(key_version).encode("utf-8"),
+            None,
         ).decode("utf-8")

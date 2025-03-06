@@ -32,8 +32,8 @@ class EncryptedDataType(TypeDecorator[bytes]):
         """
         self.ciphertext_length = ciphertext_length
         total_size = (
-            1 + 12 + ciphertext_length
-        )  # key_version(1) + nonce(12) + ciphertext
+            1 + 12 + ciphertext_length + 16
+        )  # key_version(1) + nonce(12) + ciphertext + tag(16)
         # Dynamically set the VARBINARY size
         # Needs to be done at the class level because that's what SQLAlchemy checks
         # (see TypeDecorator)

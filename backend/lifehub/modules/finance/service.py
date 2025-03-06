@@ -395,15 +395,18 @@ class FinanceService(BaseUserService):
 
         self.session.commit()
 
-        description = self.e.decrypt_data(db_t.user_description) or self.e.decrypt_data(
-            db_t.description
+        description = (
+            user_description
+            or self.e.decrypt_data(db_t.user_description)
+            or self.e.decrypt_data(db_t.description)
         )
         counterparty = self.e.decrypt_data(db_t.counterparty)
+        amount = amount or float(self.e.decrypt_data(db_t.amount))
 
         return BankTransactionResponse(
             id=str(db_t.id),
             account_id=str(db_t.account.id),
-            amount=float(db_t.amount),
+            amount=amount,
             date=db_t.date,
             description=description,
             counterparty=counterparty,

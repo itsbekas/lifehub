@@ -54,6 +54,7 @@ export async function action({ request }: { request: Request }) {
       action,
       name,
       amount,
+      description,
       category_id,
       bank_id,
       account_id,
@@ -250,7 +251,8 @@ export async function action({ request }: { request: Request }) {
               body: JSON.stringify({
                 description: "",
                 subcategory_id,
-                amount: -100,
+                amount,
+                description: description,
               }),
             },
             request
