@@ -1,39 +1,43 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy.types import String, TypeDecorator
+from sqlalchemy.types import VARBINARY, TypeDecorator
 
 if TYPE_CHECKING:
-    from sqlalchemy import Dialect
+    pass
 
 
-class EncryptedDataType(TypeDecorator[str]):
-    impl = String(1024)  # To be changed once EncryptedLargeDataType is implemented
+class EncryptedDataType(TypeDecorator[bytes]):
+    """
+    A SQLAlchemy TypeDecorator for encrypted data.
+    It is used to store encrypted data as binary data in the database.
+    The format of the data is as follows:
+    - key_version (1 byte)
+    - nonce (12 bytes)
+    - ciphertext (variable length)
+    The constructor takes the length of the ciphertext in bytes,
+    but the total size of the data is 1 + 12 + ciphertext_length.
+    """
 
-    def process_bind_param(self, value: str | None, dialect: Dialect) -> str | None:
+    cache_ok = True  # This is required to allow TypeDecorator to be cached
+
+    def __init__(
+        self, ciphertext_length: int, *args: list[Any], **kwargs: dict[Any, Any]
+    ) -> None:
         """
-        This method is called before data is persisted to the database.
-        It checks that the value adheres to the expected "key_version;nonce;ciphertext" format.
-        """
-        if value is None:
-            return value
+        Initializes the encrypted data type.
 
-        # Check the value is a string and matches the expected format
-        if isinstance(value, str):
-            parts = value.split(";")
-            if len(parts) != 3:
-                raise ValueError(
-                    "Invalid encrypted data format. Expected format: key_version;nonce;ciphertext"
-                )
-        else:
-            raise TypeError("Encrypted data must be stored as a string.")
-
-        return value
-
-    def process_result_value(self, value: str | None, dialect: Dialect) -> str | None:
+        :param ciphertext_length: Length of the ciphertext in bytes.
         """
-        This method is called when data is loaded from the database.
-        You can optionally validate or transform the data here.
-        """
-        return value  # You might choose to leave it as-is.
+        self.ciphertext_length = ciphertext_length
+        total_size = (
+            1 + 12 + ciphertext_length
+        )  # key_version(1) + nonce(12) + ciphertext
+        # Dynamically set the VARBINARY size
+        # Needs to be done at the class level because that's what SQLAlchemy checks
+        # (see TypeDecorator)
+        self.__class__.impl = VARBINARY(
+            total_size
+        )  # Dynamically set the VARBINARY size
+        super().__init__(*args, **kwargs)

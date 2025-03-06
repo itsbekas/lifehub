@@ -18,7 +18,7 @@ class BankAccount(UserBaseModel):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    account_id: Mapped[str] = mapped_column(EncryptedDataType)  # str
+    account_id: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # str
     institution_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     requisition_id: Mapped[str] = mapped_column(String(64))
     last_synced: Mapped[dt.datetime] = mapped_column(default=dt.datetime.min)
@@ -41,7 +41,7 @@ class AccountBalance(FetchBaseModel):
         ForeignKey("bank_account.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    amount: Mapped[str] = mapped_column(EncryptedDataType)  # float / Decimal
+    amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
 
     account: Mapped[BankAccount] = relationship(back_populates="balances")
 
@@ -56,16 +56,16 @@ class BankTransaction(UserBaseModel):
     account_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("bank_account.id", ondelete="CASCADE")
     )
-    amount: Mapped[str] = mapped_column(EncryptedDataType)  # float / Decimal
+    amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
     date: Mapped[dt.datetime] = mapped_column()
-    description: Mapped[Optional[str]] = mapped_column(
-        EncryptedDataType, nullable=True
+    description: Mapped[Optional[bytes]] = mapped_column(
+        EncryptedDataType(560), nullable=True
     )  # str
-    user_description: Mapped[Optional[str]] = mapped_column(
-        EncryptedDataType, nullable=True, default=None
+    user_description: Mapped[Optional[bytes]] = mapped_column(
+        EncryptedDataType(128), nullable=True, default=None
     )  # str
-    counterparty: Mapped[Optional[str]] = mapped_column(
-        EncryptedDataType, nullable=True
+    counterparty: Mapped[Optional[bytes]] = mapped_column(
+        EncryptedDataType(176), nullable=True
     )  # str
     subcategory_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True), ForeignKey("budget_subcategory.id"), nullable=True

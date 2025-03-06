@@ -425,6 +425,7 @@ class FinanceService(BaseUserService):
         """
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
         transaction = bank_transaction_repo.get_by_id(transaction_id)
+
         if transaction is None:
             raise FinanceServiceException(404, "Transaction not found")
         if user_description is not None:
@@ -435,18 +436,36 @@ class FinanceService(BaseUserService):
             transaction.subcategory_id = uuid.UUID(subcategory_id)
         if amount is not None:
             transaction.amount = self.encryption_service.encrypt_data(str(amount))
+
         self.session.commit()
+
+        description = (
+            self.encryption_service.decrypt_data(transaction.description)
+            if transaction.description
+            else None
+        )
+        user_description = (
+            self.encryption_service.decrypt_data(transaction.user_description)
+            if transaction.user_description
+            else None
+        )
+        counterparty = (
+            self.encryption_service.decrypt_data(transaction.counterparty)
+            if transaction.counterparty
+            else None
+        )
+
         return BankTransactionResponse(
             id=str(transaction.id),
             account_id=str(transaction.account.id),
             amount=float(transaction.amount),
             date=transaction.date,
-            description=transaction.description,
-            counterparty=transaction.counterparty,
+            description=description,
+            counterparty=counterparty,
             subcategory_id=str(transaction.subcategory_id)
             if transaction.subcategory_id
             else None,
-            user_description=transaction.user_description,
+            user_description=user_description,
         )
 
     def get_budget_categories(self) -> list[BudgetCategoryResponse]:

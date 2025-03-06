@@ -65,7 +65,7 @@ class EncryptionService(BaseUserService):
         data_key: str = self._bytes_to_str(self._generate_aes_key())
         return self.vault.encrypt_user_dek(data_key)
 
-    def encrypt_data(self, data: str) -> str:
+    def encrypt_data(self, data: str) -> bytes:
         """
         Encrypt the given data using a random DEK and AES-GCM.
         """
@@ -75,16 +75,19 @@ class EncryptionService(BaseUserService):
             nonce, data.encode("utf-8"), str(key_version).encode("utf-8")
         )
 
-        # key_version;nonce;ciphertext
-        return f"{key_version};{self._bytes_to_str(nonce)};{self._bytes_to_str(ciphertext)}"
+        return bytes([key_version]) + nonce + ciphertext
 
-    def decrypt_data(self, data: str) -> str:
+    def decrypt_data(self, data: bytes) -> str:
         """
         Decrypt the given data using the user's DEK and AES-GCM.
         """
-        key_version, nonce, ciphertext = data.split(";")
+
+        key_version = data[0]
+        nonce = data[1:13]
+        ciphertext = data[13:]
+
         return self.aesgcm.decrypt(
-            base64.b64decode(nonce),
-            base64.b64decode(ciphertext),
-            key_version.encode("utf-8"),
+            nonce,
+            ciphertext,
+            str(key_version).encode("utf-8"),
         ).decode("utf-8")
