@@ -38,7 +38,9 @@ export function EditTransactionModal({
 }: EditTransactionModalProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
-    null
+    subCategories.find(
+      (subCategory) => subCategory.id === transaction.subcategory_id
+    )?.id ?? null
   );
   const [description, setDescription] = useState<string>(
     transaction.description

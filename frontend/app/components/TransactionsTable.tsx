@@ -51,7 +51,7 @@ export function TransactionsTable({
     const subcategory = categories.find(
       (cat) => cat.id === transaction.subcategory_id
     );
-    const categoryName = subcategory?.name || "Uncategorized";
+    const categoryName = subcategory?.name || "";
 
     return (
       <Table.Tr key={transaction.id}>
