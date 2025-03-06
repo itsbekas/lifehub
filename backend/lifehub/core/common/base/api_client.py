@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session as SessionType
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken, is_oauth_config
+from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.repository.user import UserRepository
 from lifehub.core.user.schema import User
 
@@ -180,15 +181,23 @@ class APIClient(ABC):
             self._refresh_token(tokenRepo)
             session.commit()
 
+        self.encryption_service = EncryptionService(session, token_user)
+
         match self.auth_type:
             case AuthType.BASIC:
                 pass
             case AuthType.HEADERS:
                 pass
             case AuthType.TOKEN_HEADERS:
-                self.headers = {"Authorization": self.token.token}
+                self.headers = {
+                    "Authorization": self.encryption_service.decrypt_data(
+                        self.token.token
+                    )
+                }
             case AuthType.TOKEN_BEARER_HEADERS:
-                self.headers = {"Authorization": f"Bearer {self.token.token}"}
+                self.headers = {
+                    "Authorization": f"Bearer {self.encryption_service.decrypt_data(self.token.token)}"
+                }
             case AuthType.COOKIES:
                 pass
 
@@ -196,7 +205,9 @@ class APIClient(ABC):
         config = self.provider.config
         if not is_oauth_config(config):
             raise Exception("Attempting to refresh token for non-OAuth provider")
-        url = config.build_refresh_token_url(self.token.refresh_token)
+        url = config.build_refresh_token_url(
+            self.encryption_service.decrypt_data(self.token.refresh_token)
+        )
         res = requests.post(url)
         if res.status_code != 200:
             raise APIException(

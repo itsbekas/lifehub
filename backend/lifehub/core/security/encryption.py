@@ -66,10 +66,19 @@ class EncryptionService(BaseUserService):
         data_key: str = self._bytes_to_str(self._generate_aes_key())
         return self.vault.encrypt_user_dek(data_key)
 
-    def encrypt_data(self, data: str) -> bytes:
+    @overload
+    def encrypt_data(self, data: str) -> bytes: ...
+
+    @overload
+    def encrypt_data(self, data: None) -> None: ...
+
+    def encrypt_data(self, data: str | None) -> bytes | None:
         """
         Encrypt the given data using a random DEK and AES-GCM.
         """
+        if data is None:
+            return None
+
         key_version = 1  # Placeholder until key rotation is implemented
         nonce = self._generate_aes_nonce()
         ciphertext = self.aesgcm.encrypt(nonce, data.encode("utf-8"), None)

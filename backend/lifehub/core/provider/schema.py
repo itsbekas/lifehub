@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.core.common.base.db_model import BaseModel, UserBaseModel
 from lifehub.core.module.schema import module_provider
+from lifehub.core.security.encrypted_data import EncryptedDataType
 from lifehub.core.user.schema import user_provider
 
 if TYPE_CHECKING:
@@ -62,8 +63,8 @@ class ProviderToken(UserBaseModel):
         String(32), ForeignKey("provider.id"), primary_key=True
     )
     custom_url: Mapped[str] = mapped_column(String(64), nullable=True)
-    token: Mapped[str] = mapped_column(String(512), nullable=False)
-    refresh_token: Mapped[str] = mapped_column(String(512), nullable=True)
+    token: Mapped[bytes] = mapped_column(EncryptedDataType(512), nullable=False)
+    refresh_token: Mapped[bytes] = mapped_column(EncryptedDataType(512), nullable=True)
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     expires_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.max)
 

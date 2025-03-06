@@ -277,12 +277,14 @@ class UserService(BaseService):
         if self.provider_token_repository.get(user, provider) is not None:
             raise UserServiceException(409, "Token already exists")
 
+        encryption_service = EncryptionService(self.session, user)
+
         provider_token = ProviderToken(
             user_id=user.id,
             provider_id=provider.id,
             custom_url=custom_url,
-            token=token,
-            refresh_token=refresh_token,
+            token=encryption_service.encrypt_data(token),
+            refresh_token=encryption_service.encrypt_data(refresh_token),
             created_at=created_at,
             expires_at=expires_at,
         )
@@ -311,9 +313,13 @@ class UserService(BaseService):
         if not provider.config.allow_custom_url and custom_url is not None:
             raise UserServiceException(400, "Provider does not allow custom URLs")
 
-        provider_token.token = token
+        encryption_service = EncryptionService(self.session, user)
+
+        provider_token.token = encryption_service.encrypt_data(token)
         if refresh_token is not None:
-            provider_token.refresh_token = refresh_token
+            provider_token.refresh_token = encryption_service.encrypt_data(
+                refresh_token
+            )
         if expires_at is not None:
             provider_token.expires_at = expires_at
         if custom_url is not None:

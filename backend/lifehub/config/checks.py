@@ -74,7 +74,7 @@ def setup_admin_tokens() -> None:
                 admin,
                 gocardless_provider,
                 "",
-                "",
+                None,
                 dt.datetime.now(),
                 dt.datetime.max,
                 skip_test=True,

@@ -12,6 +12,7 @@ from lifehub.config.constants import (
 )
 from lifehub.core.common.base.api_client import APIClient, AuthType, auth_override
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
+from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 
 from .models import (
@@ -41,10 +42,11 @@ class GoCardlessAPIClient(APIClient):
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session, ADMIN_USERNAME)
+        self.encryption_service = EncryptionService(session, user)
 
     def _refresh_token(self, tokenRepo: ProviderTokenRepository) -> None:
         res = self.refresh_token()
-        self.token.token = res.access
+        self.token.token = self.encryption_service.encrypt_data(res.access)
         self.token.expires_at = dt.datetime.now() + dt.timedelta(
             seconds=res.access_expires
         )
@@ -60,7 +62,9 @@ class GoCardlessAPIClient(APIClient):
         return SpectacularJWTObtainResponse(**res)
 
     def refresh_token(self) -> SpectacularJWTRefreshResponse:
-        req = JWTRefreshRequest(refresh=self.token.refresh_token)
+        req = JWTRefreshRequest(
+            refresh=self.encryption_service.decrypt_data(self.token.refresh_token)
+        )
         res = self._post("token/refresh/", data=req)
         return SpectacularJWTRefreshResponse(**res)
 
