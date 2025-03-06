@@ -44,7 +44,6 @@ class BankTransactionResponse:
     description: Optional[str]
     counterparty: Optional[str]
     subcategory_id: Optional[str]
-    user_description: Optional[str]
 
 
 @dataclass

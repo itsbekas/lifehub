@@ -1,5 +1,6 @@
 import base64
 import os
+from typing import overload
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from sqlalchemy.orm import Session
@@ -77,10 +78,18 @@ class EncryptionService(BaseUserService):
 
         return bytes([key_version]) + nonce + ciphertext
 
-    def decrypt_data(self, data: bytes) -> str:
+    @overload
+    def decrypt_data(self, data: bytes) -> str: ...
+
+    @overload
+    def decrypt_data(self, data: None) -> None: ...
+
+    def decrypt_data(self, data: bytes | None) -> str | None:
         """
         Decrypt the given data using the user's DEK and AES-GCM.
         """
+        if data is None:
+            return None
 
         key_version = data[0]
         nonce = data[1:13]

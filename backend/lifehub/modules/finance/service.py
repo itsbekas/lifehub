@@ -55,6 +55,7 @@ class FinanceService(BaseUserService):
     def __init__(self, session: Session, user: User):
         super().__init__(session, user)
         self.encryption_service = EncryptionService(session, user)
+        self.e = self.encryption_service
 
     def fetch_t212_balance(self) -> BankBalanceResponse:
         """
@@ -264,43 +265,20 @@ class FinanceService(BaseUserService):
         for account in bank_account_repo.get_all():
             # If the last sync was less than 6 hours ago, get the transactions from the database
             if account.last_synced > dt.datetime.now() - dt.timedelta(hours=6):
-                for synced_transaction in bank_transaction_repo.get_by_account_id(
-                    account.id
-                ):
-                    synced_amount = float(
-                        self.encryption_service.decrypt_data(synced_transaction.amount)
-                    )
-                    synced_description = (
-                        self.encryption_service.decrypt_data(
-                            synced_transaction.description
-                        )
-                        if synced_transaction.description
-                        else None
-                    )
-                    synced_counterparty = (
-                        self.encryption_service.decrypt_data(
-                            synced_transaction.counterparty
-                        )
-                        if synced_transaction.counterparty
-                        else None
-                    )
-                    synced_user_description = (
-                        self.encryption_service.decrypt_data(
-                            synced_transaction.user_description
-                        )
-                        if synced_transaction.user_description
-                        else None
-                    )
+                for synced_t in bank_transaction_repo.get_by_account_id(account.id):
+                    synced_description = self.e.decrypt_data(
+                        synced_t.user_description
+                    ) or self.e.decrypt_data(synced_t.description)
+
                     transactions.append(
                         BankTransactionResponse(
-                            id=str(synced_transaction.id),
-                            account_id=str(synced_transaction.account.id),
-                            amount=synced_amount,
-                            date=synced_transaction.date,
+                            id=str(synced_t.id),
+                            account_id=str(synced_t.account.id),
+                            amount=float(self.e.decrypt_data(synced_t.amount)),
+                            date=synced_t.date,
                             description=synced_description,
-                            counterparty=synced_counterparty,
-                            subcategory_id=str(synced_transaction.subcategory_id),
-                            user_description=synced_user_description,
+                            counterparty=self.e.decrypt_data(synced_t.counterparty),
+                            subcategory_id=str(synced_t.subcategory_id),
                         )
                     )
                 continue
@@ -308,42 +286,41 @@ class FinanceService(BaseUserService):
             account_id = self.encryption_service.decrypt_data(account.account_id)
             account_transactions = gc_api.get_account_transactions(account_id).booked
 
-            for transaction in account_transactions:
-                if transaction.transactionId is None:
+            for api_t in account_transactions:
+                if api_t.transactionId is None:
                     continue
 
-                db_transaction = bank_transaction_repo.get_by_original_id(
-                    account.id, transaction.transactionId
+                db_t = bank_transaction_repo.get_by_original_id(
+                    account.id, api_t.transactionId
                 )
 
-                if db_transaction is None:
-                    amount = float(transaction.transactionAmount.amount)
+                if db_t is None:
+                    amount = float(api_t.transactionAmount.amount)
 
+                    # Transaction descriptions are weird...
                     description: str | None = None
-                    if transaction.remittanceInformationUnstructured is not None:
-                        description = transaction.remittanceInformationUnstructured
-                    elif transaction.remittanceInformationUnstructuredArray is not None:
+                    if api_t.remittanceInformationUnstructured is not None:
+                        description = api_t.remittanceInformationUnstructured
+                    elif api_t.remittanceInformationUnstructuredArray is not None:
                         description = " ".join(
-                            transaction.remittanceInformationUnstructuredArray
+                            api_t.remittanceInformationUnstructuredArray
                         )
 
                     user_description = None
 
                     # Convert date to datetime object
                     # Some transactions have valueDateTime, some have valueDate
-                    if transaction.valueDateTime is not None:
-                        date = dt.datetime.fromisoformat(transaction.valueDateTime)
-                    elif transaction.valueDate is not None:
+                    if api_t.valueDateTime is not None:
+                        date = dt.datetime.fromisoformat(api_t.valueDateTime)
+                    elif api_t.valueDate is not None:
                         date = dt.datetime.strptime(
-                            transaction.valueDate, "%Y-%m-%d"
+                            api_t.valueDate, "%Y-%m-%d"
                         ).replace(hour=0, minute=0, second=0)
                     else:
                         date = dt.datetime.max
 
                     counterparty = (
-                        transaction.debtorName
-                        if transaction.debtorName
-                        else transaction.creditorName
+                        api_t.debtorName if api_t.debtorName else api_t.creditorName
                     )
 
                     encrypted_amount = self.encryption_service.encrypt_data(str(amount))
@@ -354,55 +331,36 @@ class FinanceService(BaseUserService):
                         counterparty if counterparty is not None else ""
                     )
 
-                    db_transaction = BankTransaction(
+                    db_t = BankTransaction(
                         user_id=self.user.id,
-                        transaction_id=transaction.transactionId,
+                        transaction_id=api_t.transactionId,
                         account_id=account.id,
                         amount=encrypted_amount,
                         date=date,
                         description=encrypted_description,
                         counterparty=encrypted_counterparty,
                     )
-                    bank_transaction_repo.add(db_transaction)
+                    bank_transaction_repo.add(db_t)
                 else:
-                    amount = float(
-                        self.encryption_service.decrypt_data(db_transaction.amount)
-                    )
-                    description = (
-                        self.encryption_service.decrypt_data(db_transaction.description)
-                        if db_transaction.description is not None
-                        else None
-                    )
-                    counterparty = (
-                        self.encryption_service.decrypt_data(
-                            db_transaction.counterparty
-                        )
-                        if db_transaction.counterparty is not None
-                        else None
-                    )
-                    user_description = (
-                        self.encryption_service.decrypt_data(
-                            db_transaction.user_description
-                        )
-                        if db_transaction.user_description is not None
-                        else None
-                    )
+                    amount = float(self.e.decrypt_data(db_t.amount))
+                    description = self.e.decrypt_data(db_t.description)
+                    counterparty = self.e.decrypt_data(db_t.counterparty)
+                    user_description = self.e.decrypt_data(db_t.user_description)
 
                 # Apply filters to update subcategory_id and user_description
-                self.apply_filters_to_transaction(db_transaction)
+                self.apply_filters_to_transaction(db_t)
 
                 transactions.append(
                     BankTransactionResponse(
-                        id=str(db_transaction.id),
+                        id=str(db_t.id),
                         account_id=str(account.id),
                         amount=amount,
-                        date=db_transaction.date,
-                        description=description,
+                        date=db_t.date,
+                        description=user_description or description,
                         counterparty=counterparty,
-                        subcategory_id=str(db_transaction.subcategory_id)
-                        if db_transaction.subcategory_id
+                        subcategory_id=str(db_t.subcategory_id)
+                        if db_t.subcategory_id
                         else None,
-                        user_description=user_description,
                     )
                 )
 
@@ -424,48 +382,32 @@ class FinanceService(BaseUserService):
         Updates a bank transaction with user description and subcategory.
         """
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        transaction = bank_transaction_repo.get_by_id(transaction_id)
+        db_t = bank_transaction_repo.get_by_id(transaction_id)
 
-        if transaction is None:
+        if db_t is None:
             raise FinanceServiceException(404, "Transaction not found")
         if user_description is not None:
-            transaction.user_description = self.encryption_service.encrypt_data(
-                user_description
-            )
+            db_t.user_description = self.e.encrypt_data(user_description)
         if subcategory_id is not None:
-            transaction.subcategory_id = uuid.UUID(subcategory_id)
+            db_t.subcategory_id = uuid.UUID(subcategory_id)
         if amount is not None:
-            transaction.amount = self.encryption_service.encrypt_data(str(amount))
+            db_t.amount = self.e.encrypt_data(str(amount))
 
         self.session.commit()
 
-        description = (
-            self.encryption_service.decrypt_data(transaction.description)
-            if transaction.description
-            else None
+        description = self.e.decrypt_data(db_t.user_description) or self.e.decrypt_data(
+            db_t.description
         )
-        user_description = (
-            self.encryption_service.decrypt_data(transaction.user_description)
-            if transaction.user_description
-            else None
-        )
-        counterparty = (
-            self.encryption_service.decrypt_data(transaction.counterparty)
-            if transaction.counterparty
-            else None
-        )
+        counterparty = self.e.decrypt_data(db_t.counterparty)
 
         return BankTransactionResponse(
-            id=str(transaction.id),
-            account_id=str(transaction.account.id),
-            amount=float(transaction.amount),
-            date=transaction.date,
+            id=str(db_t.id),
+            account_id=str(db_t.account.id),
+            amount=float(db_t.amount),
+            date=db_t.date,
             description=description,
             counterparty=counterparty,
-            subcategory_id=str(transaction.subcategory_id)
-            if transaction.subcategory_id
-            else None,
-            user_description=user_description,
+            subcategory_id=str(db_t.subcategory_id) if db_t.subcategory_id else None,
         )
 
     def get_budget_categories(self) -> list[BudgetCategoryResponse]:
