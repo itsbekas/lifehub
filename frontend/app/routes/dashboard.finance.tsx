@@ -249,10 +249,9 @@ export async function action({ request }: { request: Request }) {
             {
               method: "PUT",
               body: JSON.stringify({
-                description: "",
+                description,
                 subcategory_id,
-                amount,
-                description: description,
+                amount: parseFloat(amount),
               }),
             },
             request

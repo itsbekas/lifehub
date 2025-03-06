@@ -7,6 +7,7 @@ import {
   Group,
   ActionIcon,
   TextInput,
+  NumberInput,
 } from "@mantine/core";
 import { useFetcher } from "react-router";
 import { IconDots } from "@tabler/icons-react";
@@ -45,7 +46,7 @@ export function EditTransactionModal({
   const [description, setDescription] = useState<string>(
     transaction.description
   );
-  const [amount, setAmount] = useState<number>(transaction.amount);
+  const [amount, setAmount] = useState<number | string>(transaction.amount);
   const fetcher = useFetcher();
 
   const handleSubmit = () => {
@@ -81,13 +82,13 @@ export function EditTransactionModal({
           required
           mb="sm"
         />
-        <TextInput
+        <NumberInput
           label="Amount"
-          type="number"
-          placeholder="Enter a number"
+          placeholder="Enter amount"
           value={amount}
-          onChange={(event) => setAmount(parseFloat(event.currentTarget.value))}
+          onChange={setAmount}
           required
+          decimalScale={2}
           mb="sm"
         />
         <Select
