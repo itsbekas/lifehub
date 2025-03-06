@@ -89,7 +89,7 @@ class EncryptionService(BaseUserService):
         if data is None:
             return None
 
-        key_version = data[0]
+        # key_version = data[0]
         nonce = data[1:13]
         ciphertext = data[13:]
 

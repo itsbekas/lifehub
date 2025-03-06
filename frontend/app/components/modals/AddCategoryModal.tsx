@@ -18,6 +18,9 @@ export function AddCategoryModal() {
       { name: categoryName, action: "createCategory" },
       { method: "post", encType: "application/json" }
     );
+
+    setCategoryName("");
+    close();
   };
 
   return (

@@ -27,6 +27,10 @@ export function AddSubCategoryModal({ categoryId }: AddSubCategoryModalProps) {
       },
       { method: "post", encType: "application/json" }
     );
+
+    setSubCategoryName("");
+    setAmount("");
+    close();
   };
 
   return (
