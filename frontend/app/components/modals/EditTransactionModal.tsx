@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Button, Select, Group, ActionIcon } from "@mantine/core";
+import {
+  Modal,
+  Button,
+  Select,
+  Group,
+  ActionIcon,
+  TextInput,
+  NumberInput,
+} from "@mantine/core";
 import { useFetcher } from "react-router";
 import { IconDots } from "@tabler/icons-react";
 
@@ -31,8 +39,14 @@ export function EditTransactionModal({
 }: EditTransactionModalProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
-    null
+    subCategories.find(
+      (subCategory) => subCategory.id === transaction.subcategory_id
+    )?.id ?? null
   );
+  const [description, setDescription] = useState<string>(
+    transaction.description
+  );
+  const [amount, setAmount] = useState<number | string>(transaction.amount);
   const fetcher = useFetcher();
 
   const handleSubmit = () => {
@@ -45,6 +59,8 @@ export function EditTransactionModal({
       {
         account_id: transaction.account_id,
         transaction_id: transaction.id,
+        description,
+        amount,
         subcategory_id: selectedSubCategory,
         action: "editTransaction",
       },
@@ -58,6 +74,23 @@ export function EditTransactionModal({
   return (
     <>
       <Modal opened={opened} onClose={close} title="Edit Transaction" centered>
+        <TextInput
+          label="Description"
+          placeholder="Enter a description"
+          value={description}
+          onChange={(event) => setDescription(event.currentTarget.value)}
+          required
+          mb="sm"
+        />
+        <NumberInput
+          label="Amount"
+          placeholder="Enter amount"
+          value={amount}
+          onChange={setAmount}
+          required
+          decimalScale={2}
+          mb="sm"
+        />
         <Select
           label="Select Sub-Category"
           placeholder="Choose a sub-category"
