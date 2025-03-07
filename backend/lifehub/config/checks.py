@@ -39,7 +39,7 @@ def setup_admin_user() -> None:
         try:
             user = user_service.create_user(
                 ADMIN_USERNAME,
-                "admin@lifehub",
+                "admin@life.hub",
                 ADMIN_PASSWORD,
                 "Admin",
             )

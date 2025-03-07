@@ -42,8 +42,12 @@ class UserService(BaseService):
 
         hashed_password = self.hash_password(password)
 
+        # E-mail and name are empty until they can be encrypted
         new_user = User(
-            username=username, email=email, password=hashed_password, name=name
+            username=username,
+            email=bytes([0]),
+            password=hashed_password,
+            name=bytes([0]),
         )
         self.user_repository.add(new_user)
 
@@ -71,6 +75,8 @@ class UserService(BaseService):
             raise UserServiceException(500, "Failed to create user")
 
         new_user.data_key = user_dek
+        new_user.email = encryption_service.encrypt_data(email)
+        new_user.name = encryption_service.encrypt_data(name)
 
         self.session.commit()
 
@@ -153,10 +159,11 @@ class UserService(BaseService):
         return user
 
     def get_user_data(self, user: User) -> UserResponse:
+        encryption_service = EncryptionService(self.session, user)
         return UserResponse(
             username=user.username,
-            email=user.email,
-            name=user.name,
+            email=encryption_service.decrypt_data(user.email),
+            name=encryption_service.decrypt_data(user.name),
             created_at=user.created_at,
         )
 
@@ -171,10 +178,12 @@ class UserService(BaseService):
     ) -> UserResponse:
         self.session.merge(user)
 
+        encryption_service = EncryptionService(self.session, user)
+
         if name is not None:
-            user.name = name
+            user.name = encryption_service.encrypt_data(name)
         if email is not None:
-            user.email = email
+            user.email = encryption_service.encrypt_data(email)
         if password is not None:
             user.password = self.hash_password(password)
 
@@ -182,8 +191,8 @@ class UserService(BaseService):
 
         return UserResponse(
             username=user.username,
-            email=user.email,
-            name=user.name,
+            email=email or encryption_service.decrypt_data(user.email),
+            name=name or encryption_service.decrypt_data(user.name),
             created_at=user.created_at,
         )
 

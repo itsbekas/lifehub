@@ -6,6 +6,7 @@ from sqlalchemy import UUID, Column, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.core.common.base.db_model import BaseModel
+from lifehub.core.security.encrypted_data import EncryptedDataType
 
 if TYPE_CHECKING:
     from lifehub.core.module.schema import Module
@@ -36,9 +37,11 @@ class User(BaseModel):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     username: Mapped[str] = mapped_column(String(32), unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    email: Mapped[bytes] = mapped_column(
+        EncryptedDataType(64), unique=True, nullable=False
+    )
     password: Mapped[str] = mapped_column(String(128), nullable=False)
-    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     verified: Mapped[bool] = mapped_column(default=False)
     data_key: Mapped[str] = mapped_column(String(256), nullable=True)

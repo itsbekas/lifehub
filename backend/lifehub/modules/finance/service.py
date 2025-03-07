@@ -127,7 +127,7 @@ class FinanceService(BaseUserService):
                 balance = db_balance
 
         res = BankBalanceResponse(
-            bank=account.institution_id,
+            bank=self.e.decrypt_data(account.institution_id),
             account_id=str(account.id),
             balance=balance_amount,
         )
@@ -187,8 +187,8 @@ class FinanceService(BaseUserService):
                 BankAccount(
                     user_id=self.user.id,
                     account_id=encrypted_account_id,
-                    institution_id=requisition.institution_id,
-                    requisition_id=ref,
+                    institution_id=self.e.encrypt_data(requisition.institution_id),
+                    requisition_id=self.e.encrypt_data(ref),
                 )
             )
 

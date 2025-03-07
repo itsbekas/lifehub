@@ -19,8 +19,10 @@ class BankAccount(UserBaseModel):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     account_id: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # str
-    institution_id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    requisition_id: Mapped[str] = mapped_column(String(64))
+    institution_id: Mapped[bytes] = mapped_column(
+        EncryptedDataType(64), primary_key=True
+    )
+    requisition_id: Mapped[bytes] = mapped_column(EncryptedDataType(64))
     last_synced: Mapped[dt.datetime] = mapped_column(default=dt.datetime.min)
 
     transactions: Mapped[list[BankTransaction]] = relationship(
