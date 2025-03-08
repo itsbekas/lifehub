@@ -1,0 +1,16 @@
+.venv
+.venv-dev
+.vscode
+
+# Ignore environment variables
+.env
+
+# Ignore Docker files
+Dockerfile
+Dockerfile.*
+
+# Repo stuff
+schema.dbml
+LICENSE
+dev-requirements.txt
+.pre-commit-config.yaml

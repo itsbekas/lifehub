@@ -1,7 +1,7 @@
 import hvac
 from sqlalchemy.orm import Session
 
-from lifehub.config.constants import VAULT_ADDR, VAULT_TOKEN, VAULT_TRANSIT_MOUNT_POINT
+from lifehub.config.constants import cfg
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.user.schema import User
@@ -20,7 +20,7 @@ class VaultService(BaseUserService):
 
     def __init__(self, session: Session, user: User) -> None:
         super().__init__(session, user)
-        self.client = hvac.Client(url=VAULT_ADDR, token=VAULT_TOKEN)
+        self.client = hvac.Client(url=cfg.VAULT_ADDR, token=cfg.VAULT_TOKEN)
         self.kek_path = f"user-{self.user.id}"
 
     def _user_kek_exists(self) -> bool:
@@ -42,7 +42,7 @@ class VaultService(BaseUserService):
         """
         # Create the KEK in Transit
         self.client.secrets.transit.create_key(
-            name=self.kek_path, mount_point=VAULT_TRANSIT_MOUNT_POINT
+            name=self.kek_path, mount_point=cfg.VAULT_TRANSIT_MOUNT_POINT
         )
 
         # Store KEK metadata in Vault KV
@@ -60,7 +60,7 @@ class VaultService(BaseUserService):
         result = self.client.secrets.transit.encrypt_data(
             name=self.kek_path,
             plaintext=dek,
-            mount_point=VAULT_TRANSIT_MOUNT_POINT,
+            mount_point=cfg.VAULT_TRANSIT_MOUNT_POINT,
         )
         return result["data"]["ciphertext"]  # type: ignore
 
@@ -81,6 +81,6 @@ class VaultService(BaseUserService):
         result = self.client.secrets.transit.decrypt_data(
             name=self.kek_path,
             ciphertext=encrypted_dek,
-            mount_point=VAULT_TRANSIT_MOUNT_POINT,
+            mount_point=cfg.VAULT_TRANSIT_MOUNT_POINT,
         )
         return result["data"]["plaintext"]  # type: ignore

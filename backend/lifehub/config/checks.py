@@ -1,7 +1,7 @@
 import datetime as dt
 import time
 
-from lifehub.config.constants import ADMIN_PASSWORD, ADMIN_USERNAME
+from lifehub.config.constants import cfg
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
 from lifehub.config.vault import setup_vault
@@ -38,21 +38,21 @@ def setup_admin_user() -> None:
 
         try:
             user = user_service.create_user(
-                ADMIN_USERNAME,
+                cfg.ADMIN_USERNAME,
                 "admin@life.hub",
-                ADMIN_PASSWORD,
+                cfg.ADMIN_PASSWORD,
                 "Admin",
             )
             user.verified = True
         except UserServiceException as e:
             if e.status_code != 409:
                 raise
-            user = user_service.get_user(ADMIN_USERNAME)
+            user = user_service.get_user(cfg.ADMIN_USERNAME)
             user_service.update_user(
                 user,
                 "Admin",
                 "admin@lifehub",
-                ADMIN_PASSWORD,
+                cfg.ADMIN_PASSWORD,
             )
         session.commit()
 
@@ -62,7 +62,7 @@ def setup_admin_tokens() -> None:
         user_service = UserService(session)
         provider_repo = ProviderRepository(session)
 
-        admin = user_service.get_user(ADMIN_USERNAME)
+        admin = user_service.get_user(cfg.ADMIN_USERNAME)
 
         gocardless_provider = provider_repo.get_by_id("gocardless")
         if gocardless_provider is None:
@@ -107,6 +107,8 @@ def create_db_tables() -> None:
 
 
 def pre_run_setup() -> None:
+    cfg._load_env()  # Load the environment variables
+    cfg._load_vault_secrets()  #! DEBUG ONLY
     setup_vault()  # Must run before db checks since it sets up the db credentials
     check_mariadb()
     create_db_tables()

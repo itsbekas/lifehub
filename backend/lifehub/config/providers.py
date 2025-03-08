@@ -1,6 +1,6 @@
 from typing import Any
 
-from lifehub.config.constants import getenv
+from lifehub.config.constants import cfg
 from lifehub.core.common.database_service import get_session
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.schema import (
@@ -40,8 +40,8 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "auth_type": "oauth",
             "auth_url": "https://accounts.google.com/o/oauth2/auth",
             "token_url": "https://accounts.google.com/o/oauth2/token",
-            "client_id": getenv("GOOGLE_CALENDAR_CLIENT_ID"),
-            "client_secret": getenv("GOOGLE_CALENDAR_CLIENT_SECRET"),
+            "client_id": cfg.GOOGLE_CALENDAR_CLIENT_ID,
+            "client_secret": cfg.GOOGLE_CALENDAR_CLIENT_SECRET,
             "scope": "https://www.googleapis.com/auth/calendar.readonly",
         },
         "google_tasks": {
@@ -49,8 +49,8 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "auth_type": "oauth",
             "auth_url": "https://accounts.google.com/o/oauth2/auth",
             "token_url": "https://accounts.google.com/o/oauth2/token",
-            "client_id": getenv("GOOGLE_TASKS_CLIENT_ID"),
-            "client_secret": getenv("GOOGLE_TASKS_CLIENT_SECRET"),
+            "client_id": cfg.GOOGLE_TASKS_CLIENT_ID,
+            "client_secret": cfg.GOOGLE_TASKS_CLIENT_SECRET,
             "scope": "https://www.googleapis.com/auth/tasks",
         },
         "spotify": {
@@ -58,8 +58,8 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "auth_type": "oauth",
             "auth_url": "https://accounts.spotify.com/authorize",
             "token_url": "https://accounts.spotify.com/api/token",
-            "client_id": getenv("SPOTIFY_CLIENT_ID"),
-            "client_secret": getenv("SPOTIFY_CLIENT_SECRET"),
+            "client_id": cfg.SPOTIFY_CLIENT_ID,
+            "client_secret": cfg.SPOTIFY_CLIENT_SECRET,
             "scope": "user-read-private user-read-email",
         },
         "strava": {
@@ -67,8 +67,8 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "auth_type": "oauth",
             "auth_url": "https://www.strava.com/oauth/authorize",
             "token_url": "https://www.strava.com/oauth/token",
-            "client_id": getenv("STRAVA_CLIENT_ID"),
-            "client_secret": getenv("STRAVA_CLIENT_SECRET"),
+            "client_id": cfg.STRAVA_CLIENT_ID,
+            "client_secret": cfg.STRAVA_CLIENT_SECRET,
             "scope": "activity:read_all",
         },
         "trading212": {
@@ -80,8 +80,8 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
             "auth_type": "oauth",
             "auth_url": "https://app.ynab.com/oauth/authorize",
             "token_url": "https://app.ynab.com/oauth/token",
-            "client_id": getenv("YNAB_CLIENT_ID"),
-            "client_secret": getenv("YNAB_CLIENT_SECRET"),
+            "client_id": cfg.YNAB_CLIENT_ID,
+            "client_secret": cfg.YNAB_CLIENT_SECRET,
             "scope": "read-only",
         },
     }
