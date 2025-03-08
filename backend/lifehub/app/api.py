@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from lifehub.config.checks import pre_run_setup
-from lifehub.config.constants import ENVIRONMENT, UVICORN_HOST
+from lifehub.config.constants import cfg
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.api.router import router as modules_router
 from lifehub.core.provider.api.router import router as providers_router
@@ -58,7 +58,7 @@ app.include_router(api, prefix="/api/v0")
 async def service_exception_handler(
     request: Request, exc: ServiceException
 ) -> JSONResponse:
-    if ENVIRONMENT == "development":
+    if cfg.ENVIRONMENT == "development":
         print(f"ServiceException: {exc}")
 
     return JSONResponse(
@@ -69,7 +69,7 @@ async def service_exception_handler(
 
 def run() -> None:
     pre_run_setup()
-    uvicorn.run("lifehub.app.api:app", host=UVICORN_HOST, port=8000, reload=True)
+    uvicorn.run("lifehub.app.api:app", host=cfg.UVICORN_HOST, port=8000, reload=True)
 
 
 if __name__ == "__main__":
