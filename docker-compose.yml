@@ -1,17 +1,4 @@
 services:
-  lifehub-mariadb:
-    image: mariadb:latest
-    container_name: lifehub-mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MARIADB_PASSWORD}
-      MYSQL_DATABASE: ${MARIADB_DATABASE}
-      MYSQL_USER: ${MARIADB_USER}
-      MYSQL_PASSWORD: ${MARIADB_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-
   lifehub-backend:
     build:
       context: backend/
@@ -24,8 +11,6 @@ services:
       - FRONTEND_URL=http://lifehub-frontend
     ports:
       - "8000:8000"
-    depends_on:
-      - lifehub-mariadb
 
   lifehub-frontend:
     build:
