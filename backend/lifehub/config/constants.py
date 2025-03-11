@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+import hvac
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -53,7 +54,6 @@ class Config:
     def __new__(cls) -> Config:
         if cls.__instance is None:
             cls.__instance = super(Config, cls).__new__(cls)
-            cls.__instance._load_env()  # Load values once
         return cls.__instance
 
     def _getenv(self, key: str) -> str:
@@ -62,19 +62,17 @@ class Config:
         return val
 
     def _load_env(self) -> None:
-        """Load environment variables once."""
+        """Load environment variables"""
+        #
         self.ENVIRONMENT = self._getenv("ENVIRONMENT")
         self.UVICORN_HOST = self._getenv("UVICORN_HOST")
         self.REDIRECT_URI_BASE = self._getenv("FRONTEND_URL")
         self.OAUTH_REDIRECT_URI = (
             f"{self.REDIRECT_URI_BASE}/settings/providers/oauth_token"
         )
-        self.AUTH_SECRET_KEY = self._getenv("AUTH_SECRET_KEY")
-        self.AUTH_ALGORITHM = self._getenv("AUTH_ALGORITHM")
+        self.AUTH_ALGORITHM = "HS256"
         self.DB_HOST = self._getenv("DB_HOST")
         self.DB_NAME = self._getenv("DB_NAME")
-        self.VAULT_ADDR = self._getenv("VAULT_ADDR")
-        self.VAULT_TOKEN = self._getenv("VAULT_TOKEN")
         self.VAULT_DB_USER = self._getenv("VAULT_DB_USER")
         self.VAULT_DB_PASSWORD = self._getenv("VAULT_DB_PASSWORD")
         self.VAULT_DB_ROLE = "lifehub-app"
@@ -84,24 +82,49 @@ class Config:
         self.ADMIN_USERNAME = self._getenv("ADMIN_USERNAME")
         self.ADMIN_PASSWORD = self._getenv("ADMIN_PASSWORD")
 
+        # Vault
+        self.VAULT_ADDR = self._getenv("VAULT_ADDR")
+        self.VAULT_APPROLE_ROLE_ID = self._getenv("VAULT_APPROLE_ROLE_ID")
+        self.VAULT_APPROLE_SECRET_ID = self._getenv("VAULT_APPROLE_SECRET_ID")
+        self.VAULT_TOKEN = hvac.Client().auth.approle.login(
+            role_id=self.VAULT_APPROLE_ROLE_ID, secret_id=self.VAULT_APPROLE_SECRET_ID
+        )["auth"]["client_token"]
+
     def _load_vault_secrets(self) -> None:
-        """Placeholder for loading Vault secrets"""
-        self.GOCARDLESS_BANK_ID = self._getenv("GOCARDLESS_BANK_ID")
-        self.GOCARDLESS_CLIENT_ID = self._getenv("GOCARDLESS_CLIENT_ID")
-        self.GOCARDLESS_CLIENT_SECRET = self._getenv("GOCARDLESS_CLIENT_SECRET")
-        self.POSTMARK_API_TOKEN = self._getenv("POSTMARK_API_TOKEN")
-        self.GOOGLE_CALENDAR_CLIENT_ID = self._getenv("GOOGLE_CALENDAR_CLIENT_ID")
-        self.GOOGLE_CALENDAR_CLIENT_SECRET = self._getenv(
+        """Load Vault secrets"""
+
+        vault = hvac.Client(url=self.VAULT_ADDR, token=self.VAULT_TOKEN)
+
+        if self.ENVIRONMENT == "development":
+            load_secret = self._getenv
+        elif self.ENVIRONMENT == "production":
+
+            def load_secret(key: str) -> str:
+                secret: str = vault.secrets.kv.v2.read_secret_version(
+                    mount_point="kv/lifehub", path=key
+                )["data"]["data"]
+                return secret
+
+        # Backend Secrets
+        self.AUTH_SECRET_KEY = load_secret("AUTH_SECRET_KEY")
+
+        # Provider API Secrets
+        self.GOCARDLESS_BANK_ID = load_secret("GOCARDLESS_BANK_ID")
+        self.GOCARDLESS_CLIENT_ID = load_secret("GOCARDLESS_CLIENT_ID")
+        self.GOCARDLESS_CLIENT_SECRET = load_secret("GOCARDLESS_CLIENT_SECRET")
+        self.POSTMARK_API_TOKEN = load_secret("POSTMARK_API_TOKEN")
+        self.GOOGLE_CALENDAR_CLIENT_ID = load_secret("GOOGLE_CALENDAR_CLIENT_ID")
+        self.GOOGLE_CALENDAR_CLIENT_SECRET = load_secret(
             "GOOGLE_CALENDAR_CLIENT_SECRET"
         )
-        self.GOOGLE_TASKS_CLIENT_ID = self._getenv("GOOGLE_TASKS_CLIENT_ID")
-        self.GOOGLE_TASKS_CLIENT_SECRET = self._getenv("GOOGLE_TASKS_CLIENT_SECRET")
-        self.SPOTIFY_CLIENT_ID = self._getenv("SPOTIFY_CLIENT_ID")
-        self.SPOTIFY_CLIENT_SECRET = self._getenv("SPOTIFY_CLIENT_SECRET")
-        self.STRAVA_CLIENT_ID = self._getenv("STRAVA_CLIENT_ID")
-        self.STRAVA_CLIENT_SECRET = self._getenv("STRAVA_CLIENT_SECRET")
-        self.YNAB_CLIENT_ID = self._getenv("YNAB_CLIENT_ID")
-        self.YNAB_CLIENT_SECRET = self._getenv("YNAB_CLIENT_SECRET")
+        self.GOOGLE_TASKS_CLIENT_ID = load_secret("GOOGLE_TASKS_CLIENT_ID")
+        self.GOOGLE_TASKS_CLIENT_SECRET = load_secret("GOOGLE_TASKS_CLIENT_SECRET")
+        self.SPOTIFY_CLIENT_ID = load_secret("SPOTIFY_CLIENT_ID")
+        self.SPOTIFY_CLIENT_SECRET = load_secret("SPOTIFY_CLIENT_SECRET")
+        self.STRAVA_CLIENT_ID = load_secret("STRAVA_CLIENT_ID")
+        self.STRAVA_CLIENT_SECRET = load_secret("STRAVA_CLIENT_SECRET")
+        self.YNAB_CLIENT_ID = load_secret("YNAB_CLIENT_ID")
+        self.YNAB_CLIENT_SECRET = load_secret("YNAB_CLIENT_SECRET")
 
 
 # Instantiate and load config once

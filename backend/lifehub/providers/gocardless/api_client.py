@@ -91,9 +91,9 @@ class GoCardlessAPIClient(APIClient):
         )
         return TransactionsResponse(**res)
 
-    def create_agreement(self) -> EndUserAgreementResponse:
+    def create_agreement(self, institution_id: str) -> EndUserAgreementResponse:
         req = EndUserAgreementRequest(
-            institution_id=cfg.GOCARDLESS_BANK_ID,
+            institution_id,
         )
         res = self._post("agreements/enduser/", data=req)
         return EndUserAgreementResponse(**res)
