@@ -1,16 +1,22 @@
+version: "3.8"
+
 services:
   lifehub-backend:
     build:
       context: backend/
     container_name: lifehub-backend
     environment:
+      - ENVIRONMENT=production
+      - UVICORN_HOST=0.0.0.0
       - DB_HOST=lifehub-mariadb
-      - DB_USER=${MARIADB_USER}
-      - DB_PASSWORD=${MARIADB_PASSWORD}
-      - DB_NAME=${MARIADB_DATABASE}
+      - DB_NAME=lifehub
       - FRONTEND_URL=http://lifehub-frontend
-    ports:
-      - "8000:8000"
+      - VAULT_ADDR=http://192.168.100.1:8200
+      - VAULT_APPROLE_ROLE_ID={VAULT_APPROLE_ROLE_ID}
+      - VAULT_APPROLE_SECRET_ID={VAULT_APPROLE_SECRET_ID}
+    networks:
+      - vault-net
+      - lifehub-net
 
   lifehub-frontend:
     build:
@@ -18,11 +24,20 @@ services:
       dockerfile: Dockerfile
     container_name: lifehub-frontend
     environment:
-      - VITE_BACKEND_URL=lifehub-backend
+      - ENVIRONMENT=production
+      - VITE_BACKEND_URL=http://lifehub-backend:8000
     ports:
       - "80:5173"
     depends_on:
       - lifehub-backend
+    networks:
+      - lifehub-net
+
+networks:
+  vault-net:
+    external: true
+  lifehub-net:
+    driver: bridge
 
 volumes:
   dbdata:
