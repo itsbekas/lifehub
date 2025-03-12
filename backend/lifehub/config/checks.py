@@ -107,9 +107,6 @@ def create_db_tables() -> None:
 
 
 def pre_run_setup() -> None:
-    cfg._load_env()
-    setup_vault()  # Must run before db checks since it sets up the db credentials
-    cfg._load_vault_secrets()
     check_mariadb()
     create_db_tables()
     setup_providers()

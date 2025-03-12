@@ -56,7 +56,7 @@ This will ensure the backend is connected to the Vault network (`vault-net`).
 Run this command inside the backend container to verify Vault is reachable:
 
 ```bash
-docker exec -it lifehub-backend curl http://192.168.100.1:8200/v1/sys/health
+docker run --rm --network=vault-net curlimages/curl:latest -L -v http://192.168.100.1:8200/v1/sys/health
 ```
 
 A successful response means Vault is **properly set up** and accessible.

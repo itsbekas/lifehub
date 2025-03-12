@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 import hvac
 from dotenv import load_dotenv
@@ -54,6 +55,8 @@ class Config:
     def __new__(cls) -> Config:
         if cls.__instance is None:
             cls.__instance = super(Config, cls).__new__(cls)
+            cls.__instance._load_env()
+            cls.__instance._load_vault_secrets()
         return cls.__instance
 
     def _getenv(self, key: str) -> str:
@@ -73,14 +76,15 @@ class Config:
         self.AUTH_ALGORITHM = "HS256"
         self.DB_HOST = self._getenv("DB_HOST")
         self.DB_NAME = self._getenv("DB_NAME")
-        self.VAULT_DB_USER = self._getenv("VAULT_DB_USER")
-        self.VAULT_DB_PASSWORD = self._getenv("VAULT_DB_PASSWORD")
+        self.VAULT_DB_USER = "vault"
+        # self.VAULT_DB_PASSWORD = self._getenv("VAULT_DB_PASSWORD")
+        self.VAULT_DB_PASSWORD = "vault-testing" #! DEBUG: Retrieve from Vault
         self.VAULT_DB_ROLE = "lifehub-app"
         self.VAULT_DB_ADMIN_ROLE = "lifehub-admin"
         self.VAULT_DB_MOUNT_POINT = "database/lifehub"
         self.VAULT_TRANSIT_MOUNT_POINT = "transit/lifehub"
-        self.ADMIN_USERNAME = self._getenv("ADMIN_USERNAME")
-        self.ADMIN_PASSWORD = self._getenv("ADMIN_PASSWORD")
+        self.ADMIN_USERNAME = "admin"
+        self.ADMIN_PASSWORD = "admin-testing" #! DEBUG: Retrieve from Vault
 
         # Vault
         self.VAULT_ADDR = self._getenv("VAULT_ADDR")
@@ -100,31 +104,29 @@ class Config:
         elif self.ENVIRONMENT == "production":
 
             def load_secret(key: str) -> str:
-                secret: str = vault.secrets.kv.v2.read_secret_version(
+                secret: dict[str, Any] = vault.secrets.kv.v2.read_secret_version(
                     mount_point="kv/lifehub", path=key
-                )["data"]["data"]
-                return secret
+                )
+                return secret['data']['data']
 
         # Backend Secrets
-        self.AUTH_SECRET_KEY = load_secret("AUTH_SECRET_KEY")
+        self.AUTH_SECRET_KEY = load_secret("AUTH_SECRET_KEY")['token']
+        print(self.AUTH_SECRET_KEY)
 
         # Provider API Secrets
-        self.GOCARDLESS_BANK_ID = load_secret("GOCARDLESS_BANK_ID")
-        self.GOCARDLESS_CLIENT_ID = load_secret("GOCARDLESS_CLIENT_ID")
-        self.GOCARDLESS_CLIENT_SECRET = load_secret("GOCARDLESS_CLIENT_SECRET")
-        self.POSTMARK_API_TOKEN = load_secret("POSTMARK_API_TOKEN")
-        self.GOOGLE_CALENDAR_CLIENT_ID = load_secret("GOOGLE_CALENDAR_CLIENT_ID")
-        self.GOOGLE_CALENDAR_CLIENT_SECRET = load_secret(
-            "GOOGLE_CALENDAR_CLIENT_SECRET"
-        )
-        self.GOOGLE_TASKS_CLIENT_ID = load_secret("GOOGLE_TASKS_CLIENT_ID")
-        self.GOOGLE_TASKS_CLIENT_SECRET = load_secret("GOOGLE_TASKS_CLIENT_SECRET")
-        self.SPOTIFY_CLIENT_ID = load_secret("SPOTIFY_CLIENT_ID")
-        self.SPOTIFY_CLIENT_SECRET = load_secret("SPOTIFY_CLIENT_SECRET")
-        self.STRAVA_CLIENT_ID = load_secret("STRAVA_CLIENT_ID")
-        self.STRAVA_CLIENT_SECRET = load_secret("STRAVA_CLIENT_SECRET")
-        self.YNAB_CLIENT_ID = load_secret("YNAB_CLIENT_ID")
-        self.YNAB_CLIENT_SECRET = load_secret("YNAB_CLIENT_SECRET")
+        api_tokens = load_secret("api-tokens")
+        self.GOCARDLESS_CLIENT_ID = api_tokens["GOCARDLESS_CLIENT_ID"]
+        self.GOCARDLESS_CLIENT_SECRET = api_tokens["GOCARDLESS_CLIENT_SECRET"]
+        self.GOOGLE_CALENDAR_CLIENT_ID = api_tokens["GOOGLE_CALENDAR_CLIENT_ID"]
+        self.GOOGLE_CALENDAR_CLIENT_SECRET = api_tokens["GOOGLE_CALENDAR_CLIENT_SECRET"]
+        self.GOOGLE_TASKS_CLIENT_ID = api_tokens["GOOGLE_TASKS_CLIENT_ID"]
+        self.GOOGLE_TASKS_CLIENT_SECRET = api_tokens["GOOGLE_TASKS_CLIENT_SECRET"]
+        self.SPOTIFY_CLIENT_ID = api_tokens["SPOTIFY_CLIENT_ID"]
+        self.SPOTIFY_CLIENT_SECRET = api_tokens["SPOTIFY_CLIENT_SECRET"]
+        self.STRAVA_CLIENT_ID = api_tokens["STRAVA_CLIENT_ID"]
+        self.STRAVA_CLIENT_SECRET = api_tokens["STRAVA_CLIENT_SECRET"]
+        self.YNAB_CLIENT_ID = api_tokens["YNAB_CLIENT_ID"]
+        self.YNAB_CLIENT_SECRET = api_tokens["YNAB_CLIENT_SECRET"]
 
 
 # Instantiate and load config once

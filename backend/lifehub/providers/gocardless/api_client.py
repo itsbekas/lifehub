@@ -135,7 +135,7 @@ class GoCardlessAPIClient(APIClient):
         return SpectacularRequisitionResponse(**res)
 
     def _test(self) -> None:
-        self.get_institution(cfg.GOCARDLESS_BANK_ID)
+        self.get_institutions()
 
     def _error_msg(self, res: Any) -> str:
         msg: str = res.json().get("detail")
