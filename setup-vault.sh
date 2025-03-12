@@ -12,7 +12,6 @@ export VAULT_ADDR
 DB_NAME="lifehub"
 DB_HOST="192.168.100.1"
 VAULT_DB_USER="vault"
-VAULT_DB_PASSWORD="vault-testing"
 VAULT_DB_ROLE="lifehub-app"
 VAULT_DB_ADMIN_ROLE="lifehub-admin"
 VAULT_DB_MOUNT_POINT="database/lifehub"
@@ -28,6 +27,9 @@ echo "Enabling Database Engine..."
 vault secrets enable -path="$VAULT_DB_MOUNT_POINT" database &> /dev/null || echo "Database engine already enabled."
 
 # --- Configure Database Secret Engine ---
+echo "Retrieving vault db secrets..."
+VAULT_DB_PASSWORD="$(vault kv get -field=password kv/vault-metadata/mariadb)"
+
 echo "Checking if database connection is already configured..."
 if ! vault read "$VAULT_DB_MOUNT_POINT/config/$DB_NAME" &>/dev/null; then
     echo "Configuring database connection..."

@@ -28,7 +28,6 @@ class Config:
     VAULT_ADDR: str
     VAULT_TOKEN: str
     VAULT_DB_USER: str
-    VAULT_DB_PASSWORD: str
     VAULT_DB_ROLE: str
     VAULT_DB_ADMIN_ROLE: str
     VAULT_DB_MOUNT_POINT: str
@@ -77,41 +76,42 @@ class Config:
         self.DB_HOST = self._getenv("DB_HOST")
         self.DB_NAME = self._getenv("DB_NAME")
         self.VAULT_DB_USER = "vault"
-        # self.VAULT_DB_PASSWORD = self._getenv("VAULT_DB_PASSWORD")
-        self.VAULT_DB_PASSWORD = "vault-testing" #! DEBUG: Retrieve from Vault
         self.VAULT_DB_ROLE = "lifehub-app"
         self.VAULT_DB_ADMIN_ROLE = "lifehub-admin"
         self.VAULT_DB_MOUNT_POINT = "database/lifehub"
         self.VAULT_TRANSIT_MOUNT_POINT = "transit/lifehub"
         self.ADMIN_USERNAME = "admin"
-        self.ADMIN_PASSWORD = "admin-testing" #! DEBUG: Retrieve from Vault
 
         # Vault
         self.VAULT_ADDR = self._getenv("VAULT_ADDR")
         self.VAULT_APPROLE_ROLE_ID = self._getenv("VAULT_APPROLE_ROLE_ID")
         self.VAULT_APPROLE_SECRET_ID = self._getenv("VAULT_APPROLE_SECRET_ID")
+
+    def _load_vault_secrets(self) -> None:
+        """Load Vault secrets"""
         self.VAULT_TOKEN = hvac.Client().auth.approle.login(
             role_id=self.VAULT_APPROLE_ROLE_ID, secret_id=self.VAULT_APPROLE_SECRET_ID
         )["auth"]["client_token"]
 
-    def _load_vault_secrets(self) -> None:
-        """Load Vault secrets"""
-
         vault = hvac.Client(url=self.VAULT_ADDR, token=self.VAULT_TOKEN)
 
         if self.ENVIRONMENT == "development":
-            load_secret = self._getenv
+            kv_mount = "kv/lifehub-dev"
         elif self.ENVIRONMENT == "production":
+            kv_mount = "kv/lifehub"
+        else:
+            raise NotImplementedError(f"Environment {self.ENVIRONMENT} not supported")
 
-            def load_secret(key: str) -> str:
-                secret: dict[str, Any] = vault.secrets.kv.v2.read_secret_version(
-                    mount_point="kv/lifehub", path=key
-                )
-                return secret['data']['data']
+        def load_secret(key: str) -> str:
+            secret: dict[str, Any] = vault.secrets.kv.v2.read_secret_version(
+                mount_point=kv_mount, path=key
+            )
+            return secret['data']['data']
 
-        # Backend Secrets
-        self.AUTH_SECRET_KEY = load_secret("AUTH_SECRET_KEY")['token']
-        print(self.AUTH_SECRET_KEY)
+        # Lifehub Metadata
+        metadata = load_secret("metadata")
+        self.AUTH_SECRET_KEY = metadata["AUTH_SECRET_KEY"]
+        self.ADMIN_PASSWORD = metadata["ADMIN_PASSWORD"]
 
         # Provider API Secrets
         api_tokens = load_secret("api-tokens")
