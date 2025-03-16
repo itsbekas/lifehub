@@ -20,7 +20,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/v0/user/signup`,
+      `${process.env.BACKEND_URL}/api/v0/user/signup`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

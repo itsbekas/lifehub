@@ -39,7 +39,7 @@ export const action: ActionFunction = async ({ request }) => {
 
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_URL}/api/v0/user/login`,
+      `${process.env.BACKEND_URL}/api/v0/user/login`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,12 +120,12 @@ const LoginPage = () => {
             mb={15}
           />
           {actionData?.error && (
-            <Text color="red" size="sm" mt={5}>
+            <Text c="red" size="sm" mt={5}>
               {actionData.error}
             </Text>
           )}
           {form.errors && (
-            <Text color="red" size="sm" mt={5}>
+            <Text c="red" size="sm" mt={5}>
               {Object.values(form.errors).join(", ")}
             </Text>
           )}
