@@ -3,13 +3,7 @@ from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
-from lifehub.config.constants import (
-    ADMIN_USERNAME,
-    GOCARDLESS_BANK_ID,
-    GOCARDLESS_CLIENT_ID,
-    GOCARDLESS_CLIENT_SECRET,
-    REDIRECT_URI_BASE,
-)
+from lifehub.config.constants import cfg
 from lifehub.core.common.base.api_client import APIClient, AuthType, auth_override
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.security.encryption import EncryptionService
@@ -41,7 +35,7 @@ class GoCardlessAPIClient(APIClient):
     auth_type = AuthType.OAUTH
 
     def __init__(self, user: User, session: Session) -> None:
-        super().__init__(user, session, ADMIN_USERNAME)
+        super().__init__(user, session, cfg.ADMIN_USERNAME)
         self.encryption_service = EncryptionService(session, user)
 
     def _refresh_token(self, tokenRepo: ProviderTokenRepository) -> None:
@@ -55,8 +49,8 @@ class GoCardlessAPIClient(APIClient):
     @auth_override(AuthType.BASIC)
     def get_token(self) -> SpectacularJWTObtainResponse:
         req = JWTObtainPairRequest(
-            secret_id=GOCARDLESS_CLIENT_ID,
-            secret_key=GOCARDLESS_CLIENT_SECRET,
+            secret_id=cfg.GOCARDLESS_CLIENT_ID,
+            secret_key=cfg.GOCARDLESS_CLIENT_SECRET,
         )
         res = self._post("token/new/", data=req)
         return SpectacularJWTObtainResponse(**res)
@@ -97,9 +91,9 @@ class GoCardlessAPIClient(APIClient):
         )
         return TransactionsResponse(**res)
 
-    def create_agreement(self) -> EndUserAgreementResponse:
+    def create_agreement(self, institution_id: str) -> EndUserAgreementResponse:
         req = EndUserAgreementRequest(
-            institution_id=GOCARDLESS_BANK_ID,
+            institution_id,
         )
         res = self._post("agreements/enduser/", data=req)
         return EndUserAgreementResponse(**res)
@@ -131,7 +125,7 @@ class GoCardlessAPIClient(APIClient):
         return self._get("requisitions", params=params)
 
     def create_requisition(self, bank_id: str) -> SpectacularRequisitionResponse:
-        redirect_uri = f"{REDIRECT_URI_BASE}/dashboard/finance/callback"
+        redirect_uri = f"{cfg.REDIRECT_URI_BASE}/dashboard/finance/callback"
         req = RequisitionRequest(redirect=redirect_uri, institution_id=bank_id)
         res = self._post("requisitions/", data=req)
         return SpectacularRequisitionResponse(**res)
@@ -141,7 +135,7 @@ class GoCardlessAPIClient(APIClient):
         return SpectacularRequisitionResponse(**res)
 
     def _test(self) -> None:
-        self.get_institution(GOCARDLESS_BANK_ID)
+        self.get_institutions()
 
     def _error_msg(self, res: Any) -> str:
         msg: str = res.json().get("detail")

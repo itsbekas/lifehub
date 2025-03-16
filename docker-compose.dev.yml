@@ -8,7 +8,6 @@ services:
       MYSQL_USER: ${MARIADB_USER}
       MYSQL_PASSWORD: ${MARIADB_PASSWORD}
       VAULT_DB_USER: ${VAULT_DB_USER}
-      VAULT_DB_PASSWORD: ${VAULT_DB_PASSWORD}
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN:-dev-root-token}
       VAULT_URL: http://172.17.0.1:8200
     ports:
@@ -59,7 +58,6 @@ services:
       VAULT_ADDR: http://172.17.0.1:8200
       VAULT_TOKEN: ${VAULT_ROOT_TOKEN}
       VAULT_DB_USER: ${VAULT_DB_USER}
-      VAULT_DB_PASSWORD: ${VAULT_DB_PASSWORD}
       ENVIRONMENT: development
     ports:
       - "8000:8000"

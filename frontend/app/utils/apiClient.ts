@@ -1,6 +1,6 @@
 import { getSession } from "~/utils/session";
 
-const BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const BASE_URL = process.env.BACKEND_URL;
 
 export async function fetchWithAuth(
   endpoint: string,

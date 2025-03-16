@@ -1,4 +1,4 @@
-import { Center, Title, Button } from "@mantine/core";
+import { Center, Title, Button, Text } from "@mantine/core";
 import { useNavigate } from "react-router";
 import { isLoggedIn } from "~/utils/session";
 import type { Route } from "./+types/_index";
@@ -22,6 +22,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       >
         {loggedIn ? "Go to Dashboard" : "Login"}
       </Button>
+      {!loggedIn && (
+        <Text ta="center" size="sm" mt="sm">
+          New here?{" "}
+          <Text component="a" href="/signup" c="blue">
+            Sign up
+          </Text>
+        </Text>
+      )}
     </Center>
   );
 }

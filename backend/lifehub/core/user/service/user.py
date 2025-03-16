@@ -5,7 +5,7 @@ from hvac.exceptions import VaultError
 from jose import ExpiredSignatureError, JWTError, jwt
 from sqlalchemy.orm import Session
 
-from lifehub.config.constants import AUTH_ALGORITHM, AUTH_SECRET_KEY
+from lifehub.config.constants import cfg
 from lifehub.config.providers import PROVIDER_CLIENTS
 from lifehub.core.common.base.api_client import APIClient
 from lifehub.core.common.base.service.base import BaseService
@@ -103,16 +103,16 @@ class UserService(BaseService):
     def create_jwt_token(self, user_id: str, expires_at: dt.datetime) -> str:
         return jwt.encode(
             {"sub": user_id, "exp": expires_at, "iss": "Lifehub", "aud": "UserService"},
-            AUTH_SECRET_KEY,
-            algorithm=AUTH_ALGORITHM,
+            cfg.AUTH_SECRET_KEY,
+            algorithm=cfg.AUTH_ALGORITHM,
         )
 
     def decode_jwt_token(self, token: str) -> dict[str, str]:
         try:
             return jwt.decode(
                 token,
-                AUTH_SECRET_KEY,
-                algorithms=[AUTH_ALGORITHM],
+                cfg.AUTH_SECRET_KEY,
+                algorithms=[cfg.AUTH_ALGORITHM],
                 audience="UserService",
                 issuer="Lifehub",
                 options={"verify_aud": True, "verify_iss": True},

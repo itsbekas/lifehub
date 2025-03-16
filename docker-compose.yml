@@ -1,31 +1,23 @@
 services:
-  lifehub-mariadb:
-    image: mariadb:latest
-    container_name: lifehub-mariadb
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MARIADB_PASSWORD}
-      MYSQL_DATABASE: ${MARIADB_DATABASE}
-      MYSQL_USER: ${MARIADB_USER}
-      MYSQL_PASSWORD: ${MARIADB_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-
   lifehub-backend:
     build:
       context: backend/
     container_name: lifehub-backend
     environment:
-      - DB_HOST=lifehub-mariadb
-      - DB_USER=${MARIADB_USER}
-      - DB_PASSWORD=${MARIADB_PASSWORD}
-      - DB_NAME=${MARIADB_DATABASE}
+      - ENVIRONMENT=production
+      - UVICORN_HOST=0.0.0.0
+      - DB_HOST=host.docker.internal
+      - DB_NAME=lifehub
       - FRONTEND_URL=http://lifehub-frontend
+      - VAULT_ADDR=http://host.docker.internal:8200
+      - VAULT_APPROLE_ROLE_ID=${VAULT_APPROLE_ROLE_ID}
+      - VAULT_APPROLE_SECRET_ID=${VAULT_APPROLE_SECRET_ID}
     ports:
-      - "8000:8000"
-    depends_on:
-      - lifehub-mariadb
+        - "8000:8000"
+    networks:
+      - lifehub-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   lifehub-frontend:
     build:
@@ -33,12 +25,17 @@ services:
       dockerfile: Dockerfile
     container_name: lifehub-frontend
     environment:
-      - VITE_BACKEND_URL=lifehub-backend
+      - ENVIRONMENT=production
+      - NODE_ENV=production
+      - BACKEND_URL=http://lifehub-backend:8000
+      - SESSION_SECRET=${SESSION_SECRET} # Not ideal to store as env, but for now it'll do
     ports:
-      - "80:5173"
+      - "80:3000"
     depends_on:
       - lifehub-backend
+    networks:
+      - lifehub-net
 
-volumes:
-  dbdata:
-    driver: local
+networks:
+  lifehub-net:
+    driver: bridge

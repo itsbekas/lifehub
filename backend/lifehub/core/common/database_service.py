@@ -6,15 +6,7 @@ import hvac
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from lifehub.config.constants import (
-    DB_HOST,
-    DB_NAME,
-    VAULT_ADDR,
-    VAULT_DB_ADMIN_ROLE,
-    VAULT_DB_MOUNT_POINT,
-    VAULT_DB_ROLE,
-    VAULT_TOKEN,
-)
+from lifehub.config.constants import cfg
 
 if TYPE_CHECKING:
     from sqlalchemy import Engine
@@ -25,11 +17,11 @@ def get_db_credentials(admin: bool = False) -> dict[str, str]:
     """
     Fetch dynamic credentials from Vault.
     """
-    client = hvac.Client(url=VAULT_ADDR, token=VAULT_TOKEN)
-    role = VAULT_DB_ADMIN_ROLE if admin else VAULT_DB_ROLE
+    client = hvac.Client(url=cfg.VAULT_ADDR, token=cfg.VAULT_TOKEN)
+    role = cfg.VAULT_DB_ADMIN_ROLE if admin else cfg.VAULT_DB_ROLE
     creds = client.secrets.database.generate_credentials(
         name=role,
-        mount_point=VAULT_DB_MOUNT_POINT,
+        mount_point=cfg.VAULT_DB_MOUNT_POINT,
     )
 
     return {
@@ -43,7 +35,7 @@ def get_engine(admin: bool = False) -> Engine:
     Create a SQLAlchemy engine with dynamic credentials.
     """
     creds = get_db_credentials(admin)
-    db_url = f"mariadb+mariadbconnector://{creds['username']}:{creds['password']}@{DB_HOST}:3306/{DB_NAME}"
+    db_url = f"mariadb+mariadbconnector://{creds['username']}:{creds['password']}@{cfg.DB_HOST}:3306/{cfg.DB_NAME}"
     return create_engine(db_url)
 
 

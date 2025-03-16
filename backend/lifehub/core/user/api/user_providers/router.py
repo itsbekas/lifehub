@@ -4,7 +4,7 @@ import datetime as dt
 import requests
 from fastapi import APIRouter, Depends, HTTPException
 
-from lifehub.config.constants import OAUTH_REDIRECT_URI
+from lifehub.config.constants import cfg
 from lifehub.core.provider.api.dependencies import ProviderDep
 from lifehub.core.provider.models import (
     ProviderTokenBasicRequest,
@@ -82,7 +82,7 @@ async def add_oauth_provider(
         data = {
             "grant_type": "authorization_code",
             "code": code,
-            "redirect_uri": OAUTH_REDIRECT_URI,
+            "redirect_uri": cfg.OAUTH_REDIRECT_URI,
         }
 
     res = requests.post(url, data=data, params=params, headers=headers)
