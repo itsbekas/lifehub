@@ -18,7 +18,7 @@ export const { getSession, commitSession, destroySession } =
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
-      secrets: ['123456'],
+      secrets: [process.env.SESSION_SECRET as string], // as string is just to satisfy TypeScript
     },
   });
 
