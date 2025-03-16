@@ -22,14 +22,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       >
         {loggedIn ? "Go to Dashboard" : "Login"}
       </Button>
-      { !loggedIn &&
+      {!loggedIn && (
         <Text ta="center" size="sm" mt="sm">
           New here?{" "}
           <Text component="a" href="/signup" c="blue">
             Sign up
           </Text>
         </Text>
-      }
+      )}
     </Center>
   );
 }
