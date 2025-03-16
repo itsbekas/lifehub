@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# Load the .env file
+set -a
+. backend/.env
+set +a
+
+set -e  # Exit on error
+set -u  # Treat unset variables as errors
+set -o pipefail  # Catch pipeline errors
+
+# Write to kv/lifehub/metadata
+vault kv put kv/lifehub/metadata \
+    AUTH_SECRET_KEY="$AUTH_SECRET_KEY" \
+    ADMIN_PASSWORD="$ADMIN_PASSWORD"
+
+vault kv put kv/lifehub/api-tokens \
+    GOCARDLESS_CLIENT_ID="$GOCARDLESS_CLIENT_ID" \
+    GOCARDLESS_CLIENT_SECRET="$GOCARDLESS_CLIENT_SECRET" \
+    GOOGLE_CALENDAR_CLIENT_ID="$GOOGLE_CALENDAR_CLIENT_ID" \
+    GOOGLE_CALENDAR_CLIENT_SECRET="$GOOGLE_CALENDAR_CLIENT_SECRET" \
+    GOOGLE_TASKS_CLIENT_ID="$GOOGLE_TASKS_CLIENT_ID" \
+    GOOGLE_TASKS_CLIENT_SECRET="$GOOGLE_TASKS_CLIENT_SECRET" \
+    SPOTIFY_CLIENT_ID="$SPOTIFY_CLIENT_ID" \
+    SPOTIFY_CLIENT_SECRET="$SPOTIFY_CLIENT_SECRET" \
+    STRAVA_CLIENT_ID="$STRAVA_CLIENT_ID" \
+    STRAVA_CLIENT_SECRET="$STRAVA_CLIENT_SECRET" \
+    YNAB_CLIENT_ID="$YNAB_CLIENT_ID" \
+    YNAB_CLIENT_SECRET="$YNAB_CLIENT_SECRET"

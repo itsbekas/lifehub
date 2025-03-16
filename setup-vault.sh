@@ -1,16 +1,16 @@
 #!/bin/bash
 
-set -e  # Exit on error
+# set -e  # Exit on error
 set -u  # Treat unset variables as errors
 set -o pipefail  # Catch pipeline errors
 
 # Vault address and login
-VAULT_ADDR="http://192.168.100.1:8200"
+VAULT_ADDR="http://localhost:8200"
 export VAULT_ADDR
 
 # Always make sure these are synced with the backend config
 DB_NAME="lifehub"
-DB_HOST="192.168.100.1"
+DB_HOST="localhost"
 VAULT_DB_USER="vault"
 VAULT_DB_ROLE="lifehub-app"
 VAULT_DB_ADMIN_ROLE="lifehub-admin"
@@ -70,8 +70,8 @@ else
 fi
 
 # --- Setup Vault Policies ---
-echo "Applying user-keystore policy..."
-vault policy write user-keystore - <<EOF
+echo "Applying lifehub-user policy..."
+vault policy write lifehub-user - <<EOF
 # Allow users to encrypt data using only their own KEK
 path "transit/lifehub/encrypt/user-{{identity.entity.id}}" {
     capabilities = ["update"]
@@ -88,8 +88,8 @@ path "kv/lifehub/user-keys/{{identity.entity.id}}" {
 }
 EOF
 
-echo "Applying backend-keystore policy..."
-vault policy write backend-keystore - <<EOF
+echo "Applying lifehub-app policy..."
+vault policy write lifehub-app - <<EOF
 # Backend can encrypt data using any user's KEK
 path "transit/lifehub/encrypt/user-*" {
     capabilities = ["update"]
@@ -105,10 +105,26 @@ path "transit/lifehub/keys/user-*" {
     capabilities = ["create", "update", "read", "delete"]
 }
 
-# Backend has full access to all user KEK metadata in Vault KV
-path "kv/lifehub/user-keys/*" {
+# Backend has full access to all data in the lifehub KV store
+path "kv/lifehub/*" {
     capabilities = ["create", "update", "read", "delete"]
 }
+
+# Backend can read and write to the lifehub database
+path "database/lifehub/*" {
+    capabilities = ["create", "read", "update", "delete"]
+}
 EOF
+
+# --- Setup Vault Auth Methods ---
+echo "Enabling AppRole authentication..."
+vault auth enable approle &> /dev/null || echo "AppRole authentication already enabled."
+
+echo "Creating AppRole for lifehub-app..."
+vault write auth/approle/role/lifehub-app \
+    token_policies="lifehub-app" \
+    token_ttl="10m" \
+    token_max_ttl="30m" \
+    secret_id_num_uses="1" &> /dev/null
 
 echo "Vault setup completed successfully!"

@@ -29,6 +29,11 @@ FROM python:3.13-slim-bookworm AS runner
 
 WORKDIR /app
 
+# Install necessary runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmariadb3 && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy necessary files from the builder stage
 COPY --from=builder /app /app
 

@@ -4,7 +4,6 @@ import time
 from lifehub.config.constants import cfg
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
-from lifehub.config.vault import setup_vault
 from lifehub.core.common.base.db_model import BaseModel
 from lifehub.core.common.database_service import get_engine, get_session
 from lifehub.core.provider.repository.provider import ProviderRepository
