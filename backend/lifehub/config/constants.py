@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from typing import Any
 
@@ -54,9 +55,19 @@ class Config:
     def __new__(cls) -> Config:
         if cls.__instance is None:
             cls.__instance = super(Config, cls).__new__(cls)
-            cls.__instance._load_env()
-            cls.__instance._load_vault_secrets()
+            if os.path.exists("config.json"):
+                with open("config.json", "r") as f:
+                    cls.__instance.__dict__ = json.load(f)
+            else:
+                cls.__instance._load_env()
+                cls.__instance._load_vault_secrets()
+                # TODO: Eventually this will have some other setup such as Redis
+                cls.__instance.save_to_file()
         return cls.__instance
+
+    def save_to_file(self) -> None:
+        with open("config.json", "w") as f:
+            json.dump(self.__dict__, f, indent=4)
 
     def _getenv(self, key: str) -> str:
         if (val := os.getenv(key)) is None:

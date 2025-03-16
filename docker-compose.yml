@@ -12,6 +12,8 @@ services:
       - VAULT_ADDR=http://host.docker.internal:8200
       - VAULT_APPROLE_ROLE_ID=${VAULT_APPROLE_ROLE_ID}
       - VAULT_APPROLE_SECRET_ID=${VAULT_APPROLE_SECRET_ID}
+    ports:
+        - "8000:8000"
     networks:
       - lifehub-net
     extra_hosts:
