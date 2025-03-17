@@ -9,20 +9,13 @@ export VAULT_ADDR
 
 
 db_name="lifehub"
-db_user="lifehub"
-db_password="testing" # TODO: Read from env or vault
+#db_user="lifehub"
+#db_password="testing"
 db_host="localhost"
 
 vault_user="vault"
 vault_password=$(vault kv get -field=password kv/vault-metadata/mariadb)
 vault_host="localhost"
-#vault_host="bernardo-arch"
-
-# Must be root to run this script
-#if [ "$(id -u)" -ne 0 ]; then
-#  echo "Error: This script must be run as root"
-#  exit 1
-#fi
 
 # Check if mariadb is running
 echo "Checking if MariaDB is running..."
@@ -35,9 +28,9 @@ fi
 echo "Setting up database and user..."
 sudo mariadb -u root <<EOF
 CREATE DATABASE IF NOT EXISTS ${db_name};
-CREATE USER IF NOT EXISTS '${db_user}'@'${vault_host}' IDENTIFIED BY '${db_password}';
-GRANT ALL PRIVILEGES ON ${db_name}.* TO '${db_user}'@'${vault_host}';
-FLUSH PRIVILEGES;
+;CREATE USER IF NOT EXISTS '${db_user}'@'${vault_host}' IDENTIFIED BY '${db_password}';
+;GRANT ALL PRIVILEGES ON ${db_name}.* TO '${db_user}'@'${vault_host}';
+;FLUSH PRIVILEGES;
 EOF
 
 # Check if the database was created

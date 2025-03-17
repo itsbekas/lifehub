@@ -1,0 +1,29 @@
+services:
+  lifehub-backend:
+    build:
+      context: backend/
+      dockerfile: Dockerfile.dev
+    environment:
+      - ENVIRONMENT=development
+    develop:
+      watch:
+        - action: sync
+          path: ./backend
+          target: /app
+        - action: rebuild
+          path: ./backend/requirements.txt
+
+  lifehub-frontend:
+    build:
+      context: frontend/
+      dockerfile: Dockerfile.dev
+    environment:
+      - ENVIRONMENT=development
+      - NODE_ENV=development
+    develop:
+      watch:
+        - action: sync
+          path: ./frontend
+          target: /app
+        - action: rebuild
+          path: ./frontend/package.json

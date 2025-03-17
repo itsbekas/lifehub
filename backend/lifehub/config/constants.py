@@ -106,16 +106,9 @@ class Config:
 
         vault = hvac.Client(url=self.VAULT_ADDR, token=self.VAULT_TOKEN)
 
-        if self.ENVIRONMENT == "development":
-            kv_mount = "kv/lifehub-dev"
-        elif self.ENVIRONMENT == "production":
-            kv_mount = "kv/lifehub"
-        else:
-            raise NotImplementedError(f"Environment {self.ENVIRONMENT} not supported")
-
         def load_secret(key: str) -> str:
             secret: dict[str, Any] = vault.secrets.kv.v2.read_secret_version(
-                mount_point=kv_mount, path=key
+                mount_point="kv/lifehub", path=key
             )
             return secret['data']['data']
 

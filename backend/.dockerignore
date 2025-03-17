@@ -1,6 +1,6 @@
-.venv
-.venv-dev
-.vscode
+.venv/
+.venv-dev/
+.vscode/
 
 # Ignore environment variables
 .env
@@ -14,3 +14,5 @@ schema.dbml
 LICENSE
 dev-requirements.txt
 .pre-commit-config.yaml
+
+config.json

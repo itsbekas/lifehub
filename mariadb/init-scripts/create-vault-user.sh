@@ -1,9 +1,11 @@
 #!/bin/bash
 
-db_name="${MYSQL_DATABASE:-db_name}"
+set -u
+
+db_name="${MYSQL_DATABASE}"
 # Default variables for Vault user and password
-vault_user="${VAULT_DB_USER:-vault_user}"
-vault_password="${VAULT_DB_PASSWORD:-default_vault_password}"
+vault_user="${VAULT_DB_USER}"
+vault_password="${VAULT_DB_PASSWORD}"
 
 # Execute the SQL commands using MariaDB's CLI tool
 mariadb -u root -p"${MYSQL_ROOT_PASSWORD}" <<EOF
