@@ -24,24 +24,15 @@ if ! sudo mariadb-admin ping -h localhost --silent; then
   exit 1
 fi
 
-# Setup the database and user for the application
+# Setup the database for the application
 echo "Setting up database and user..."
 sudo mariadb -u root <<EOF
 CREATE DATABASE IF NOT EXISTS ${db_name};
-;CREATE USER IF NOT EXISTS '${db_user}'@'${vault_host}' IDENTIFIED BY '${db_password}';
-;GRANT ALL PRIVILEGES ON ${db_name}.* TO '${db_user}'@'${vault_host}';
-;FLUSH PRIVILEGES;
 EOF
 
 # Check if the database was created
 if ! sudo mariadb -u root -e "USE ${db_name}"; then
   echo "Error: Failed to create database"
-  exit 1
-fi
-
-# Check if the user was created
-if ! sudo mariadb -u root -e "SELECT User FROM mysql.user WHERE User='${db_user}'"; then
-  echo "Error: Failed to create user"
   exit 1
 fi
 
