@@ -429,9 +429,9 @@ class FinanceService(BaseUserService):
                 subcategories.append(
                     BudgetSubCategoryResponse(
                         id=str(subcategory.id),
-                        name=subcategory.name,
+                        name=self.e.decrypt_data(subcategory.name),
                         category_id=str(category.id),
-                        category_name=category.name,
+                        category_name=self.e.decrypt_data(category.name),
                         budgeted=budgeted,
                         spent=spent,
                         available=available,
@@ -439,7 +439,9 @@ class FinanceService(BaseUserService):
                 )
             categories.append(
                 BudgetCategoryResponse(
-                    id=str(category.id), name=category.name, subcategories=subcategories
+                    id=str(category.id),
+                    name=self.e.decrypt_data(category.name),
+                    subcategories=subcategories,
                 )
             )
         return categories
@@ -450,12 +452,14 @@ class FinanceService(BaseUserService):
         """
         category = BudgetCategory(
             user_id=self.user.id,
-            name=name,
+            name=self.e.encrypt_data(name),
         )
         self.user.budget_categories.append(category)
         self.session.commit()
         return BudgetCategoryResponse(
-            id=str(category.id), name=category.name, subcategories=[]
+            id=str(category.id),
+            name=self.e.decrypt_data(category.name),
+            subcategories=[],
         )
 
     def get_budget_category(self, category_id: uuid.UUID) -> BudgetCategoryResponse:
@@ -475,9 +479,9 @@ class FinanceService(BaseUserService):
             subcategories.append(
                 BudgetSubCategoryResponse(
                     id=str(subcategory.id),
-                    name=subcategory.name,
+                    name=self.e.decrypt_data(subcategory.name),
                     category_id=str(category.id),
-                    category_name=category.name,
+                    category_name=self.e.decrypt_data(category.name),
                     budgeted=budgeted,
                     spent=spent,
                     available=available,
@@ -485,7 +489,9 @@ class FinanceService(BaseUserService):
             )
 
         return BudgetCategoryResponse(
-            id=str(category.id), name=category.name, subcategories=subcategories
+            id=str(category.id),
+            name=self.e.decrypt_data(category.name),
+            subcategories=subcategories,
         )
 
     def update_budget_category(
@@ -499,11 +505,9 @@ class FinanceService(BaseUserService):
         )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
-        category.name = name
+        category.name = self.e.encrypt_data(name)
         self.session.commit()
-        return BudgetCategoryResponse(
-            id=str(category.id), name=category.name, subcategories=[]
-        )
+        return BudgetCategoryResponse(id=str(category.id), name=name, subcategories=[])
 
     def delete_budget_category(self, category_id: uuid.UUID) -> None:
         """
@@ -536,9 +540,9 @@ class FinanceService(BaseUserService):
             subcategories.append(
                 BudgetSubCategoryResponse(
                     id=str(subcategory.id),
-                    name=subcategory.name,
+                    name=self.e.decrypt_data(subcategory.name),
                     category_id=str(category.id),
-                    category_name=category.name,
+                    category_name=self.e.decrypt_data(category.name),
                     budgeted=budgeted,
                     spent=spent,
                     available=available,
@@ -561,14 +565,14 @@ class FinanceService(BaseUserService):
         subcategory = BudgetSubCategory(
             user_id=self.user.id,
             category_id=category.id,
-            name=name,
-            amount=Decimal(amount),
+            name=self.e.encrypt_data(name),
+            amount=self.e.encrypt_data(str(Decimal(amount))),
         )
         category.subcategories.append(subcategory)
         self.session.commit()
 
         # Fetch budgeted amount
-        budgeted = float(subcategory.amount)
+        budgeted = float(self.e.decrypt_data(subcategory.amount))
 
         # Initially, there are no transactions, so spent is 0 and available equals the budgeted amount
         spent = 0.0
@@ -576,9 +580,9 @@ class FinanceService(BaseUserService):
 
         return BudgetSubCategoryResponse(
             id=str(subcategory.id),
-            name=subcategory.name,
+            name=self.e.decrypt_data(subcategory.name),
             category_id=str(category.id),
-            category_name=category.name,
+            category_name=self.e.decrypt_data(category.name),
             budgeted=budgeted,
             spent=spent,
             available=available,
@@ -595,17 +599,17 @@ class FinanceService(BaseUserService):
         )
         if subcategory is None:
             raise FinanceServiceException(404, "Subcategory not found")
-        subcategory.name = name
-        subcategory.amount = Decimal(amount)
+        subcategory.name = self.e.encrypt_data(name)
+        subcategory.amount = self.e.encrypt_data(str(Decimal(amount)))
         self.session.commit()
 
         budgeted, spent, available = self._get_budget_status(subcategory.id)
 
         return BudgetSubCategoryResponse(
             id=str(subcategory.id),
-            name=subcategory.name,
+            name=self.e.decrypt_data(subcategory.name),
             category_id=str(subcategory.category_id),
-            category_name=subcategory.category.name,
+            category_name=self.e.decrypt_data(subcategory.category.name),
             budgeted=budgeted,
             spent=spent,
             available=available,
@@ -677,7 +681,7 @@ class FinanceService(BaseUserService):
             raise FinanceServiceException(404, "Subcategory not found")
 
         # Fetch budgeted amount
-        budgeted = float(subcategory.amount)
+        budgeted = float(self.e.decrypt_data(subcategory.amount))
 
         # Calculate spent amount
         transactions = self._get_current_month_transactions_by_subcategory(

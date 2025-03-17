@@ -106,11 +106,11 @@ class Config:
 
         vault = hvac.Client(url=self.VAULT_ADDR, token=self.VAULT_TOKEN)
 
-        def load_secret(key: str) -> str:
+        def load_secret(key: str) -> dict[str, str]:
             secret: dict[str, Any] = vault.secrets.kv.v2.read_secret_version(
                 mount_point="kv/lifehub", path=key
             )
-            return secret['data']['data']
+            return secret["data"]["data"]  # type: ignore
 
         # Lifehub Metadata
         metadata = load_secret("metadata")

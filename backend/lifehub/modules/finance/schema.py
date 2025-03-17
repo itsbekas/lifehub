@@ -85,7 +85,7 @@ class BudgetCategory(UserBaseModel):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    name: Mapped[str] = mapped_column(String(64))
+    name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
 
     subcategories: Mapped[list[BudgetSubCategory]] = relationship(
         back_populates="category"
@@ -101,8 +101,8 @@ class BudgetSubCategory(UserBaseModel):
     category_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("budget_category.id")
     )
-    name: Mapped[str] = mapped_column(String(64))
-    amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2))
+    name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
+    amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
 
     category: Mapped[BudgetCategory] = relationship(
         back_populates="subcategories", single_parent=True

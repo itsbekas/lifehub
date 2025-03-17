@@ -55,8 +55,8 @@ if [[ ! "$EXISTING_ROLES" =~ "$VAULT_DB_ROLE" ]]; then
     vault write "$VAULT_DB_MOUNT_POINT/roles/$VAULT_DB_ROLE" \
         db_name="$DB_NAME" \
         creation_statements="CREATE USER '{{name}}'@'172.%' IDENTIFIED BY '{{password}}'; GRANT SELECT, INSERT, UPDATE, DELETE ON $DB_NAME.* TO '{{name}}'@'172.%';" \
-        default_ttl="1h" \
-        max_ttl="24h"
+        default_ttl="5m" \
+        max_ttl="10m"
 else
     echo "Database role '$VAULT_DB_ROLE' already exists."
 fi
@@ -66,8 +66,8 @@ if [[ ! "$EXISTING_ROLES" =~ "$VAULT_DB_ADMIN_ROLE" ]]; then
     vault write "$VAULT_DB_MOUNT_POINT/roles/$VAULT_DB_ADMIN_ROLE" \
         db_name="$DB_NAME" \
         creation_statements="CREATE USER '{{name}}'@'172.%' IDENTIFIED BY '{{password}}'; GRANT ALL PRIVILEGES ON $DB_NAME.* TO '{{name}}'@'172.%'; GRANT GRANT OPTION ON $DB_NAME.* TO '{{name}}'@'172.%';" \
-        default_ttl="1h" \
-        max_ttl="2h"
+        default_ttl="5m" \
+        max_ttl="10m"
 else
     echo "Database admin role '$VAULT_DB_ADMIN_ROLE' already exists."
 fi
