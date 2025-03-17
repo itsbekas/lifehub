@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import DECIMAL, UUID, ForeignKey, String
+from sqlalchemy import UUID, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.core.common.base.db_model import BaseModel, FetchBaseModel, UserBaseModel
