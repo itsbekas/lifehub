@@ -287,11 +287,14 @@ class FinanceService(BaseUserService):
             account_transactions = gc_api.get_account_transactions(account_id).booked
 
             for api_t in account_transactions:
-                if api_t.transactionId is None:
+                # Previously, the stored ID was the transactionId, which comes from the Bank.
+                # However, at least for GoCardless' Sandbox Finance, different transactions often have the same ID.
+                # To fix that, the internalTransactionId is used, which is defined by GoCardless, and hopefully unique.
+                if api_t.internalTransactionId is None:
                     continue
 
                 db_t = bank_transaction_repo.get_by_original_id(
-                    account.id, api_t.transactionId
+                    account.id, api_t.internalTransactionId
                 )
 
                 if db_t is None:
@@ -333,7 +336,7 @@ class FinanceService(BaseUserService):
 
                     db_t = BankTransaction(
                         user_id=self.user.id,
-                        transaction_id=api_t.transactionId,
+                        transaction_id=api_t.internalTransactionId,
                         account_id=account.id,
                         amount=encrypted_amount,
                         date=date,
