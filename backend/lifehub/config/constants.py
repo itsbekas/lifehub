@@ -79,10 +79,6 @@ class Config:
         #
         self.ENVIRONMENT = self._getenv("ENVIRONMENT")
         self.UVICORN_HOST = self._getenv("UVICORN_HOST")
-        self.REDIRECT_URI_BASE = self._getenv("FRONTEND_URL")
-        self.OAUTH_REDIRECT_URI = (
-            f"{self.REDIRECT_URI_BASE}/settings/providers/oauth_token"
-        )
         self.AUTH_ALGORITHM = "HS256"
         self.DB_HOST = self._getenv("DB_HOST")
         self.DB_NAME = self._getenv("DB_NAME")
@@ -116,6 +112,15 @@ class Config:
         metadata = load_secret("metadata")
         self.AUTH_SECRET_KEY = metadata["AUTH_SECRET_KEY"]
         self.ADMIN_PASSWORD = metadata["ADMIN_PASSWORD"]
+        self.FRONTEND_URL = (
+            metadata["FRONTEND_URL"]
+            if self.ENVIRONMENT == "production"
+            else metadata["FRONTEND_URL_DEV"]
+        )
+        self.REDIRECT_URI_BASE = self.FRONTEND_URL
+        self.OAUTH_REDIRECT_URI = (
+            f"{self.REDIRECT_URI_BASE}/settings/providers/oauth_token"
+        )
 
         # Provider API Secrets
         api_tokens = load_secret("api-tokens")
