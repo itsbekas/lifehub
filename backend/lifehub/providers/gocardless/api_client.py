@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from lifehub.config.constants import cfg
 from lifehub.core.common.base.api_client import APIClient, AuthType, auth_override
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
-from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 
 from .models import (
@@ -36,7 +35,6 @@ class GoCardlessAPIClient(APIClient):
 
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(user, session, cfg.ADMIN_USERNAME)
-        self.encryption_service = EncryptionService(session, user)
 
     def _refresh_token(self, tokenRepo: ProviderTokenRepository) -> None:
         res = self.refresh_token()

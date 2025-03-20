@@ -155,33 +155,29 @@ class APIClient(ABC):
                 raise Exception(f"User {token_username} not found in the database")
         else:
             token_user = user
-
         self.user = user
+        self.encryption_service = EncryptionService(session, token_user)
 
+        # Get provider
         provider: Provider | None = ProviderRepository(session).get_by_id(
             self.provider_name
         )
-
         if provider is None:
             raise Exception(f"Provider {self.provider_name} not found in the database")
-
         self.provider: Provider = provider
 
+        # Get user token
         tokenRepo: ProviderTokenRepository = ProviderTokenRepository(session)
-
         token: ProviderToken | None = tokenRepo.get(token_user, self.provider)
-
         if token is None:
             raise Exception(f"Token not found for {self.provider_name} provider")
-
         self.token: ProviderToken = token
         session.merge(self.token)
 
+        # If necessary, refresh token
         if self.token.expires_at < dt.datetime.now():
             self._refresh_token(tokenRepo)
             session.commit()
-
-        self.encryption_service = EncryptionService(session, token_user)
 
         match self.auth_type:
             case AuthType.BASIC:
