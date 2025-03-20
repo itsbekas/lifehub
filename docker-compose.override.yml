@@ -11,7 +11,7 @@ services:
           path: ./backend
           target: /app
         - action: rebuild
-          path: ./backend/requirements.txt
+          path: ./backend/pyproject.toml
 
   lifehub-frontend:
     build:
