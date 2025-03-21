@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import json
 import os
-from typing import Any
 
-import hvac
+import redis
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,12 +10,13 @@ load_dotenv()
 
 class Config:
     """
-    Singleton class to store configuration constants with type hints.
+    Singleton class to store configuration constants, loading from Redis.
     """
 
     __instance: Config | None = None
+    redis_client: redis.Redis
 
-    # Environment
+    # Type hints for IDE support
     ENVIRONMENT: str
     UVICORN_HOST: str
     REDIRECT_URI_BASE: str
@@ -27,7 +26,6 @@ class Config:
     DB_HOST: str
     DB_NAME: str
     VAULT_ADDR: str
-    VAULT_TOKEN: str
     VAULT_DB_USER: str
     VAULT_DB_ROLE: str
     VAULT_DB_ADMIN_ROLE: str
@@ -36,11 +34,9 @@ class Config:
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
 
-    # Vault
-    GOCARDLESS_BANK_ID: str
+    # Provider API Secrets
     GOCARDLESS_CLIENT_ID: str
     GOCARDLESS_CLIENT_SECRET: str
-    POSTMARK_API_TOKEN: str
     GOOGLE_CALENDAR_CLIENT_ID: str
     GOOGLE_CALENDAR_CLIENT_SECRET: str
     GOOGLE_TASKS_CLIENT_ID: str
@@ -52,90 +48,43 @@ class Config:
     YNAB_CLIENT_ID: str
     YNAB_CLIENT_SECRET: str
 
+    # Dynamic Secrets
+    @property
+    def VAULT_TOKEN(self) -> str:
+        return self.redis_client.get("VAULT_TOKEN")  # type: ignore
+
     def __new__(cls) -> Config:
+        """Ensure singleton instance and load from Redis on first access."""
         if cls.__instance is None:
             cls.__instance = super(Config, cls).__new__(cls)
-            if os.path.exists("config.json"):
-                with open("config.json", "r") as f:
-                    cls.__instance.__dict__ = json.load(f)
-            else:
-                cls.__instance._load_env()
-                cls.__instance._load_vault_secrets()
-                # TODO: Eventually this will have some other setup such as Redis
-                cls.__instance.save_to_file()
+            redis_host = cls.__instance._getenv("REDIS_HOST")
+            redis_port = int(cls.__instance._getenv("REDIS_PORT"))
+            redis_password = cls.__instance._getenv("REDIS_PASSWORD")
+            cls.__instance.redis_client = redis.Redis(
+                host=redis_host,
+                port=redis_port,
+                decode_responses=True,
+                password=redis_password,
+            )
+            cls.__instance._load_from_redis()
         return cls.__instance
 
-    def save_to_file(self) -> None:
-        with open("config.json", "w") as f:
-            json.dump(self.__dict__, f, indent=4)
-
     def _getenv(self, key: str) -> str:
+        """Retrieve environment variable or raise error if not set."""
         if (val := os.getenv(key)) is None:
             raise NotImplementedError(f"{key} is not set")
         return val
 
-    def _load_env(self) -> None:
-        """Load environment variables"""
-        #
-        self.ENVIRONMENT = self._getenv("ENVIRONMENT")
-        self.UVICORN_HOST = self._getenv("UVICORN_HOST")
-        self.AUTH_ALGORITHM = "HS256"
-        self.DB_HOST = self._getenv("DB_HOST")
-        self.DB_NAME = self._getenv("DB_NAME")
-        self.VAULT_DB_USER = "vault"
-        self.VAULT_DB_ROLE = "lifehub-app"
-        self.VAULT_DB_ADMIN_ROLE = "lifehub-admin"
-        self.VAULT_DB_MOUNT_POINT = "database/lifehub"
-        self.VAULT_TRANSIT_MOUNT_POINT = "transit/lifehub"
-        self.ADMIN_USERNAME = "admin"
+    def _load_from_redis(self) -> None:
+        """Load configuration from Redis into memory."""
+        if not self.redis_client.exists("config:loaded"):
+            from lifehub.config.config_manager import init_config
 
-        # Vault
-        self.VAULT_ADDR = self._getenv("VAULT_ADDR")
-        self.VAULT_APPROLE_ROLE_ID = self._getenv("VAULT_APPROLE_ROLE_ID")
-        self.VAULT_APPROLE_SECRET_ID = self._getenv("VAULT_APPROLE_SECRET_ID")
+            init_config()
 
-    def _load_vault_secrets(self) -> None:
-        """Load Vault secrets"""
-        self.VAULT_TOKEN = hvac.Client().auth.approle.login(
-            role_id=self.VAULT_APPROLE_ROLE_ID, secret_id=self.VAULT_APPROLE_SECRET_ID
-        )["auth"]["client_token"]
-
-        vault = hvac.Client(url=self.VAULT_ADDR, token=self.VAULT_TOKEN)
-
-        def load_secret(key: str) -> dict[str, str]:
-            secret: dict[str, Any] = vault.secrets.kv.v2.read_secret_version(
-                mount_point="kv/lifehub", path=key
-            )
-            return secret["data"]["data"]  # type: ignore
-
-        # Lifehub Metadata
-        metadata = load_secret("metadata")
-        self.AUTH_SECRET_KEY = metadata["AUTH_SECRET_KEY"]
-        self.ADMIN_PASSWORD = metadata["ADMIN_PASSWORD"]
-        self.FRONTEND_URL = (
-            metadata["FRONTEND_URL"]
-            if self.ENVIRONMENT == "production"
-            else metadata["FRONTEND_URL_DEV"]
-        )
-        self.REDIRECT_URI_BASE = self.FRONTEND_URL
-        self.OAUTH_REDIRECT_URI = (
-            f"{self.REDIRECT_URI_BASE}/settings/providers/oauth_token"
-        )
-
-        # Provider API Secrets
-        api_tokens = load_secret("api-tokens")
-        self.GOCARDLESS_CLIENT_ID = api_tokens["GOCARDLESS_CLIENT_ID"]
-        self.GOCARDLESS_CLIENT_SECRET = api_tokens["GOCARDLESS_CLIENT_SECRET"]
-        self.GOOGLE_CALENDAR_CLIENT_ID = api_tokens["GOOGLE_CALENDAR_CLIENT_ID"]
-        self.GOOGLE_CALENDAR_CLIENT_SECRET = api_tokens["GOOGLE_CALENDAR_CLIENT_SECRET"]
-        self.GOOGLE_TASKS_CLIENT_ID = api_tokens["GOOGLE_TASKS_CLIENT_ID"]
-        self.GOOGLE_TASKS_CLIENT_SECRET = api_tokens["GOOGLE_TASKS_CLIENT_SECRET"]
-        self.SPOTIFY_CLIENT_ID = api_tokens["SPOTIFY_CLIENT_ID"]
-        self.SPOTIFY_CLIENT_SECRET = api_tokens["SPOTIFY_CLIENT_SECRET"]
-        self.STRAVA_CLIENT_ID = api_tokens["STRAVA_CLIENT_ID"]
-        self.STRAVA_CLIENT_SECRET = api_tokens["STRAVA_CLIENT_SECRET"]
-        self.YNAB_CLIENT_ID = api_tokens["YNAB_CLIENT_ID"]
-        self.YNAB_CLIENT_SECRET = api_tokens["YNAB_CLIENT_SECRET"]
+        config_data = self.redis_client.hgetall("config")
+        for key, value in config_data.items():  # type: ignore
+            setattr(self, key, value)
 
 
 # Instantiate and load config once

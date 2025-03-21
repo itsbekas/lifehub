@@ -11,8 +11,13 @@ services:
       - VAULT_ADDR=http://host.docker.internal:8200
       - VAULT_APPROLE_ROLE_ID=${VAULT_APPROLE_ROLE_ID}
       - VAULT_APPROLE_SECRET_ID=${VAULT_APPROLE_SECRET_ID}
+      - REDIS_HOST=lifehub-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "8000:8000"
+    depends_on:
+      - lifehub-redis
     networks:
       - lifehub-net
     extra_hosts:
@@ -31,6 +36,16 @@ services:
       - "3000:3000"
     depends_on:
       - lifehub-backend
+    networks:
+      - lifehub-net
+
+  lifehub-redis:
+    image: redis:latest
+    container_name: lifehub-redis
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - "6379:6379"
     networks:
       - lifehub-net
 

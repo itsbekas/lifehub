@@ -137,8 +137,8 @@ vault auth enable approle &> /dev/null || echo "AppRole authentication already e
 echo "Creating AppRole for lifehub-app..."
 vault write auth/approle/role/lifehub-app \
     token_policies="lifehub-app" \
-    token_ttl="10m" \
-    token_max_ttl="30m" \
-    secret_id_num_uses="1" &> /dev/null
+    token_ttl="11m" \
+    token_max_ttl="31d" \
+    secret_id_num_uses="0" &> /dev/null
 
 echo "Vault setup completed successfully!"

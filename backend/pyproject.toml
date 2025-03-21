@@ -20,6 +20,7 @@ dependencies = [
     "python-multipart",
     "hvac>=2.3.0",
     "cryptography>=44.0.2",
+    "redis>=5.2.1",
 ]
 
 [tool.setuptools.packages]
