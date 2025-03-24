@@ -100,7 +100,7 @@ class FinanceService(BaseUserService):
 
         db_balance = balance_repo.get_by_account_id(account.id)
 
-        if db_balance is not None and not db_balance.older_than(hours=6):
+        if db_balance is not None and not account.synced_before(hours=6):
             # Local balance is updated
             balance = db_balance
             balance_amount = float(self.encryption_service.decrypt_data(balance.amount))
@@ -264,7 +264,7 @@ class FinanceService(BaseUserService):
 
         for account in bank_account_repo.get_all():
             # If the last sync was less than 6 hours ago, get the transactions from the database
-            if account.last_synced > dt.datetime.now() - dt.timedelta(hours=6):
+            if account.synced_before(hours=6):
                 for synced_t in bank_transaction_repo.get_by_account_id(account.id):
                     synced_description = self.e.decrypt_data(
                         synced_t.user_description
@@ -294,7 +294,6 @@ class FinanceService(BaseUserService):
                     account.id, api_t.transactionId
                 )
 
-                # We only care about new transactions
                 if db_t is None:
                     amount = float(api_t.transactionAmount.amount)
 
@@ -345,6 +344,11 @@ class FinanceService(BaseUserService):
 
                     # Apply filters to update subcategory_id and user_description
                     self.apply_filters_to_transaction(db_t)
+                else:
+                    amount = float(self.e.decrypt_data(db_t.amount))
+                    description = self.e.decrypt_data(db_t.description)
+                    user_description = self.e.decrypt_data(db_t.user_description)
+                    counterparty = self.e.decrypt_data(db_t.counterparty)
 
                 transactions.append(
                     BankTransactionResponse(

@@ -2,9 +2,20 @@ import { fetchWithAuth } from "~/utils/apiClient";
 import { TransactionsTable } from "~/components/TransactionsTable";
 import { BankBalances } from "~/components/BankBalances";
 import { Categories } from "~/components/Categories";
-import { Grid, Container, Title, Stack } from "@mantine/core";
+import {
+  Grid,
+  Container,
+  Title,
+  Stack,
+  Skeleton,
+  Center,
+  Text,
+} from "@mantine/core";
 import type { Route } from "./+types/dashboard.finance";
 import { redirect } from "react-router";
+import * as React from "react";
+import { Await } from "react-router";
+import { useAsyncValue, useAsyncError } from "react-router";
 
 export type Transaction = {
   id: string;
@@ -301,54 +312,55 @@ export async function action({ request }: { request: Request }) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  // Fetch transactions
-  const transactionsRes = await fetchWithAuth(
+  const transactions = fetchWithAuth(
     "/finance/bank/transactions",
     undefined,
     request
-  );
-  if (!transactionsRes.ok) {
-    throw new Error(
-      `Failed to fetch transactions: ${transactionsRes.statusText}`
-    );
-  }
-  const transactions: Transaction[] = await transactionsRes.json();
+  ).then((res) => {
+    if (!res.ok) throw new Error("Failed to fetch transactions");
+    return res.json();
+  });
 
-  // Fetch categories
-  const categoriesRes = await fetchWithAuth(
+  const categories = fetchWithAuth(
     "/finance/budget/categories",
     undefined,
     request
-  );
-  if (!categoriesRes.ok) {
-    throw new Error(`Failed to fetch categories: ${categoriesRes.statusText}`);
-  }
-  const categories: Category[] = await categoriesRes.json();
+  ).then((res) => {
+    if (!res.ok) throw new Error("Failed to fetch categories");
+    return res.json();
+  });
 
-  // Fetch bank balances
-  const balancesRes = await fetchWithAuth(
+  const balances = fetchWithAuth(
     "/finance/bank/balances",
     undefined,
     request
-  );
-  if (!balancesRes.ok) {
-    throw new Error(`Failed to fetch bank balances: ${balancesRes.statusText}`);
-  }
-  const balances: BankBalance[] = await balancesRes.json();
+  ).then((res) => {
+    if (!res.ok) throw new Error("Failed to fetch balances");
+    return res.json();
+  });
 
-  // Fetch banks
-  const banksRes = await fetchWithAuth(
-    "/finance/bank/banks",
-    undefined,
-    request
+  const banks = fetchWithAuth("/finance/bank/banks", undefined, request).then(
+    (res) => {
+      if (!res.ok) throw new Error("Failed to fetch banks");
+      return res.json();
+    }
   );
-  if (!banksRes.ok) {
-    throw new Error(`Failed to fetch banks: ${banksRes.statusText}`);
-  }
-  const banks: Bank[] = await banksRes.json();
 
-  // Return combined data
   return { transactions, categories, balances, banks };
+}
+
+function CategoriesWrapper() {
+  const categories = useAsyncValue() as Category[];
+  return <Categories categories={categories} />;
+}
+
+function ErrorFallback() {
+  const error = useAsyncError() as Error;
+  return (
+    <Center>
+      <Text c="red">{error.message}</Text>
+    </Center>
+  );
 }
 
 export default function FinancePage({ loaderData }: Route.ComponentProps) {
@@ -362,16 +374,53 @@ export default function FinancePage({ loaderData }: Route.ComponentProps) {
       <Grid>
         {/* Categories Column */}
         <Grid.Col span={4}>
-          <Categories categories={categories} />
+          <React.Suspense fallback={<Skeleton height={400} />}>
+            <Await resolve={categories} errorElement={<ErrorFallback />}>
+              <CategoriesWrapper />
+            </Await>
+          </React.Suspense>
         </Grid.Col>
 
         <Grid.Col span={8}>
           <Stack gap="md">
-            <BankBalances balances={balances} banks={banks} />
-            <TransactionsTable
-              transactions={transactions}
-              categories={categories.flatMap((c) => c.subcategories)}
-            />
+            <React.Suspense fallback={<Skeleton height={150} />}>
+              <Await
+                resolve={Promise.all([balances, banks])}
+                errorElement={<ErrorFallback />}
+              >
+                {(resolved) => {
+                  const [resolvedBalances, resolvedBanks] = resolved as [
+                    BankBalance[],
+                    Bank[]
+                  ];
+                  return (
+                    <BankBalances
+                      balances={resolvedBalances}
+                      banks={resolvedBanks}
+                    />
+                  );
+                }}
+              </Await>
+            </React.Suspense>
+
+            <React.Suspense fallback={<Skeleton height={300} />}>
+              <Await
+                resolve={Promise.all([transactions, categories])}
+                errorElement={<ErrorFallback />}
+              >
+                {([resolvedTransactions, resolvedCategories]: [
+                  Transaction[],
+                  Category[]
+                ]) => (
+                  <TransactionsTable
+                    transactions={resolvedTransactions}
+                    categories={resolvedCategories.flatMap(
+                      (c) => c.subcategories
+                    )}
+                  />
+                )}
+              </Await>
+            </React.Suspense>
           </Stack>
         </Grid.Col>
       </Grid>
