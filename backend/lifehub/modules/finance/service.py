@@ -284,7 +284,12 @@ class FinanceService(BaseUserService):
                 continue
 
             account_id = self.encryption_service.decrypt_data(account.account_id)
-            account_transactions = gc_api.get_account_transactions(account_id).booked
+            last_sync = (account.last_synced - dt.timedelta(days=1)).strftime(
+                "%Y-%m-%d"
+            )
+            account_transactions = gc_api.get_account_transactions(
+                account_id, last_sync
+            ).booked
 
             for api_t in account_transactions:
                 if api_t.transactionId is None:
