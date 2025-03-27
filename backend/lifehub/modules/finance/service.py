@@ -252,126 +252,108 @@ class FinanceService(BaseUserService):
 
         self.session.commit()
 
-    def get_bank_transactions(self) -> list[BankTransactionResponse]:
+    def _fetch_new_transactions(self, account: BankAccount) -> None:
         """
         Fetches the latest transactions from the bank accounts and applies any user filters.
         """
         gc_api = GoCardlessAPIClient(self.user, self.session)
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+
+        account_id = self.encryption_service.decrypt_data(account.account_id)
+        last_sync = (account.last_synced - dt.timedelta(days=1)).strftime("%Y-%m-%d")
+        account_transactions = gc_api.get_account_transactions(
+            account_id, last_sync
+        ).booked
+
+        for api_t in account_transactions:
+            if api_t.transactionId is None:
+                continue
+
+            db_t = bank_transaction_repo.get_by_original_id(
+                account.id, api_t.transactionId
+            )
+
+            if db_t is None:
+                amount = float(api_t.transactionAmount.amount)
+
+                # Transaction descriptions are weird...
+                description: str | None = None
+                if api_t.remittanceInformationUnstructured is not None:
+                    description = api_t.remittanceInformationUnstructured
+                elif api_t.remittanceInformationUnstructuredArray is not None:
+                    description = " ".join(api_t.remittanceInformationUnstructuredArray)
+
+                # Convert date to datetime object
+                # Some transactions have valueDateTime, some have valueDate
+                if api_t.valueDateTime is not None:
+                    date = dt.datetime.fromisoformat(api_t.valueDateTime)
+                elif api_t.valueDate is not None:
+                    date = dt.datetime.strptime(api_t.valueDate, "%Y-%m-%d").replace(
+                        hour=0, minute=0, second=0
+                    )
+                else:
+                    date = dt.datetime.max
+
+                counterparty = (
+                    api_t.debtorName if api_t.debtorName else api_t.creditorName
+                )
+
+                encrypted_amount = self.encryption_service.encrypt_data(str(amount))
+                encrypted_description = self.encryption_service.encrypt_data(
+                    description if description is not None else ""
+                )
+                encrypted_counterparty = self.encryption_service.encrypt_data(
+                    counterparty if counterparty is not None else ""
+                )
+
+                db_t = BankTransaction(
+                    user_id=self.user.id,
+                    transaction_id=api_t.transactionId,
+                    account_id=account.id,
+                    amount=encrypted_amount,
+                    date=date,
+                    description=encrypted_description,
+                    counterparty=encrypted_counterparty,
+                )
+                bank_transaction_repo.add(db_t)
+
+                # Apply filters to update subcategory_id and user_description
+                self.apply_filters_to_transaction(db_t)
+
+        account.last_synced = dt.datetime.now()
+
+        self.session.commit()
+
+    def get_bank_transactions(self) -> list[BankTransactionResponse]:
+        """
+        Fetches the latest transactions from the bank accounts and applies any user filters.
+        """
         bank_account_repo = BankAccountRepository(self.user, self.session)
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
 
         transactions = []
 
         for account in bank_account_repo.get_all():
-            # If the last sync was less than 6 hours ago, get the transactions from the database
+            # If the last sync was more than 6 hours ago, fetch the transactions from the API
             if account.synced_before(hours=6):
-                for synced_t in bank_transaction_repo.get_by_account_id(account.id):
-                    synced_description = self.e.decrypt_data(
-                        synced_t.user_description
-                    ) or self.e.decrypt_data(synced_t.description)
+                self._fetch_new_transactions(account)
 
-                    transactions.append(
-                        BankTransactionResponse(
-                            id=str(synced_t.id),
-                            account_id=str(synced_t.account.id),
-                            amount=float(self.e.decrypt_data(synced_t.amount)),
-                            date=synced_t.date,
-                            description=synced_description,
-                            counterparty=self.e.decrypt_data(synced_t.counterparty),
-                            subcategory_id=str(synced_t.subcategory_id),
-                        )
-                    )
-                continue
-
-            account_id = self.encryption_service.decrypt_data(account.account_id)
-            last_sync = (account.last_synced - dt.timedelta(days=1)).strftime(
-                "%Y-%m-%d"
-            )
-            account_transactions = gc_api.get_account_transactions(
-                account_id, last_sync
-            ).booked
-
-            for api_t in account_transactions:
-                if api_t.transactionId is None:
-                    continue
-
-                db_t = bank_transaction_repo.get_by_original_id(
-                    account.id, api_t.transactionId
-                )
-
-                if db_t is None:
-                    amount = float(api_t.transactionAmount.amount)
-
-                    # Transaction descriptions are weird...
-                    description: str | None = None
-                    if api_t.remittanceInformationUnstructured is not None:
-                        description = api_t.remittanceInformationUnstructured
-                    elif api_t.remittanceInformationUnstructuredArray is not None:
-                        description = " ".join(
-                            api_t.remittanceInformationUnstructuredArray
-                        )
-
-                    user_description = None
-
-                    # Convert date to datetime object
-                    # Some transactions have valueDateTime, some have valueDate
-                    if api_t.valueDateTime is not None:
-                        date = dt.datetime.fromisoformat(api_t.valueDateTime)
-                    elif api_t.valueDate is not None:
-                        date = dt.datetime.strptime(
-                            api_t.valueDate, "%Y-%m-%d"
-                        ).replace(hour=0, minute=0, second=0)
-                    else:
-                        date = dt.datetime.max
-
-                    counterparty = (
-                        api_t.debtorName if api_t.debtorName else api_t.creditorName
-                    )
-
-                    encrypted_amount = self.encryption_service.encrypt_data(str(amount))
-                    encrypted_description = self.encryption_service.encrypt_data(
-                        description if description is not None else ""
-                    )
-                    encrypted_counterparty = self.encryption_service.encrypt_data(
-                        counterparty if counterparty is not None else ""
-                    )
-
-                    db_t = BankTransaction(
-                        user_id=self.user.id,
-                        transaction_id=api_t.transactionId,
-                        account_id=account.id,
-                        amount=encrypted_amount,
-                        date=date,
-                        description=encrypted_description,
-                        counterparty=encrypted_counterparty,
-                    )
-                    bank_transaction_repo.add(db_t)
-
-                    # Apply filters to update subcategory_id and user_description
-                    self.apply_filters_to_transaction(db_t)
-                else:
-                    amount = float(self.e.decrypt_data(db_t.amount))
-                    description = self.e.decrypt_data(db_t.description)
-                    user_description = self.e.decrypt_data(db_t.user_description)
-                    counterparty = self.e.decrypt_data(db_t.counterparty)
+            for synced_t in bank_transaction_repo.get_by_account_id(account.id):
+                synced_description = self.e.decrypt_data(
+                    synced_t.user_description
+                ) or self.e.decrypt_data(synced_t.description)
 
                 transactions.append(
                     BankTransactionResponse(
-                        id=str(db_t.id),
-                        account_id=str(account.id),
-                        amount=amount,
-                        date=db_t.date,
-                        description=user_description or description,
-                        counterparty=counterparty,
-                        subcategory_id=str(db_t.subcategory_id)
-                        if db_t.subcategory_id
-                        else None,
+                        id=str(synced_t.id),
+                        account_id=str(synced_t.account.id),
+                        amount=float(self.e.decrypt_data(synced_t.amount)),
+                        date=synced_t.date,
+                        description=synced_description,
+                        counterparty=self.e.decrypt_data(synced_t.counterparty),
+                        subcategory_id=str(synced_t.subcategory_id),
                     )
                 )
-
-            account.last_synced = dt.datetime.now()
-
-        self.session.commit()
 
         return transactions
 
