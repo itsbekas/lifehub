@@ -83,6 +83,7 @@ export function TransactionsTable({
             <Table.Th>Description</Table.Th>
             <Table.Th>Category</Table.Th>
             <Table.Th>Amount</Table.Th>
+            <Table.Th />
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>

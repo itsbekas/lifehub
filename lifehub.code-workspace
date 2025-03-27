@@ -46,5 +46,12 @@
       "mypy.mypyExecutable": "${workspaceFolder:backend}/.venv/bin/mypy",
       "python.defaultInterpreterPath": "${workspaceFolder:backend}/.venv/bin/python",
       "mypy.runUsingActiveInterpreter": true,
+      "cssVariables.lookupFiles": [
+        "**/*.css",
+        "**/*.scss",
+        "**/*.sass",
+        "**/*.less",
+        "node_modules/@mantine/core/styles.css"
+      ]
   }
 }
