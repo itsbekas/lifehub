@@ -260,7 +260,11 @@ class FinanceService(BaseUserService):
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
 
         account_id = self.encryption_service.decrypt_data(account.account_id)
-        last_sync = (account.last_synced - dt.timedelta(days=1)).strftime("%Y-%m-%d")
+        last_sync = (
+            None  # New accounts
+            if account.last_synced == dt.datetime.min
+            else (account.last_synced - dt.timedelta(weeks=2)).strftime("%Y-%m-%d")
+        )
         account_transactions = gc_api.get_account_transactions(
             account_id, last_sync
         ).booked
