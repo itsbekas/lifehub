@@ -1,14 +1,14 @@
 import { Center, Title, Button, Text } from "@mantine/core";
-import { useNavigate } from "react-router";
-import { isLoggedIn } from "~/utils/session";
-import type { Route } from "./+types/_index";
+import { isAuthenticated } from "~/utils/cookies";
+import { useNavigate, createFileRoute } from "@tanstack/react-router";
 
-export async function loader({ request }: Route.LoaderArgs) {
-  return { loggedIn: await isLoggedIn(request) };
-}
+export const Route = createFileRoute("/")({
+  component: () => {
+    return <Home loggedIn={isAuthenticated()} />;
+  },
+});
 
-export default function Home({ loaderData }: Route.ComponentProps) {
-  const { loggedIn } = loaderData;
+export default function Home({ loggedIn }: { loggedIn: boolean }) {
   const navigate = useNavigate();
 
   return (
@@ -18,7 +18,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </Title>
       <Button
         style={{ marginTop: "2rem" }}
-        onClick={() => navigate(loggedIn ? "/dashboard" : "/login")}
+        onClick={() => navigate({ to: loggedIn ? "/dashboard" : "/login" })}
       >
         {loggedIn ? "Go to Dashboard" : "Login"}
       </Button>
