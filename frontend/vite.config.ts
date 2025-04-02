@@ -1,16 +1,21 @@
-import { reactRouter } from "@react-router/dev/vite";
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import autoprefixer from "autoprefixer";
 import tailwindcss from "tailwindcss";
-import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 
+// https://vitejs.dev/config/
 export default defineConfig({
   css: {
     postcss: {
       plugins: [tailwindcss, autoprefixer],
     },
   },
-  plugins: [reactRouter(), tsconfigPaths()],
+  plugins: [
+    TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
+    react(),
+  ],
   resolve: {
     alias: {
       // /esm/icons/index.mjs only exports the icons statically, so no separate chunks are created
