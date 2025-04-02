@@ -3,11 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "react-router build",
-    "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx ."
+    "dev": "vite --port 3000",
+    "build": "vite build && tsc --noEmit",
+    "serve": "vite preview",
+    "start": "vite"
   },
   "dependencies": {
     "@mantine/core": "^7.15.3",
@@ -21,7 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
-    "@tanstack/react-router-devtools": "^1.114.32",
+    "@tanstack/react-router-devtools": "^1.114.33",
     "@tanstack/router-plugin": "^1.114.32",
     "@types/node": "^20",
     "@types/react": "^19.0.1",
