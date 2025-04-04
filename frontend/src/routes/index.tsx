@@ -1,5 +1,5 @@
 import { Center, Title, Button, Text } from "@mantine/core";
-import { isAuthenticated } from "~/utils/cookies";
+import { isAuthenticated } from "~/lib/cookies";
 import { useNavigate, createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({

@@ -40,8 +40,11 @@ export const loginUser = (token: string, expiresAt: Date): void => {
   // Set the auth token in cookies
   setCookie("authToken", token, {
     expires: expiresAt,
-    httpOnly: true, // Ensures the cookie is only accessible via HTTP(S) and not JavaScript, enhancing security.
-    secure: process.env.NODE_ENV === "production", // Ensures the cookie is only sent over HTTPS, preventing it from being transmitted over insecure connections.
-    sameSite: "Strict", // Prevents the cookie from being sent with cross-site requests, mitigating CSRF attacks.
+    // In development, we need to allow JavaScript access to cookies for cross-origin requests
+    httpOnly: process.env.NODE_ENV === "production",
+    // Only use secure in production (HTTPS)
+    secure: process.env.NODE_ENV === "production",
+    // Use Lax in development for cross-origin requests, Strict in production
+    sameSite: process.env.NODE_ENV !== "production" ? "Lax" : "Strict",
   });
 };
