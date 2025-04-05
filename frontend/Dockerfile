@@ -1,22 +1,18 @@
-FROM node:23-alpine AS development-dependencies-env
-COPY . /app
+FROM node:23-alpine AS dependencies
 WORKDIR /app
+COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM node:23-alpine AS production-dependencies-env
-COPY ./package.json package-lock.json /app/
+FROM node:23-alpine AS builder
 WORKDIR /app
-RUN npm ci --omit=dev
-
-FROM node:23-alpine AS build-env
-COPY . /app/
-COPY --from=development-dependencies-env /app/node_modules /app/node_modules
-WORKDIR /app
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY . .
 RUN npm run build
 
-FROM node:23-alpine
-COPY ./package.json package-lock.json /app/
-COPY --from=production-dependencies-env /app/node_modules /app/node_modules
-COPY --from=build-env /app/build /app/build
+FROM node:23-alpine AS runner
 WORKDIR /app
-CMD ["npm", "run", "start"]
+RUN npm install -g serve
+COPY --from=builder /app/dist ./dist
+
+EXPOSE 3000
+CMD ["serve", "-s", "dist", "-l", "3000"]
