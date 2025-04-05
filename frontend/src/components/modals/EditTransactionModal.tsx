@@ -9,7 +9,7 @@ import {
   TextInput,
   NumberInput,
 } from "@mantine/core";
-import { useFetcher } from "react-router";
+import { useEditTransaction } from "~/hooks/useFinanceQueries";
 import { IconDots } from "@tabler/icons-react";
 
 type SubCategory = {
@@ -40,35 +40,36 @@ export function EditTransactionModal({
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
     subCategories.find(
-      (subCategory) => subCategory.id === transaction.subcategory_id
-    )?.id ?? null
+      (subCategory) => subCategory.id === transaction.subcategory_id,
+    )?.id ?? null,
   );
   const [description, setDescription] = useState<string>(
-    transaction.description
+    transaction.description,
   );
   const [amount, setAmount] = useState<number | string>(transaction.amount);
-  const fetcher = useFetcher();
+  const editTransaction = useEditTransaction();
 
   const handleSubmit = () => {
     if (!selectedSubCategory) {
       return;
     }
 
-    // Use fetcher.submit with JSON encoding
-    fetcher.submit(
+    // Use mutation hook instead of fetcher
+    editTransaction.mutate(
       {
         account_id: transaction.account_id,
         transaction_id: transaction.id,
         description,
-        amount,
+        amount: typeof amount === "string" ? parseFloat(amount) : amount,
         subcategory_id: selectedSubCategory,
-        action: "editTransaction",
       },
-      { method: "post", encType: "application/json" }
+      {
+        onSuccess: () => {
+          // Close modal on success
+          close();
+        },
+      },
     );
-
-    // Close modal on success (optionally handle fetcher.state or errors)
-    close();
   };
 
   return (
@@ -107,7 +108,7 @@ export function EditTransactionModal({
           <Button variant="default" onClick={close}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={fetcher.state !== "idle"}>
+          <Button onClick={handleSubmit} loading={editTransaction.isPending}>
             Save
           </Button>
         </Group>

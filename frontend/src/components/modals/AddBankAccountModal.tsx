@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Modal, Button, Group, Select } from "@mantine/core";
-import { useFetcher } from "react-router";
+import { useAddBankAccount } from "~/hooks/useFinanceQueries";
 
 type Bank = {
   id: string;
@@ -16,21 +16,18 @@ type AddBankAccountModalProps = {
 export function AddBankAccountModal({ banks }: AddBankAccountModalProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
-  const fetcher = useFetcher();
+  const addBankAccount = useAddBankAccount();
 
   const handleSubmit = () => {
     if (!selectedBank) {
       return;
     }
 
-    // Use fetcher.submit with JSON encoding
-    fetcher.submit(
-      {
-        bank_id: selectedBank,
-        action: "addBankAccount",
+    addBankAccount.mutate(selectedBank, {
+      onSuccess: (loginUrl) => {
+        window.location.href = loginUrl;
       },
-      { method: "post", encType: "application/json" }
-    );
+    });
   };
 
   return (
@@ -52,7 +49,7 @@ export function AddBankAccountModal({ banks }: AddBankAccountModalProps) {
           <Button variant="default" onClick={close}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={fetcher.state !== "idle"}>
+          <Button onClick={handleSubmit} loading={addBankAccount.isPending}>
             Add
           </Button>
         </Group>

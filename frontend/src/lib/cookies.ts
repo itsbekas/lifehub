@@ -18,8 +18,6 @@ export const removeCookie = (key: string): void => {
 
 export const isAuthenticated = (): boolean => {
   const token = getCookie("authToken");
-  console.log(token);
-  console.log(!!token);
   return !!token; // Returns true if the token exists, indicating the user is authenticated.
 };
 

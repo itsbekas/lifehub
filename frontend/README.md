@@ -1,100 +1,73 @@
-# Welcome to React Router!
+# Lifehub Frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+A modern frontend for the Lifehub application, built with React and TanStack Router.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Tech Stack
 
-## Features
+- **React 19** - Modern UI library
+- **TanStack Router** - Type-safe routing for React applications
+- **TanStack Query** - Data fetching and state management
+- **Mantine UI** - Component library for building the user interface
+- **Axios** - HTTP client for API requests
+- **Vite** - Fast build tool and development server
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Project Structure
+
+- `src/routes` - Route components following the TanStack Router file-based routing convention
+- `src/components` - Reusable UI components
+- `src/hooks` - Custom React hooks for data fetching and business logic
+- `src/lib` - Utility functions and configuration
+- `src/styles` - CSS modules and global styles
+
+## Features Implemented
+
+- **Authentication** - Login, signup, and token-based authentication
+- **Dashboard Layout** - Common layout for all dashboard pages with authentication protection
+- **Finance Dashboard** - View and manage financial data:
+  - Transaction listing and categorization
+  - Budget categories and subcategories
+  - Bank account balances
+  - Bank account integration
+
+## Development Approach
+
+The application uses a client-side rendering approach with TanStack Router and TanStack Query:
+
+- **Routing** - File-based routing with TanStack Router
+- **Data Fetching** - Client-side data fetching with TanStack Query
+- **Authentication** - Token-based authentication with cookie storage
+- **API Communication** - Axios for API requests with interceptors for authentication
 
 ## Getting Started
 
-### Installation
+1. Install dependencies:
 
-Install the dependencies:
+   ```
+   npm install
+   ```
 
-```bash
-npm install
-```
+2. Start the development server:
 
-### Development
+   ```
+   npm run dev
+   ```
 
-Start the development server with HMR:
+3. Build for production:
+   ```
+   npm run build
+   ```
 
-```bash
-npm run dev
-```
+## Authentication Flow
 
-Your application will be available at `http://localhost:5173`.
+Authentication is handled at multiple levels:
 
-## Building for Production
+1. **Route Protection** - Dashboard routes check for authentication before rendering
+2. **API Requests** - Axios interceptors add authentication tokens to requests
+3. **Error Handling** - 401 responses automatically redirect to the login page
 
-Create a production build:
+## Future Improvements
 
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-This template includes three Dockerfiles optimized for different package managers:
-
-- `Dockerfile` - for npm
-- `Dockerfile.pnpm` - for pnpm
-- `Dockerfile.bun` - for bun
-
-To build and run using Docker:
-
-```bash
-# For npm
-docker build -t my-app .
-
-# For pnpm
-docker build -f Dockerfile.pnpm -t my-app .
-
-# For bun
-docker build -f Dockerfile.bun -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+- Complete implementation of remaining dashboard modules
+- Add more comprehensive error handling
+- Implement offline support
+- Add comprehensive test coverage

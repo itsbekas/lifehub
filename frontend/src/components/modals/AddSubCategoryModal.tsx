@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Modal, Button, TextInput, Group, NumberInput } from "@mantine/core";
-import { useFetcher } from "react-router";
+import { useCreateSubCategory } from "~/hooks/useFinanceQueries";
 
 type AddSubCategoryModalProps = {
   categoryId: string; // The ID of the category to associate the sub-category with
@@ -11,26 +11,27 @@ export function AddSubCategoryModal({ categoryId }: AddSubCategoryModalProps) {
   const [opened, { open, close }] = useDisclosure(false);
   const [subCategoryName, setSubCategoryName] = useState("");
   const [amount, setAmount] = useState<string | number>("");
-  const fetcher = useFetcher();
+  const createSubCategory = useCreateSubCategory();
 
   const handleSubmit = () => {
     if (!subCategoryName.trim() || !amount) {
       return;
     }
 
-    fetcher.submit(
+    createSubCategory.mutate(
       {
         name: subCategoryName,
-        amount: amount.toString(),
+        amount: typeof amount === "string" ? parseFloat(amount) : amount,
         category_id: categoryId,
-        action: "createSubCategory",
       },
-      { method: "post", encType: "application/json" }
+      {
+        onSuccess: () => {
+          setSubCategoryName("");
+          setAmount("");
+          close();
+        },
+      },
     );
-
-    setSubCategoryName("");
-    setAmount("");
-    close();
   };
 
   return (
@@ -60,7 +61,7 @@ export function AddSubCategoryModal({ categoryId }: AddSubCategoryModalProps) {
           <Button variant="default" onClick={close}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={fetcher.state !== "idle"}>
+          <Button onClick={handleSubmit} loading={createSubCategory.isPending}>
             Add
           </Button>
         </Group>
