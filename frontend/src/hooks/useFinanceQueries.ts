@@ -94,6 +94,23 @@ export const useBanks = () => {
 };
 
 // Mutation hooks
+
+// Hook for handling bank callback
+export const useBankCallback = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ref: string) => {
+      const response = await api.post(`/finance/bank/callback?ref=${ref}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate balances query to refresh the data
+      queryClient.invalidateQueries({ queryKey: financeKeys.balances() });
+    },
+  });
+};
+
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
 

@@ -9,7 +9,9 @@ import {
   Skeleton,
   Center,
   Text,
+  Alert,
 } from "@mantine/core";
+import { IconAlertCircle } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   useCategories,
@@ -19,7 +21,19 @@ import {
 } from "~/hooks/useFinanceQueries";
 import type { SubCategory } from "~/hooks/useFinanceQueries";
 
+// Define the type for the loader data
+type FinanceLoaderData = {
+  error: string | null;
+};
+
 export const Route = createFileRoute("/dashboard/finance")({
+  // Add loader to handle search parameters
+  loader: (): FinanceLoaderData => {
+    // Extract any error message from the URL
+    const searchParams = new URLSearchParams(window.location.search);
+    const error = searchParams.get("error");
+    return { error };
+  },
   component: FinancePage,
 });
 
@@ -54,11 +68,27 @@ export default function FinancePage() {
     return <QueryError error={banksQuery.error as Error} />;
   }
 
+  // Get error message from URL if any
+  const { error } = Route.useLoaderData() as FinanceLoaderData;
+
   return (
     <Container size="lg" mt="lg">
       <Title order={1} mb="lg">
         Finance Dashboard
       </Title>
+
+      {/* Display error message if present */}
+      {error && (
+        <Alert
+          icon={<IconAlertCircle size={16} />}
+          title="Error"
+          color="red"
+          mb="md"
+          withCloseButton
+        >
+          {error}
+        </Alert>
+      )}
       <Grid>
         {/* Categories Column */}
         <Grid.Col span={4}>

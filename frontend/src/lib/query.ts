@@ -31,6 +31,22 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
+// Add a response interceptor to handle 401 Unauthorized responses
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // If we get a 401 Unauthorized response, redirect to login
+    if (error.response && error.response.status === 401) {
+      // Remove the auth token as it's likely invalid
+      removeCookie("authToken");
+
+      // Redirect to login page
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);
+
 // Create a function to make requests without authentication
 export const createUnauthenticatedRequest = () => {
   // Create a new instance without the auth interceptor
