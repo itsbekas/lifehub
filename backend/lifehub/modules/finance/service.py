@@ -5,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from lifehub.config.constants import cfg
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.security.encryption import EncryptionService
@@ -25,6 +26,7 @@ from .models import (
     BankTransactionResponse,
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
+    CountryResponse,
     T212TransactionResponse,
 )
 from .repository import (
@@ -173,6 +175,42 @@ class FinanceService(BaseUserService):
 
         return history
 
+    def get_countries(self) -> list[CountryResponse]:
+        """Returns a list of supported countries."""
+        return [
+            CountryResponse(name="Austria", code="AT"),
+            CountryResponse(name="Belgium", code="BE"),
+            CountryResponse(name="Bulgaria", code="BG"),
+            CountryResponse(name="Croatia", code="HR"),
+            CountryResponse(name="Cyprus", code="CY"),
+            CountryResponse(name="Czech Republic", code="CZ"),
+            CountryResponse(name="Denmark", code="DK"),
+            CountryResponse(name="Estonia", code="EE"),
+            CountryResponse(name="Finland", code="FI"),
+            CountryResponse(name="France", code="FR"),
+            CountryResponse(name="Germany", code="DE"),
+            CountryResponse(name="Greece", code="GR"),
+            CountryResponse(name="Hungary", code="HU"),
+            CountryResponse(name="Iceland", code="IS"),
+            CountryResponse(name="Ireland", code="IE"),
+            CountryResponse(name="Italy", code="IT"),
+            CountryResponse(name="Latvia", code="LV"),
+            CountryResponse(name="Liechtenstein", code="LI"),
+            CountryResponse(name="Lithuania", code="LT"),
+            CountryResponse(name="Luxembourg", code="LU"),
+            CountryResponse(name="Malta", code="MT"),
+            CountryResponse(name="Netherlands", code="NL"),
+            CountryResponse(name="Norway", code="NO"),
+            CountryResponse(name="Poland", code="PL"),
+            CountryResponse(name="Portugal", code="PT"),
+            CountryResponse(name="Romania", code="RO"),
+            CountryResponse(name="Slovakia", code="SK"),
+            CountryResponse(name="Slovenia", code="SI"),
+            CountryResponse(name="Spain", code="ES"),
+            CountryResponse(name="Sweden", code="SE"),
+            CountryResponse(name="United Kingdom", code="GB"),
+        ]
+
     def get_bank_login(self, bank_id: str) -> str:
         api = GoCardlessAPIClient(self.user, self.session)
         return api.create_requisition(bank_id).link
@@ -210,18 +248,29 @@ class FinanceService(BaseUserService):
 
         return balances
 
-    def get_institutions(self) -> list[BankInstitutionResponse]:
+    def get_institutions(self, country: str = "PT") -> list[BankInstitutionResponse]:
         """
-        Fetches the available institutions for bank connections.
+        Fetches the available institutions for bank connections for a specific country.
         """
         gc_api = GoCardlessAPIClient(self.user, self.session)
-        return [
+        res = []
+
+        if cfg.ENVIRONMENT == "development":
+            res.append(
+                BankInstitutionResponse(
+                    id="SANDBOXFINANCE_SFIN0000",
+                    name="Sandbox Finance",
+                    logo="",
+                )
+            )
+
+        return res + [
             BankInstitutionResponse(
                 id=inst.id,
                 name=inst.name,
                 logo=inst.logo,
             )
-            for inst in gc_api.get_institutions()
+            for inst in gc_api.get_institutions(country)
         ]
 
     def apply_filters_to_transaction(self, transaction: BankTransaction) -> None:

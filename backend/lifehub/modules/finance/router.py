@@ -15,6 +15,7 @@ from .models import (
     BudgetCategoryResponse,
     BudgetSubCategoryRequest,
     BudgetSubCategoryResponse,
+    CountryResponse,
     UpdateBankTransactionRequest,
 )
 
@@ -32,7 +33,10 @@ async def get_bank_login(
 
 
 @router.post("/bank/callback")
-async def confirm_bank_login(finance_service: FinanceServiceDep, ref: str) -> None:
+async def confirm_bank_login(
+    finance_service: FinanceServiceDep,
+    ref: str,
+) -> None:
     return finance_service.confirm_bank_login(ref)
 
 
@@ -89,15 +93,19 @@ async def update_bank_transaction(
     )
 
 
+@router.get("/bank/countries")
+async def get_countries(
+    finance_service: FinanceServiceDep,
+) -> list[CountryResponse]:
+    return finance_service.get_countries()
+
+
 @router.get("/bank/banks")
 async def get_banks(
     finance_service: FinanceServiceDep,
+    country: str = "PT",  # Default to Portugal
 ) -> list[BankInstitutionResponse]:
-    return [
-        BankInstitutionResponse(
-            id="SANDBOXFINANCE_SFIN0000", name="Sandbox Finance", logo=""
-        )
-    ] + finance_service.get_institutions()
+    return finance_service.get_institutions(country)
 
 
 @router.get("/budget/categories")

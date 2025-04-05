@@ -7,23 +7,16 @@ type BankBalance = {
   balance: number;
 };
 
-type Bank = {
-  id: string;
-  name: string;
-  logo: string;
-};
-
 type BankBalancesProps = {
   balances: BankBalance[];
-  banks: Bank[]; // List of available banks for the modal
 };
 
-export function BankBalances({ balances, banks }: BankBalancesProps) {
+export function BankBalances({ balances }: BankBalancesProps) {
   return (
     <Container size="lg" mt="lg">
       <Group justify="apart" mb="md">
         <Title order={2}>Bank Balances</Title>
-        <AddBankAccountModal banks={banks} />
+        <AddBankAccountModal />
       </Group>
       <Group gap="md" align="left">
         {balances.map((balance) => (

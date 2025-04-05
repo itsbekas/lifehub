@@ -47,6 +47,12 @@ class BankTransactionResponse:
 
 
 @dataclass
+class CountryResponse:
+    code: str
+    name: str
+
+
+@dataclass
 class BankInstitutionResponse:
     id: str
     name: str

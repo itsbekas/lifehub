@@ -35,6 +35,11 @@ export type BankBalance = {
   balance: number;
 };
 
+export type Country = {
+  code: string;
+  name: string;
+};
+
 export type Bank = {
   id: string;
   name: string;
@@ -48,6 +53,9 @@ export const financeKeys = {
   categories: () => [...financeKeys.all, "categories"] as const,
   balances: () => [...financeKeys.all, "balances"] as const,
   banks: () => [...financeKeys.all, "banks"] as const,
+  banksByCountry: (country: string) =>
+    [...financeKeys.banks(), country] as const,
+  countries: () => [...financeKeys.all, "countries"] as const,
 };
 
 // Query hooks
@@ -90,6 +98,29 @@ export const useBanks = () => {
       const { data } = await api.get<Bank[]>("/finance/bank/banks");
       return data;
     },
+  });
+};
+
+export const useCountries = () => {
+  return useQuery({
+    queryKey: financeKeys.countries(),
+    queryFn: async () => {
+      const { data } = await api.get<Country[]>("/finance/bank/countries");
+      return data;
+    },
+  });
+};
+
+export const useBanksByCountry = (country: string) => {
+  return useQuery({
+    queryKey: financeKeys.banksByCountry(country),
+    queryFn: async () => {
+      const { data } = await api.get<Bank[]>(
+        `/finance/bank/banks?country=${country}`,
+      );
+      return data;
+    },
+    enabled: !!country, // Only run the query if country is provided
   });
 };
 
