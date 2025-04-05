@@ -1,6 +1,6 @@
 import axios from "axios";
 import { QueryClient } from "@tanstack/react-query";
-import { getCookie } from "./cookies";
+import { getCookie, removeCookie } from "./cookies";
 
 // Determine the base URL based on the environment
 const getBaseUrl = () => {

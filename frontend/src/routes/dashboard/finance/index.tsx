@@ -26,7 +26,7 @@ type FinanceLoaderData = {
   error: string | null;
 };
 
-export const Route = createFileRoute("/dashboard/finance")({
+export const Route = createFileRoute("/dashboard/finance/")({
   // Add loader to handle search parameters
   loader: (): FinanceLoaderData => {
     // Extract any error message from the URL
