@@ -1,7 +1,9 @@
 import uuid
+from typing import Optional
 
 from fastapi import APIRouter, Depends
 
+from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.user.api.dependencies import user_is_authenticated
 
 from .dependencies import FinanceServiceDep
@@ -50,8 +52,19 @@ async def get_bank_balances(
 @router.get("/bank/transactions")
 async def get_bank_transactions(
     finance_service: FinanceServiceDep,
-) -> list[BankTransactionResponse]:
-    return finance_service.get_bank_transactions()
+    page: int = 1,
+    page_size: int = 20,
+    subcategory_id: Optional[str] = None,
+    description: Optional[str] = None,
+) -> PaginatedResponse[BankTransactionResponse]:
+    # Create a filter request from query parameters
+    request = BankTransactionFilterRequest(
+        page=page,
+        page_size=page_size,
+        subcategory_id=subcategory_id,
+        description=description,
+    )
+    return finance_service.get_bank_transactions(request)
 
 
 @router.get("/bank/transactions/filters")

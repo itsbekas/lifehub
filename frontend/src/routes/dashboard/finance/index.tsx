@@ -114,7 +114,7 @@ export default function FinancePage() {
               <Skeleton height={300} />
             ) : (
               <TransactionsTable
-                transactions={transactionsQuery.data || []}
+                transactions={transactionsQuery.data?.items || []}
                 categories={
                   categoriesQuery.data
                     ? categoriesQuery.data.flatMap(

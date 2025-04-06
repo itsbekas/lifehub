@@ -2,8 +2,10 @@ import datetime as dt
 import uuid
 from typing import Optional
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from lifehub.core.common.base.pagination import PaginatedRequest, PaginatedResponse
 from lifehub.core.common.base.repository.base import BaseRepository
 from lifehub.core.common.base.repository.fetch_base import FetchBaseRepository
 from lifehub.core.common.base.repository.user_base import UserBaseRepository
@@ -79,6 +81,39 @@ class BankTransactionRepository(UserBaseRepository[BankTransaction]):
         if subcategory_id:
             query = query.filter(BankTransaction.subcategory_id == subcategory_id)
         return query.all()
+
+    def get_paginated_transactions(
+        self,
+        request: PaginatedRequest,
+        subcategory_id: Optional[uuid.UUID] = None,
+        description: Optional[str] = None,
+    ) -> PaginatedResponse[BankTransaction]:
+        """Get paginated transactions with optional filtering.
+
+        Args:
+            request: Pagination parameters
+            subcategory_id: Filter by subcategory ID
+            description: Filter by user description
+
+        Returns:
+            Paginated response with filtered transactions
+        """
+        # Start with a base query filtered by user_id
+        query = select(BankTransaction).where(BankTransaction.user_id == self.user.id)
+
+        # Apply subcategory filter
+        if subcategory_id:
+            query = query.where(BankTransaction.subcategory_id == subcategory_id)
+
+        # Apply description filter
+        if description:
+            query = query.where(BankTransaction.user_description == description)
+
+        # Order by date descending (newest first)
+        query = query.order_by(BankTransaction.date.desc())
+
+        # Use the paginated query method from the base repository
+        return self.get_paginated(request, query)
 
 
 class BudgetCategoryRepository(UserBaseRepository[BudgetCategory]):

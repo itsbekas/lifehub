@@ -6,6 +6,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from lifehub.config.constants import cfg
+from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.security.encryption import EncryptionService
@@ -377,38 +378,56 @@ class FinanceService(BaseUserService):
 
         self.session.commit()
 
-    def get_bank_transactions(self) -> list[BankTransactionResponse]:
+    def get_bank_transactions(
+        self, request: BankTransactionFilterRequest
+    ) -> PaginatedResponse[BankTransactionResponse]:
         """
-        Fetches the latest transactions from the bank accounts and applies any user filters.
+        Fetches paginated transactions with optional filtering.
+
+        Args:
+            request: Pagination and filtering parameters
+
+        Returns:
+            Paginated response with transaction data
         """
         bank_account_repo = BankAccountRepository(self.user, self.session)
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
 
-        transactions = []
-
+        # Sync transactions if needed
         for account in bank_account_repo.get_all():
-            # If the last sync was more than 6 hours ago, fetch the transactions from the API
             if account.synced_before(hours=6):
                 self._fetch_new_transactions(account)
 
-            for synced_t in bank_transaction_repo.get_by_account_id(account.id):
-                synced_description = self.e.decrypt_data(
-                    synced_t.user_description
-                ) or self.e.decrypt_data(synced_t.description)
+        # Get paginated transactions from repository
+        paginated_transactions = bank_transaction_repo.get_paginated_transactions(
+            request=request,
+            subcategory_id=uuid.UUID(request.subcategory_id)
+            if request.subcategory_id
+            else None,
+            description=request.description,
+        )
 
-                transactions.append(
-                    BankTransactionResponse(
-                        id=str(synced_t.id),
-                        account_id=str(synced_t.account.id),
-                        amount=float(self.e.decrypt_data(synced_t.amount)),
-                        date=synced_t.date,
-                        description=synced_description,
-                        counterparty=self.e.decrypt_data(synced_t.counterparty),
-                        subcategory_id=str(synced_t.subcategory_id),
-                    )
-                )
+        # Convert DB models to response models
+        transaction_responses = [
+            BankTransactionResponse(
+                id=str(transaction.id),
+                account_id=str(transaction.account_id),
+                amount=float(self.e.decrypt_data(transaction.amount)),
+                date=transaction.date,
+                description=self.e.decrypt_data(transaction.user_description)
+                or self.e.decrypt_data(transaction.description),
+                counterparty=self.e.decrypt_data(transaction.counterparty),
+                subcategory_id=str(transaction.subcategory_id)
+                if transaction.subcategory_id
+                else None,
+            )
+            for transaction in paginated_transactions.items
+        ]
 
-        return transactions
+        # Create a new PaginatedResponse with the converted items
+        return PaginatedResponse(
+            items=transaction_responses, pagination=paginated_transactions.pagination
+        )
 
     def update_bank_transaction(
         self,
@@ -764,10 +783,12 @@ class FinanceService(BaseUserService):
             matches=[],
         )
 
-        filter.matches = [
-            BankTransactionFilterMatch(filter_id=filter.id, match_string=match)
-            for match in data.matches
-        ]
+        # Handle the case where matches is None
+        if data.matches is not None:
+            filter.matches = [
+                BankTransactionFilterMatch(filter_id=filter.id, match_string=match)
+                for match in data.matches
+            ]
 
         bank_transaction_filters_repo.add(filter)
 
@@ -801,7 +822,7 @@ class FinanceService(BaseUserService):
 
         # Update matches explicitly
         existing_matches = {match.match_string for match in filter.matches}
-        new_matches = set(data.matches)
+        new_matches = set(data.matches or [])
 
         # Add new matches
         for match_string in new_matches - existing_matches:

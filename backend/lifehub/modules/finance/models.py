@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import datetime as dt
+from dataclasses import field
 from typing import Optional
 
 from pydantic.dataclasses import dataclass
+
+from lifehub.core.common.base.pagination import PaginatedRequest
 
 
 @dataclass
@@ -96,10 +99,15 @@ class UpdateBankTransactionRequest:
 
 
 @dataclass
-class BankTransactionFilterRequest:
-    subcategory_id: Optional[str]
-    description: Optional[str]
-    matches: list[str]
+class BankTransactionFilterRequest(PaginatedRequest):
+    """Request model for filtering bank transactions with pagination."""
+
+    subcategory_id: Optional[str] = None
+    description: Optional[str] = None
+    matches: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
 
 
 @dataclass

@@ -13,6 +13,20 @@ export type Transaction = {
   user_description: string;
 };
 
+export type PaginationInfo = {
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+};
+
+export type PaginatedResponse<T> = {
+  items: T[];
+  pagination: PaginationInfo;
+};
+
 export type SubCategory = {
   id: string;
   name: string;
@@ -49,7 +63,8 @@ export type Bank = {
 // Query keys
 export const financeKeys = {
   all: ["finance"] as const,
-  transactions: () => [...financeKeys.all, "transactions"] as const,
+  transactions: (page: number = 1, pageSize: number = 20) =>
+    [...financeKeys.all, "transactions", { page, pageSize }] as const,
   categories: () => [...financeKeys.all, "categories"] as const,
   balances: () => [...financeKeys.all, "balances"] as const,
   banks: () => [...financeKeys.all, "banks"] as const,
@@ -59,13 +74,15 @@ export const financeKeys = {
 };
 
 // Query hooks
-export const useTransactions = () => {
+export const useTransactions = (page: number = 1, pageSize: number = 20) => {
   return useQuery({
-    queryKey: financeKeys.transactions(),
+    queryKey: financeKeys.transactions(page, pageSize),
     queryFn: async () => {
-      const { data } = await api.get<Transaction[]>(
-        "/finance/bank/transactions",
+      // Use the paginated endpoint with query parameters
+      const { data } = await api.get<PaginatedResponse<Transaction>>(
+        `/finance/bank/transactions?page=${page}&page_size=${pageSize}`,
       );
+
       return data;
     },
   });
@@ -228,7 +245,19 @@ export const useEditTransaction = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate both the regular and paginated transaction queries
       queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey as unknown[];
+          return (
+            queryKey.length > 2 &&
+            queryKey[0] === "finance" &&
+            queryKey[1] === "transactions" &&
+            typeof queryKey[2] === "object"
+          );
+        },
+      });
     },
   });
 };
