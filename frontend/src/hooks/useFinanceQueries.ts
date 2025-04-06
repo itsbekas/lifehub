@@ -258,6 +258,9 @@ export const useEditTransaction = () => {
           );
         },
       });
+
+      // Also invalidate categories to update the amounts
+      queryClient.invalidateQueries({ queryKey: financeKeys.categories() });
     },
   });
 };
