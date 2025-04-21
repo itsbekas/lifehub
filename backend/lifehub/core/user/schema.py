@@ -43,7 +43,8 @@ class User(BaseModel):
     password: Mapped[str] = mapped_column(String(128), nullable=False)
     name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
-    verified: Mapped[bool] = mapped_column(default=False)
+    verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_admin: Mapped[bool] = mapped_column(default=False, nullable=False)
     data_key: Mapped[str] = mapped_column(String(256), nullable=True)
 
     modules: Mapped[list["Module"]] = relationship(

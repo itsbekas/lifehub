@@ -21,6 +21,7 @@ dependencies = [
     "hvac>=2.3.0",
     "cryptography>=44.0.2",
     "redis>=5.2.1",
+    "alembic>=1.15.2",
 ]
 
 [tool.setuptools.packages]
