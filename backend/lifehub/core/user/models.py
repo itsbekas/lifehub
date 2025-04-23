@@ -35,6 +35,8 @@ class UserResponse:
     email: str
     name: str
     created_at: dt.datetime
+    verified: bool
+    is_admin: bool
 
 
 @dataclass

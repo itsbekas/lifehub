@@ -35,9 +35,12 @@ class UserService(BaseService):
         self.password_hasher = argon2.PasswordHasher()
 
     def create_user(self, username: str, email: str, password: str, name: str) -> User:
-        user = self.user_repository.get_by_username(username)
+        if self.user_repository.get_by_username(username) is not None:
+            raise UserServiceException(409, "User already exists")
 
-        if user is not None:
+        email_hash = EncryptionService.hmac(email.lower(), cfg.EMAIL_SECRET_KEY)
+
+        if self.user_repository.get_by_email_hash(email_hash) is not None:
             raise UserServiceException(409, "User already exists")
 
         hashed_password = self.hash_password(password)
@@ -46,21 +49,11 @@ class UserService(BaseService):
         new_user = User(
             username=username,
             email=bytes([0]),
+            email_hash=email_hash,
             password=hashed_password,
             name=bytes([0]),
         )
         self.user_repository.add(new_user)
-
-        # verification_token = create_jwt_token(
-        #     username, dt.datetime.now() + dt.timedelta(days=1)
-        # )
-
-        # mail_client = MailAPIClient()
-        # mail_client.send_verification_email(
-        #     email,
-        #     name,
-        #     verification_token,
-        # )
 
         # Necessary to get the newly generated ID
         self.session.commit()
@@ -124,7 +117,11 @@ class UserService(BaseService):
             raise UserServiceException(401, "Invalid token")
 
     def login_user(self, username: str, password: str) -> User:
-        user: User | None = self.user_repository.get_by_username(username)
+        user: User | None = self.user_repository.get_by_username(
+            username
+        ) or self.user_repository.get_by_email_hash(
+            EncryptionService.hmac(username, cfg.EMAIL_SECRET_KEY)
+        )
 
         if user is None or not self.verify_password(password, user.password):
             raise UserServiceException(401, "Invalid credentials")
@@ -165,6 +162,8 @@ class UserService(BaseService):
             email=encryption_service.decrypt_data(user.email),
             name=encryption_service.decrypt_data(user.name),
             created_at=user.created_at,
+            verified=user.verified,
+            is_admin=user.is_admin,
         )
 
     def get_user(self, username: str) -> User:
@@ -172,6 +171,45 @@ class UserService(BaseService):
         if user is None:
             raise UserServiceException(404, "User not found")
         return user
+
+    def get_user_by_id(self, user_id: str) -> UserResponse:
+        """Get a user by ID."""
+        try:
+            user = self.user_repository.get_by_id(user_id)
+            if user is None:
+                raise UserServiceException(404, "User not found")
+            encryption_service = EncryptionService(self.session, user)
+            return UserResponse(
+                username=user.username,
+                email=encryption_service.decrypt_data(user.email),
+                name=encryption_service.decrypt_data(user.name),
+                created_at=user.created_at,
+                verified=user.verified,
+                is_admin=user.is_admin,
+            )
+        except Exception as e:
+            raise UserServiceException(404, f"Error retrieving user: {str(e)}")
+
+    def get_all_users(self) -> list[UserResponse]:
+        """Get all users. For admin use only."""
+        users = self.user_repository.get_all()
+        encryption_service = EncryptionService(self.session, users[0])
+        return [
+            UserResponse(
+                username=user.username,
+                email=encryption_service.decrypt_data(user.email),
+                name=encryption_service.decrypt_data(user.name),
+                created_at=user.created_at,
+                verified=user.verified,
+                is_admin=user.is_admin,
+            )
+            for user in users
+        ]
+
+    def update_user_verification(self, user: User) -> None:
+        """Update a user's verification status. For admin use only."""
+        self.user_repository.update(user)
+        self.user_repository.commit()
 
     def update_user(
         self, user: User, name: str | None, email: str | None, password: str | None
@@ -194,6 +232,8 @@ class UserService(BaseService):
             email=email or encryption_service.decrypt_data(user.email),
             name=name or encryption_service.decrypt_data(user.name),
             created_at=user.created_at,
+            verified=user.verified,
+            is_admin=user.is_admin,
         )
 
     def delete_user(self, user: User) -> None:

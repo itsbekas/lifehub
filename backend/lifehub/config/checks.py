@@ -66,7 +66,7 @@ def setup_admin_user() -> None:
             user_service.update_user(
                 user,
                 "Admin",
-                "admin@lifehub",
+                "admin@life.hub",
                 cfg.ADMIN_PASSWORD,
             )
             user.is_admin = True

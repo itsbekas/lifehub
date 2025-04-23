@@ -20,3 +20,7 @@ class UserRepository(BaseRepository[User]):
     def get_by_username(self, username: str) -> User | None:
         query = select(User).where(User.username == username)
         return self.session.execute(query).scalar_one_or_none()
+
+    def get_by_email_hash(self, email_hash: str) -> User | None:
+        query = select(User).where(User.email_hash == email_hash)
+        return self.session.execute(query).scalar_one_or_none()

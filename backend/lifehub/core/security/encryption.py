@@ -1,4 +1,6 @@
 import base64
+import hashlib
+import hmac
 import os
 from typing import overload
 
@@ -107,3 +109,14 @@ class EncryptionService(BaseUserService):
             ciphertext,
             None,
         ).decode("utf-8")
+
+    @staticmethod
+    def hmac(text: str, secret_key: str) -> str:
+        """
+        Returns an HMAC-SHA256 hash of the text using the given secret key.
+        Text is normalized to lowercase and stripped of whitespace.
+        """
+        normalized_text = text.strip().lower().encode("utf-8")
+        secret_key_bytes = secret_key.encode("utf-8")
+        digest = hmac.new(secret_key_bytes, normalized_text, hashlib.sha256).hexdigest()
+        return digest

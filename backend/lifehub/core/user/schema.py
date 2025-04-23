@@ -40,6 +40,7 @@ class User(BaseModel):
     email: Mapped[bytes] = mapped_column(
         EncryptedDataType(64), unique=True, nullable=False
     )
+    email_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(128), nullable=False)
     name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
