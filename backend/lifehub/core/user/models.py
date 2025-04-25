@@ -31,6 +31,7 @@ class UserTokenResponse:
 
 @dataclass
 class UserResponse:
+    id: str
     username: str
     email: str
     name: str

@@ -18,13 +18,14 @@ class AdminService(BaseService):
         self.user_repository = UserRepository(self.session)
 
     def get_all_users(self) -> list[UserResponse]:
-        """Get all users. For admin use only."""
+        """Get all users with their verification status."""
         users = self.user_repository.get_all()
         user_list = []
         for user in users:
             encryption_service = EncryptionService(self.session, user)
             user_list.append(
                 UserResponse(
+                    id=str(user.id),
                     username=user.username,
                     email=encryption_service.decrypt_data(user.email),
                     name=encryption_service.decrypt_data(user.name),

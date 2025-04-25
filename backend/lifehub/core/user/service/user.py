@@ -158,6 +158,7 @@ class UserService(BaseService):
     def get_user_data(self, user: User) -> UserResponse:
         encryption_service = EncryptionService(self.session, user)
         return UserResponse(
+            id=str(user.id),
             username=user.username,
             email=encryption_service.decrypt_data(user.email),
             name=encryption_service.decrypt_data(user.name),
@@ -180,6 +181,7 @@ class UserService(BaseService):
                 raise UserServiceException(404, "User not found")
             encryption_service = EncryptionService(self.session, user)
             return UserResponse(
+                id=str(user.id),
                 username=user.username,
                 email=encryption_service.decrypt_data(user.email),
                 name=encryption_service.decrypt_data(user.name),
@@ -212,6 +214,7 @@ class UserService(BaseService):
         self.session.commit()
 
         return UserResponse(
+            id=str(user.id),
             username=user.username,
             email=email or encryption_service.decrypt_data(user.email),
             name=name or encryption_service.decrypt_data(user.name),
