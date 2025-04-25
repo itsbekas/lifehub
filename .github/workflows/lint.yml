@@ -20,9 +20,9 @@ jobs:
         working-directory: frontend
 
       - name: Run ESLint
-        run: npx eslint --ext .js,.jsx,.ts,.tsx app
+        run: npx eslint --ext .js,.jsx,.ts,.tsx src
         working-directory: frontend
 
       - name: Run Prettier
-        run: npx prettier --check app
+        run: npx prettier --check src
         working-directory: frontend
