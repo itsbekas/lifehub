@@ -19,6 +19,7 @@ class Config:
     # Type hints for IDE support
     ENVIRONMENT: str
     UVICORN_HOST: str
+    FRONTEND_URL: str
     REDIRECT_URI_BASE: str
     OAUTH_REDIRECT_URI: str
     AUTH_SECRET_KEY: str
@@ -33,6 +34,7 @@ class Config:
     VAULT_TRANSIT_MOUNT_POINT: str
     ADMIN_USERNAME: str
     ADMIN_PASSWORD: str
+    EMAIL_SECRET_KEY: str
 
     # Provider API Secrets
     GOCARDLESS_CLIENT_ID: str

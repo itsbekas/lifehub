@@ -96,6 +96,7 @@ class ConfigManager:
             "FRONTEND_URL": metadata["FRONTEND_URL"],
             "REDIRECT_URI_BASE": metadata["FRONTEND_URL"],
             "OAUTH_REDIRECT_URI": f"{metadata['FRONTEND_URL']}/settings/providers/oauth_token",
+            "EMAIL_SECRET_KEY": metadata["EMAIL_SECRET_KEY"],
             "GOCARDLESS_CLIENT_ID": api_tokens["GOCARDLESS_CLIENT_ID"],
             "GOCARDLESS_CLIENT_SECRET": api_tokens["GOCARDLESS_CLIENT_SECRET"],
             "GOOGLE_CALENDAR_CLIENT_ID": api_tokens["GOOGLE_CALENDAR_CLIENT_ID"],

@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from lifehub.config.checks import pre_run_setup
 from lifehub.config.constants import cfg
+from lifehub.core.admin.router import router as admin_router
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.module.api.router import router as modules_router
 from lifehub.core.provider.api.router import router as providers_router
@@ -26,7 +27,9 @@ app = FastAPI(
 
 #### CORS ####
 origins = [
-    "*",
+    "http://localhost:3000",  # Frontend development server
+    "http://127.0.0.1:3000",  # Alternative localhost address
+    cfg.FRONTEND_URL,  # Production frontend URL from config
 ]
 
 app.add_middleware(
@@ -44,6 +47,7 @@ api.include_router(
     user_providers_router, prefix="/user/providers", tags=["user/providers"]
 )
 api.include_router(user_modules_router, prefix="/user/modules", tags=["user/modules"])
+api.include_router(admin_router, prefix="/admin", tags=["admin"])
 api.include_router(providers_router, prefix="/providers", tags=["providers"])
 api.include_router(modules_router, prefix="/modules", tags=["modules"])
 api.include_router(finance_router, prefix="/finance", tags=["finance"])

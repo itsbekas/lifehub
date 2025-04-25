@@ -31,10 +31,13 @@ class UserTokenResponse:
 
 @dataclass
 class UserResponse:
+    id: str
     username: str
     email: str
     name: str
     created_at: dt.datetime
+    verified: bool
+    is_admin: bool
 
 
 @dataclass

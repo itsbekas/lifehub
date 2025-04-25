@@ -1,6 +1,8 @@
 import datetime as dt
 import time
 
+from alembic import command
+from alembic.config import Config as AlembicConfig
 from lifehub.config.constants import cfg
 from lifehub.config.providers import setup_providers
 from lifehub.config.util.schemas import *  # noqa: F401,F403
@@ -31,6 +33,19 @@ def check_mariadb() -> None:
             time.sleep(interval)
 
 
+def run_migrations() -> None:
+    """
+    Run Alembic migrations programmatically using our real engine with Vault secrets.
+    """
+    from lifehub.core.common.database_service import get_engine
+
+    # Set up Alembic config
+    alembic_cfg = AlembicConfig("alembic.ini")
+    alembic_cfg.set_main_option("sqlalchemy.url", str(get_engine(admin=True).url))
+
+    command.upgrade(alembic_cfg, "head")
+
+
 def setup_admin_user() -> None:
     with get_session() as session:
         user_service = UserService(session)
@@ -43,6 +58,7 @@ def setup_admin_user() -> None:
                 "Admin",
             )
             user.verified = True
+            user.is_admin = True
         except UserServiceException as e:
             if e.status_code != 409:
                 raise
@@ -50,9 +66,10 @@ def setup_admin_user() -> None:
             user_service.update_user(
                 user,
                 "Admin",
-                "admin@lifehub",
+                "admin@life.hub",
                 cfg.ADMIN_PASSWORD,
             )
+            user.is_admin = True
         session.commit()
 
 
@@ -108,6 +125,7 @@ def create_db_tables() -> None:
 def pre_run_setup() -> None:
     check_mariadb()
     create_db_tables()
+    run_migrations()
     setup_providers()
     setup_admin_user()
     setup_admin_tokens()

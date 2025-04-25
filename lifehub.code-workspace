@@ -40,7 +40,8 @@
     },
     "[typescriptreact]": {
       "editor.tabSize": 2,
-      "editor.insertSpaces": true
+      "editor.insertSpaces": true,
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
       "mypy.dmypyExecutable": "${workspaceFolder:backend}/.venv/bin/dmypy",
       "mypy.mypyExecutable": "${workspaceFolder:backend}/.venv/bin/mypy",
@@ -52,6 +53,7 @@
         "**/*.sass",
         "**/*.less",
         "node_modules/@mantine/core/styles.css"
-      ]
+      ],
+      "prettier.configPath": ".prettierrc"
   }
 }

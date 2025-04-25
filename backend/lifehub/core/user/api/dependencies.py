@@ -7,7 +7,7 @@ from lifehub.core.common.api.dependencies import SessionDep
 from lifehub.core.user.schema import User
 from lifehub.core.user.service.user import UserService, UserServiceException
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/api-login")
 
 
 def get_user_service(session: SessionDep) -> UserService:
