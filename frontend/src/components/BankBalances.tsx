@@ -22,7 +22,7 @@ export function BankBalances({ balances, banks }: BankBalancesProps) {
       </Group>
       <Group gap="md" align="left">
         {balances.map((balance) => {
-          const bank = banks.find(b => b.id === balance.bank);
+          const bank = banks.find((b) => b.id === balance.bank);
           return (
             <Card
               withBorder

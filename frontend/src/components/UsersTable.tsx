@@ -29,10 +29,11 @@ export function UsersTable({ users }: UsersTableProps) {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
     },
   });
-  
+
   // Sort users by creation date, newest first
   const sortedUsers = [...users].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
   // Format date to DD-MM-YYYY

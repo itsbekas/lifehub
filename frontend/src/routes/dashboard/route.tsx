@@ -1,8 +1,4 @@
-import {
-  Outlet,
-  createFileRoute,
-  redirect,
-} from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { HeaderMenu } from "~/components/HeaderMenu";
 import { Container } from "@mantine/core";
 import { isAuthenticated } from "~/lib/cookies";

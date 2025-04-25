@@ -16,7 +16,9 @@ function UsersPage() {
 
   return (
     <>
-      <Title order={2} mb="md">Users</Title>
+      <Title order={2} mb="md">
+        Users
+      </Title>
       {!isLoading && <UsersTable users={users} />}
     </>
   );

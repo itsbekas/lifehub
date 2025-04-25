@@ -34,7 +34,7 @@ export function TransactionsTable({
   const [scrolled, setScrolled] = useState(false);
   // Sort transactions from most recent to oldest
   const sortedTransactions = [...transactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
   // Custom date formatter for DD-MM-YYYY
@@ -49,7 +49,7 @@ export function TransactionsTable({
   const rows = sortedTransactions.map((transaction) => {
     // Find the sub-category name using subcategory_id
     const subcategory = categories.find(
-      (cat) => cat.id === transaction.subcategory_id
+      (cat) => cat.id === transaction.subcategory_id,
     );
     const categoryName = subcategory?.name || "";
 
