@@ -38,8 +38,10 @@ export const loginUser = (token: string, expiresAt: Date): void => {
   // Set the auth token in cookies
   setCookie("authToken", token, {
     expires: expiresAt,
-    // In development, we need to allow JavaScript access to cookies for cross-origin requests
-    httpOnly: process.env.NODE_ENV === "production",
+    // The cookie needs to be accessible by JavaScript for authentication checks
+    // Eventually this can be improved with a secondary non-httpOnly cookie to check authentication,
+    // while maintaining the actual token httpOnly for requests to the backend
+    httpOnly: false,
     // Only use secure in production (HTTPS)
     secure: process.env.NODE_ENV === "production",
     // Use Lax in development for cross-origin requests, Strict in production
