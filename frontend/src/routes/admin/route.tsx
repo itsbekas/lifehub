@@ -9,7 +9,7 @@ export const Route = createFileRoute("/admin")({
       if (!response.data.is_admin) {
         throw redirect({ to: "/dashboard" });
       }
-    } catch (error) {
+    } catch {
       // If the API call fails or user is not admin, redirect to dashboard
       throw redirect({ to: "/dashboard" });
     }
