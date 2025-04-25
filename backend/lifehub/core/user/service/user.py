@@ -190,22 +190,6 @@ class UserService(BaseService):
         except Exception as e:
             raise UserServiceException(404, f"Error retrieving user: {str(e)}")
 
-    def get_all_users(self) -> list[UserResponse]:
-        """Get all users. For admin use only."""
-        users = self.user_repository.get_all()
-        encryption_service = EncryptionService(self.session, users[0])
-        return [
-            UserResponse(
-                username=user.username,
-                email=encryption_service.decrypt_data(user.email),
-                name=encryption_service.decrypt_data(user.name),
-                created_at=user.created_at,
-                verified=user.verified,
-                is_admin=user.is_admin,
-            )
-            for user in users
-        ]
-
     def update_user_verification(self, user: User) -> None:
         """Update a user's verification status. For admin use only."""
         self.user_repository.update(user)
