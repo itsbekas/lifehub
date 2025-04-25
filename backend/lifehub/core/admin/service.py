@@ -36,3 +36,11 @@ class AdminService(BaseService):
             )
 
         return user_list
+
+    def verify_user(self, user_id: str) -> None:
+        """Verify a user by ID."""
+        user = self.user_repository.get_by_id(user_id)
+        if user is None:
+            raise AdminServiceException(404, "User not found")
+        user.verified = True
+        self.session.commit()
