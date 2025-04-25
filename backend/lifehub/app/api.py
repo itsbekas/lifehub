@@ -63,7 +63,7 @@ async def service_exception_handler(
     request: Request, exc: ServiceException
 ) -> JSONResponse:
     if cfg.ENVIRONMENT == "development":
-        print(f"ServiceException: {exc}")
+        print(f"{exc.__class__.__name__}: {exc}")
 
     return JSONResponse(
         status_code=exc.status_code,
