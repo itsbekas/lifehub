@@ -1,4 +1,7 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 
 from lifehub.core.user.api.dependencies import UserDep, UserServiceDep
 from lifehub.core.user.models import (
@@ -13,6 +16,18 @@ from lifehub.core.user.models import (
 router = APIRouter()
 
 
+# Used to login in the Swagger UI
+@router.post("/api-login")
+async def user_api_login(
+    user_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    user_service: UserServiceDep,
+) -> UserTokenResponse:
+    user = user_service.login_user(user_data.username, user_data.password)
+    user_token = user_service.create_access_token(user)
+    return user_token
+
+
+# Used to login in the frontend
 @router.post("/login")
 async def user_login(
     user_data: UserLoginRequest,
