@@ -10,7 +10,7 @@ type CallbackLoaderData = {
   error?: string;
 };
 
-export const Route = createFileRoute("/dashboard/finance/callback")({
+export const Route = createFileRoute("/(app)/dashboard/finance/callback")({
   // Use loader to handle the callback parameters and initiate the request
   loader: async (): Promise<CallbackLoaderData> => {
     // Get the current URL and extract the ref parameter

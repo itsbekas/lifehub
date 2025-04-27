@@ -19,7 +19,7 @@ import {
 } from "~/hooks/useFinanceQueries";
 import type { SubCategory } from "~/hooks/useFinanceQueries";
 
-export const Route = createFileRoute("/dashboard/finance/")({
+export const Route = createFileRoute("/(app)/dashboard/finance/")({
   component: FinancePage,
 });
 

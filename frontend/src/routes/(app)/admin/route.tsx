@@ -2,7 +2,7 @@ import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { api } from "~/lib/query";
 import { Container } from "@mantine/core";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/(app)/admin")({
   beforeLoad: async () => {
     try {
       const response = await api.get("/user/me");

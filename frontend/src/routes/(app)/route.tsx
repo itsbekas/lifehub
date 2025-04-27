@@ -4,7 +4,7 @@ import { Container } from "@mantine/core";
 import { isAuthenticated } from "~/lib/cookies";
 import { ErrorAlert } from "~/components/ErrorAlert";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/(app)")({
   beforeLoad: () => {
     // Check if user is authenticated
     if (!isAuthenticated()) {

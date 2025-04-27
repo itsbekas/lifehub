@@ -21,7 +21,7 @@ interface LoginResponse {
 }
 
 // Create the route using Tanstack Router
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute("/(auth)/login")({
   component: LoginPage,
 });
 
