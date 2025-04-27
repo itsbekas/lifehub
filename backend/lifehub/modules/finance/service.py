@@ -256,23 +256,38 @@ class FinanceService(BaseUserService):
         gc_api = GoCardlessAPIClient(self.user, self.session)
         res = []
 
+        for inst in gc_api.get_institutions(country):
+            res.append(
+                BankInstitutionResponse(
+                    id=inst.id,
+                    type="oauth",
+                    name=inst.name,
+                    logo=inst.logo,
+                )
+            )
+
+        res.append(
+            BankInstitutionResponse(
+                id="trading212",
+                type="token",
+                name="Trading212",
+                logo="",
+            )
+        )
+
+        res.sort(key=lambda x: x.name)
+
         if cfg.ENVIRONMENT == "development":
             res.append(
                 BankInstitutionResponse(
                     id="SANDBOXFINANCE_SFIN0000",
+                    type="oauth",
                     name="Sandbox Finance",
                     logo="",
                 )
             )
 
-        return res + [
-            BankInstitutionResponse(
-                id=inst.id,
-                name=inst.name,
-                logo=inst.logo,
-            )
-            for inst in gc_api.get_institutions(country)
-        ]
+        return res
 
     def apply_filters_to_transaction(self, transaction: BankTransaction) -> None:
         """

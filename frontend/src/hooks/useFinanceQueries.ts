@@ -56,6 +56,7 @@ export type Country = {
 
 export type Bank = {
   id: string;
+  type: string;
   name: string;
   logo: string;
 };

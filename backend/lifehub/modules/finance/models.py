@@ -58,6 +58,7 @@ class CountryResponse:
 @dataclass
 class BankInstitutionResponse:
     id: str
+    type: str
     name: str
     logo: str
 
