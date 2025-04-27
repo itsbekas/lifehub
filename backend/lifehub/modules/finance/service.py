@@ -9,15 +9,11 @@ from lifehub.config.constants import cfg
 from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
+from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.trading212.api_client import Trading212APIClient
-from lifehub.providers.trading212.repository.t212_dividend import T212DividendRepository
-from lifehub.providers.trading212.repository.t212_order import T212OrderRepository
-from lifehub.providers.trading212.repository.t212_transaction import (
-    T212TransactionRepository,
-)
 
 from .models import (
     BankBalanceResponse,
@@ -28,7 +24,6 @@ from .models import (
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
     CountryResponse,
-    T212TransactionResponse,
 )
 from .repository import (
     AccountBalanceRepository,
@@ -60,7 +55,18 @@ class FinanceService(BaseUserService):
         self.encryption_service = EncryptionService(session, user)
         self.e = self.encryption_service
 
-    def fetch_t212_balance(self) -> BankBalanceResponse:
+    def _fetch_new_balance(self, account: BankAccount) -> BankBalanceResponse:
+        """
+        Fetches the latest balance from bank accounts based on their provider.
+        """
+        institution_id = self.encryption_service.decrypt_data(account.institution_id)
+        match institution_id:
+            case "trading212":
+                return self._fetch_trading212_balance(account)
+            case _:
+                return self._fetch_gocardless_balance(account)
+
+    def _fetch_trading212_balance(self, account: BankAccount) -> BankBalanceResponse:
         """
         Fetches the latest balance from Trading212 and stores it in the database.
         If the local balance is less than an hour old, it will be returned instead.
@@ -68,31 +74,42 @@ class FinanceService(BaseUserService):
         t212_api = Trading212APIClient(self.user, self.session)
         balance_repo = AccountBalanceRepository(self.user, self.session)
 
-        db_balance = balance_repo.get_by_account_id("trading212")
+        db_balance = balance_repo.get_by_account_id(account.id)
 
-        if db_balance is not None and not db_balance.older_than(hours=1):
+        if db_balance is not None and not account.synced_before(hours=1):
             # Local balance is updated
             balance = db_balance
+            balance_amount = float(self.encryption_service.decrypt_data(balance.amount))
         else:
             api_balance = t212_api.get_account_cash()
+            if api_balance is None:
+                raise FinanceServiceException(500, "Balance not found")
+
+            balance_amount = float(api_balance.free)
+            encrypted_balance = self.encryption_service.encrypt_data(
+                str(api_balance.free)
+            )
+
             if db_balance is None:
                 balance = AccountBalance(
                     user_id=self.user.id,
-                    account_id="trading212",
-                    amount=api_balance.free,
+                    account_id=account.id,
+                    amount=encrypted_balance,
                 )
                 balance_repo.add(balance)
             else:
-                db_balance.amount = Decimal(api_balance.free)
+                db_balance.amount = encrypted_balance
                 balance = db_balance
 
         res = BankBalanceResponse(
-            bank="trading212", account_id="trading212", balance=float(balance.amount)
+            bank="trading212",
+            account_id=str(account.id),
+            balance=balance_amount,
         )
         self.session.commit()
         return res
 
-    def fetch_gocardless_balance(self, account: BankAccount) -> BankBalanceResponse:
+    def _fetch_gocardless_balance(self, account: BankAccount) -> BankBalanceResponse:
         """
         Fetches the latest balance from GoCardless and stores it in the database.
         If the local balance is less than 6 hours old, it will be returned instead,
@@ -136,45 +153,6 @@ class FinanceService(BaseUserService):
         )
         self.session.commit()
         return res
-
-    def get_t212_history(self) -> list[T212TransactionResponse]:
-        transactions = T212TransactionRepository(self.user, self.session).get_all()
-        orders = T212OrderRepository(self.user, self.session).get_all()
-        dividends = T212DividendRepository(self.user, self.session).get_all()
-
-        history = []
-
-        for transaction in transactions:
-            history.append(
-                T212TransactionResponse(
-                    timestamp=transaction.timestamp,
-                    amount=float(transaction.amount),
-                    type="transaction",
-                    ticker=None,
-                )
-            )
-
-        for order in orders:
-            history.append(
-                T212TransactionResponse(
-                    timestamp=order.timestamp,
-                    amount=float(order.quantity * order.price),
-                    type="order",
-                    ticker=order.ticker,
-                )
-            )
-
-        for dividend in dividends:
-            history.append(
-                T212TransactionResponse(
-                    timestamp=dividend.timestamp,
-                    amount=float(dividend.amount),
-                    type="dividend",
-                    ticker=dividend.ticker,
-                )
-            )
-
-        return history
 
     def get_countries(self) -> list[CountryResponse]:
         """Returns a list of supported countries."""
@@ -239,12 +217,9 @@ class FinanceService(BaseUserService):
         """
         bank_account_repo = BankAccountRepository(self.user, self.session)
         balances = []
+
         for account in bank_account_repo.get_all():
-            match account.institution_id:
-                case "trading212":
-                    balance = self.fetch_t212_balance()
-                case _:
-                    balance = self.fetch_gocardless_balance(account)
+            balance = self._fetch_new_balance(account)
             balances.append(balance)
 
         return balances
@@ -319,7 +294,18 @@ class FinanceService(BaseUserService):
 
     def _fetch_new_transactions(self, account: BankAccount) -> None:
         """
-        Fetches the latest transactions from the bank accounts and applies any user filters.
+        Fetches the latest transactions from bank accounts based on their provider.
+        """
+        institution_id = self.encryption_service.decrypt_data(account.institution_id)
+        match institution_id:
+            case "trading212":
+                self._fetch_trading212_transactions(account)
+            case _:
+                self._fetch_gocardless_transactions(account)
+
+    def _fetch_gocardless_transactions(self, account: BankAccount) -> None:
+        """
+        Fetches the latest transactions from GoCardless bank accounts and applies any user filters.
         """
         gc_api = GoCardlessAPIClient(self.user, self.session)
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
@@ -392,6 +378,9 @@ class FinanceService(BaseUserService):
         account.last_synced = dt.datetime.now()
 
         self.session.commit()
+
+    def _fetch_trading212_transactions(self, account: BankAccount) -> None:
+        pass
 
     def get_bank_transactions(
         self, request: BankTransactionFilterRequest
@@ -864,3 +853,30 @@ class FinanceService(BaseUserService):
             else None,
             matches=[match.match_string for match in filter.matches],
         )
+
+    def add_bank_account(self, bank_id: str) -> None:
+        # Verify user has the required provider
+        provider_repo = ProviderRepository(self.session)
+        provider = provider_repo.get_by_id(bank_id)  # Using bank_id as provider_id
+        if provider is None:
+            raise Exception(f"Provider {bank_id} not found")
+
+        if provider not in self.user.providers:
+            raise Exception(
+                f"User does not have the required provider: {provider.name}"
+            )
+
+        bank_account_repo = BankAccountRepository(self.user, self.session)
+        # Some fields are empty because I didn't feel like changing the db fields
+        # to nullable (alembic wasn't cooperating either)
+        # Either way, it ends up providing some obfuscation into the account type
+        bank_account_repo.add(
+            BankAccount(
+                user_id=self.user.id,
+                account_id=self.encryption_service.encrypt_data(""),
+                institution_id=self.encryption_service.encrypt_data(bank_id),
+                requisition_id=self.encryption_service.encrypt_data(""),
+            )
+        )
+
+        self.session.commit()

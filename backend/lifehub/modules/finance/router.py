@@ -34,6 +34,14 @@ async def get_bank_login(
     return finance_service.get_bank_login(bank_id)
 
 
+@router.post("/bank/add")
+async def add_bank_account(
+    finance_service: FinanceServiceDep,
+    bank_id: str,
+) -> None:
+    return finance_service.add_bank_account(bank_id)
+
+
 @router.post("/bank/callback")
 async def confirm_bank_login(
     finance_service: FinanceServiceDep,
