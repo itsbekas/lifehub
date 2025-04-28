@@ -380,7 +380,20 @@ class FinanceService(BaseUserService):
         self.session.commit()
 
     def _fetch_trading212_transactions(self, account: BankAccount) -> None:
-        pass
+        t212_api = Trading212APIClient(self.user, self.session)
+
+        to_date = dt.datetime.now() - dt.timedelta(minutes=30)
+        from_date = to_date - dt.timedelta(weeks=52)
+        res = t212_api.export_csv(
+            include_dividends=True,
+            include_interest=True,
+            include_orders=True,
+            include_transactions=True,
+            from_date=from_date,
+            to_date=to_date,
+        )
+
+        report_id = res.reportId
 
     def get_bank_transactions(
         self, request: BankTransactionFilterRequest

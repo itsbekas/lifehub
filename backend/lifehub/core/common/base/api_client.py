@@ -250,10 +250,11 @@ class APIClient(ABC):
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        json: Optional[RequestParams] = None,
         headers: Optional[dict[str, str]] = None,
     ) -> Any:
         return self._request(
-            "POST", endpoint, params=params, data=data, headers=headers
+            "POST", endpoint, params=params, data=data, json=json, headers=headers
         )
 
     def _put(
