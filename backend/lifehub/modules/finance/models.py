@@ -117,3 +117,50 @@ class BankTransactionFilterResponse:
     matches: list[str]
     subcategory_id: Optional[str]
     description: Optional[str]
+
+
+@dataclass
+class T212ExportTransaction:
+    action: str
+    time: str
+    isin: Optional[str]
+    ticker: Optional[str]
+    name: Optional[str]
+    notes: Optional[str]
+    id: Optional[str]
+    no_shares: Optional[float]
+    share_price: Optional[float]
+    currency: Optional[str]
+    exchange_rate: Optional[float]
+    result: Optional[float]
+    result_currency: Optional[str]
+    total: float
+    total_currency: str
+    withholding_tax: Optional[float]
+    withholding_tax_currency: Optional[str]
+    merchant_name: Optional[str]
+    merchant_category: Optional[str]
+
+    @classmethod
+    def from_csv(row: list[str]) -> T212ExportTransaction:
+        return T212ExportTransaction(
+            action=row[0],
+            time=row[1],
+            isin=row[2],
+            ticker=row[3],
+            name=row[4],
+            notes=row[5],
+            id=row[6],
+            no_shares=float(row[7]) if row[7] else None,
+            share_price=float(row[8]) if row[8] else None,
+            currency=row[9],
+            exchange_rate=float(row[10]) if row[10] else None,
+            result=float(row[11]) if row[11] else None,
+            result_currency=row[12],
+            total=float(row[13]),
+            total_currency=row[14],
+            withholding_tax=float(row[15]) if row[15] else None,
+            withholding_tax_currency=row[16],
+            merchant_name=row[17],
+            merchant_category=row[18],
+        )

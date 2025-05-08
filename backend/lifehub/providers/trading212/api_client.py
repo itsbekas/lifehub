@@ -13,6 +13,7 @@ from .models import (
     Dividend,
     ExportCSVDataIncluded,
     ExportCSVRequest,
+    ExportCSVResponse,
     ExportResponse,
     Order,
     OrderHistoryRequest,
@@ -122,7 +123,7 @@ class Trading212APIClient(APIClient):
         include_transactions: bool = False,
         from_date: dt.datetime = dt.datetime(1970, 1, 1),
         to_date: dt.datetime = dt.datetime.now(),
-    ) -> Any:
+    ) -> ExportCSVResponse:
         data = ExportCSVRequest(
             dataIncluded=ExportCSVDataIncluded(
                 includeDividends=include_dividends,
@@ -134,7 +135,8 @@ class Trading212APIClient(APIClient):
             timeTo=to_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
-        return self._post("history/exports", json=data)
+        res = self._post("history/exports", json=data)
+        return ExportCSVResponse(**res)
 
     def _error_msg(self, res: Any) -> Any:
         return res.text

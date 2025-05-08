@@ -1,8 +1,11 @@
+import csv
 import datetime as dt
 import uuid
 from decimal import Decimal
+from io import StringIO
 from typing import Optional
 
+import requests
 from sqlalchemy.orm import Session
 
 from lifehub.config.constants import cfg
@@ -24,6 +27,7 @@ from .models import (
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
     CountryResponse,
+    T212ExportTransaction,
 )
 from .repository import (
     AccountBalanceRepository,
@@ -384,7 +388,7 @@ class FinanceService(BaseUserService):
 
         to_date = dt.datetime.now() - dt.timedelta(minutes=30)
         from_date = to_date - dt.timedelta(weeks=52)
-        res = t212_api.export_csv(
+        export_res = t212_api.export_csv(
             include_dividends=True,
             include_interest=True,
             include_orders=True,
@@ -393,7 +397,22 @@ class FinanceService(BaseUserService):
             to_date=to_date,
         )
 
-        report_id = res.reportId
+        report_id = export_res.reportId
+
+        exports_res = t212_api.get_exports()
+        # Get the report with reportId = report_id
+        for r in exports_res:
+            if r.reportId == report_id:
+                report = r
+                break
+
+        file_res = requests.get(report.downloadLink, stream=True)
+
+        text_io = StringIO(file_res.text)
+        csv_reader = csv.reader(text_io)
+        data = list(csv_reader)
+
+        transactions = [T212ExportTransaction.from_csv(row) for row in data[1:]]
 
     def get_bank_transactions(
         self, request: BankTransactionFilterRequest

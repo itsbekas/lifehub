@@ -211,3 +211,8 @@ class ExportCSVRequest:
     dataIncluded: ExportCSVDataIncluded
     timeFrom: str
     timeTo: str
+
+
+@dataclass
+class ExportCSVResponse:
+    reportId: int
