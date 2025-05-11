@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.user.api.dependencies import user_is_authenticated
 
-from .dependencies import BudgetServiceDep, FinanceServiceDep
+from .dependencies import BudgetServiceDep, FilterServiceDep, FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
@@ -77,25 +77,25 @@ async def get_bank_transactions(
 
 @router.get("/bank/transactions/filters")
 async def get_bank_transactions_filters(
-    finance_service: FinanceServiceDep,
+    filter_service: FilterServiceDep,
 ) -> list[BankTransactionFilterResponse]:
-    return finance_service.get_bank_transactions_filters()
+    return filter_service.get_bank_transactions_filters()
 
 
 @router.post("/bank/transactions/filters")
 async def create_bank_transactions_filter(
-    finance_service: FinanceServiceDep, data: BankTransactionFilterRequest
+    filter_service: FilterServiceDep, data: BankTransactionFilterRequest
 ) -> BankTransactionFilterResponse:
-    return finance_service.create_bank_transactions_filter(data)
+    return filter_service.create_bank_transactions_filter(data)
 
 
 @router.put("/bank/transactions/filters/{filter_id}")
 async def update_bank_transactions_filter(
-    finance_service: FinanceServiceDep,
+    filter_service: FilterServiceDep,
     filter_id: str,
     data: BankTransactionFilterRequest,
 ) -> BankTransactionFilterResponse:
-    return finance_service.update_bank_transactions_filter(uuid.UUID(filter_id), data)
+    return filter_service.update_bank_transactions_filter(uuid.UUID(filter_id), data)
 
 
 @router.put("/bank/{account_id}/transactions/{transaction_id}")
