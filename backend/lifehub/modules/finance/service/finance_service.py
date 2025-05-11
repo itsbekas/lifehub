@@ -1,26 +1,21 @@
-import csv
 import datetime as dt
-import time
 import uuid
 from decimal import Decimal
-from io import StringIO
 from typing import Optional
 
-import requests
 from sqlalchemy.orm import Session
 
 from lifehub.config.constants import cfg
-from lifehub.core.common.base.api_client import APIException
 from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
+from lifehub.modules.finance.service.t212_service import Trading212Service
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
-from lifehub.providers.trading212.api_client import Trading212APIClient
 
-from .models import (
+from ..models import (
     BankBalanceResponse,
     BankInstitutionResponse,
     BankTransactionFilterRequest,
@@ -29,9 +24,8 @@ from .models import (
     BudgetCategoryResponse,
     BudgetSubCategoryResponse,
     CountryResponse,
-    T212ExportTransaction,
 )
-from .repository import (
+from ..repository import (
     AccountBalanceRepository,
     BankAccountRepository,
     BankTransactionFilterRepository,
@@ -39,7 +33,7 @@ from .repository import (
     BudgetCategoryRepository,
     BudgetSubCategoryRepository,
 )
-from .schema import (
+from ..schema import (
     AccountBalance,
     BankAccount,
     BankTransaction,
@@ -56,10 +50,23 @@ class FinanceServiceException(ServiceException):
 
 
 class FinanceService(BaseUserService):
+    _encryption_service: EncryptionService | None = None
+    _trading212_service: Trading212Service | None = None
+
     def __init__(self, session: Session, user: User):
         super().__init__(session, user)
-        self.encryption_service = EncryptionService(session, user)
-        self.e = self.encryption_service
+
+    @property
+    def encryption_service(self) -> EncryptionService:
+        if self._encryption_service is None:
+            self._encryption_service = EncryptionService(self.session, self.user)
+        return self._encryption_service
+
+    @property
+    def trading212_service(self) -> Trading212Service:
+        if self._trading212_service is None:
+            self._trading212_service = Trading212Service(self.session, self.user)
+        return self._trading212_service
 
     def _fetch_new_balance(self, account: BankAccount) -> BankBalanceResponse:
         """
@@ -68,52 +75,9 @@ class FinanceService(BaseUserService):
         institution_id = self.encryption_service.decrypt_data(account.institution_id)
         match institution_id:
             case "trading212":
-                return self._fetch_trading212_balance(account)
+                return self.trading212_service.fetch_balance(account)
             case _:
                 return self._fetch_gocardless_balance(account)
-
-    def _fetch_trading212_balance(self, account: BankAccount) -> BankBalanceResponse:
-        """
-        Fetches the latest balance from Trading212 and stores it in the database.
-        If the local balance is less than an hour old, it will be returned instead.
-        """
-        t212_api = Trading212APIClient(self.user, self.session)
-        balance_repo = AccountBalanceRepository(self.user, self.session)
-
-        db_balance = balance_repo.get_by_account_id(account.id)
-
-        if db_balance is not None and not account.synced_before(hours=1):
-            # Local balance is updated
-            balance = db_balance
-            balance_amount = float(self.encryption_service.decrypt_data(balance.amount))
-        else:
-            api_balance = t212_api.get_account_cash()
-            if api_balance is None:
-                raise FinanceServiceException(500, "Balance not found")
-
-            balance_amount = float(api_balance.free)
-            encrypted_balance = self.encryption_service.encrypt_data(
-                str(api_balance.free)
-            )
-
-            if db_balance is None:
-                balance = AccountBalance(
-                    user_id=self.user.id,
-                    account_id=account.id,
-                    amount=encrypted_balance,
-                )
-                balance_repo.add(balance)
-            else:
-                db_balance.amount = encrypted_balance
-                balance = db_balance
-
-        res = BankBalanceResponse(
-            bank="trading212",
-            account_id=str(account.id),
-            balance=balance_amount,
-        )
-        self.session.commit()
-        return res
 
     def _fetch_gocardless_balance(self, account: BankAccount) -> BankBalanceResponse:
         """
@@ -153,7 +117,7 @@ class FinanceService(BaseUserService):
                 balance = db_balance
 
         res = BankBalanceResponse(
-            bank=self.e.decrypt_data(account.institution_id),
+            bank=self.encryption_service.decrypt_data(account.institution_id),
             account_id=str(account.id),
             balance=balance_amount,
         )
@@ -210,8 +174,10 @@ class FinanceService(BaseUserService):
                 BankAccount(
                     user_id=self.user.id,
                     account_id=encrypted_account_id,
-                    institution_id=self.e.encrypt_data(requisition.institution_id),
-                    requisition_id=self.e.encrypt_data(ref),
+                    institution_id=self.encryption_service.encrypt_data(
+                        requisition.institution_id
+                    ),
+                    requisition_id=self.encryption_service.encrypt_data(ref),
                 )
             )
 
@@ -305,7 +271,7 @@ class FinanceService(BaseUserService):
         institution_id = self.encryption_service.decrypt_data(account.institution_id)
         match institution_id:
             case "trading212":
-                self._fetch_trading212_transactions(account)
+                self.trading212_service.fetch_new_transactions(account)
             case _:
                 self._fetch_gocardless_transactions(account)
 
@@ -385,127 +351,6 @@ class FinanceService(BaseUserService):
 
         self.session.commit()
 
-    def _fetch_trading212_transactions(self, account: BankAccount) -> None:
-        t212_api = Trading212APIClient(self.user, self.session)
-
-        to_date = dt.datetime.now()
-        from_date = to_date - dt.timedelta(weeks=52)
-        export_res = t212_api.export_csv(
-            include_dividends=True,
-            include_interest=True,
-            include_orders=True,
-            include_transactions=True,
-            from_date=from_date,
-            to_date=to_date,
-        )
-
-        report_id = export_res.reportId
-
-        try:
-            time.sleep(3)  # Wait for the export to be generated
-            exports_res = t212_api.get_exports()
-        except APIException as e:
-            if e.status_code == 429:
-                time.sleep(60)
-                exports_res = t212_api.get_exports()
-            else:
-                raise e
-
-        # Get the report with reportId = report_id
-        dl_link = None
-        for r in exports_res:
-            if r.reportId == report_id:
-                dl_link = r.downloadLink
-                break
-
-        if not dl_link:
-            time.sleep(60)
-            exports_res = t212_api.get_exports()
-            for r in exports_res:
-                if r.reportId == report_id:
-                    dl_link = r.downloadLink
-                    break
-
-        if not dl_link:
-            return
-
-        file_res = requests.get(dl_link, stream=True)
-
-        text_io = StringIO(file_res.text)
-        csv_reader = csv.reader(text_io)
-        data = list(csv_reader)
-
-        exported_transactions = [
-            T212ExportTransaction.from_csv(row) for row in data[1:]
-        ]
-
-        transactions = []
-        for t in exported_transactions:
-            new_t = BankTransaction(
-                user_id=self.user.id,
-                transaction_id=t.id,
-                account_id=account.id,
-                date=dt.datetime.fromisoformat(t.time),
-            )
-
-            description = None
-            counterparty = None
-            amount = 0.0  # Set separately to handle deposits
-
-            match t.action:
-                case "Deposit":
-                    amount = t.total
-                    description = f"{t.action} ({t.notes})"
-                case "Card debit":
-                    amount = -t.total
-                    description = (
-                        f"{t.merchant_name} ({t.notes})" if t.notes else t.merchant_name
-                    )
-                    counterparty = t.merchant_name
-                case "Card credit":
-                    amount = t.total
-                    description = (
-                        f"{t.merchant_name} ({t.notes})" if t.notes else t.merchant_name
-                    )
-                    counterparty = t.merchant_name
-                case "Spending cashback":
-                    amount = t.total
-                    description = t.action
-                case "Interest on cash":
-                    amount = t.total
-                    description = t.action
-                case "Lending interest":
-                    amount = t.total
-                    description = t.notes
-                case "Market buy":
-                    amount = -t.total
-                    description = f"{t.action} ({t.ticker})"
-                    counterparty = f"{t.name} ({t.ticker})"
-                case "Market sell":
-                    amount = t.total
-                    description = f"{t.action} ({t.ticker})"
-                    counterparty = f"{t.name} ({t.ticker})"
-                case "Dividend (Dividend)":
-                    amount = t.total
-                    description = t.action
-                    counterparty = f"{t.name} ({t.ticker})"
-                case _:
-                    pass
-
-            if description is not None:
-                new_t.description = self.e.encrypt_data(description)
-            if counterparty is not None:
-                new_t.counterparty = self.e.encrypt_data(counterparty)
-            new_t.amount = self.e.encrypt_data(str(amount))
-
-            transactions.append(new_t)
-
-        account.last_synced = dt.datetime.now()
-        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        bank_transaction_repo.add_all(transactions)
-
-        self.session.commit()
-
     def get_bank_transactions(
         self, request: BankTransactionFilterRequest
     ) -> PaginatedResponse[BankTransactionResponse]:
@@ -540,11 +385,15 @@ class FinanceService(BaseUserService):
             BankTransactionResponse(
                 id=str(transaction.id),
                 account_id=str(transaction.account_id),
-                amount=float(self.e.decrypt_data(transaction.amount)),
+                amount=float(self.encryption_service.decrypt_data(transaction.amount)),
                 date=transaction.date,
-                description=self.e.decrypt_data(transaction.user_description)
-                or self.e.decrypt_data(transaction.description),
-                counterparty=self.e.decrypt_data(transaction.counterparty),
+                description=self.encryption_service.decrypt_data(
+                    transaction.user_description
+                )
+                or self.encryption_service.decrypt_data(transaction.description),
+                counterparty=self.encryption_service.decrypt_data(
+                    transaction.counterparty
+                ),
                 subcategory_id=str(transaction.subcategory_id)
                 if transaction.subcategory_id
                 else None,
@@ -574,21 +423,23 @@ class FinanceService(BaseUserService):
         if db_t is None:
             raise FinanceServiceException(404, "Transaction not found")
         if user_description is not None:
-            db_t.user_description = self.e.encrypt_data(user_description)
+            db_t.user_description = self.encryption_service.encrypt_data(
+                user_description
+            )
         if subcategory_id is not None:
             db_t.subcategory_id = uuid.UUID(subcategory_id)
         if amount is not None:
-            db_t.amount = self.e.encrypt_data(str(amount))
+            db_t.amount = self.encryption_service.encrypt_data(str(amount))
 
         self.session.commit()
 
         description = (
             user_description
-            or self.e.decrypt_data(db_t.user_description)
-            or self.e.decrypt_data(db_t.description)
+            or self.encryption_service.decrypt_data(db_t.user_description)
+            or self.encryption_service.decrypt_data(db_t.description)
         )
-        counterparty = self.e.decrypt_data(db_t.counterparty)
-        amount = amount or float(self.e.decrypt_data(db_t.amount))
+        counterparty = self.encryption_service.decrypt_data(db_t.counterparty)
+        amount = amount or float(self.encryption_service.decrypt_data(db_t.amount))
 
         return BankTransactionResponse(
             id=str(db_t.id),
@@ -613,9 +464,11 @@ class FinanceService(BaseUserService):
                 subcategories.append(
                     BudgetSubCategoryResponse(
                         id=str(subcategory.id),
-                        name=self.e.decrypt_data(subcategory.name),
+                        name=self.encryption_service.decrypt_data(subcategory.name),
                         category_id=str(category.id),
-                        category_name=self.e.decrypt_data(category.name),
+                        category_name=self.encryption_service.decrypt_data(
+                            category.name
+                        ),
                         budgeted=budgeted,
                         spent=spent,
                         available=available,
@@ -624,7 +477,7 @@ class FinanceService(BaseUserService):
             categories.append(
                 BudgetCategoryResponse(
                     id=str(category.id),
-                    name=self.e.decrypt_data(category.name),
+                    name=self.encryption_service.decrypt_data(category.name),
                     subcategories=subcategories,
                 )
             )
@@ -636,13 +489,13 @@ class FinanceService(BaseUserService):
         """
         category = BudgetCategory(
             user_id=self.user.id,
-            name=self.e.encrypt_data(name),
+            name=self.encryption_service.encrypt_data(name),
         )
         self.user.budget_categories.append(category)
         self.session.commit()
         return BudgetCategoryResponse(
             id=str(category.id),
-            name=self.e.decrypt_data(category.name),
+            name=self.encryption_service.decrypt_data(category.name),
             subcategories=[],
         )
 
@@ -663,9 +516,9 @@ class FinanceService(BaseUserService):
             subcategories.append(
                 BudgetSubCategoryResponse(
                     id=str(subcategory.id),
-                    name=self.e.decrypt_data(subcategory.name),
+                    name=self.encryption_service.decrypt_data(subcategory.name),
                     category_id=str(category.id),
-                    category_name=self.e.decrypt_data(category.name),
+                    category_name=self.encryption_service.decrypt_data(category.name),
                     budgeted=budgeted,
                     spent=spent,
                     available=available,
@@ -674,7 +527,7 @@ class FinanceService(BaseUserService):
 
         return BudgetCategoryResponse(
             id=str(category.id),
-            name=self.e.decrypt_data(category.name),
+            name=self.encryption_service.decrypt_data(category.name),
             subcategories=subcategories,
         )
 
@@ -689,7 +542,7 @@ class FinanceService(BaseUserService):
         )
         if category is None:
             raise FinanceServiceException(404, "Category not found")
-        category.name = self.e.encrypt_data(name)
+        category.name = self.encryption_service.encrypt_data(name)
         self.session.commit()
         return BudgetCategoryResponse(id=str(category.id), name=name, subcategories=[])
 
@@ -724,9 +577,9 @@ class FinanceService(BaseUserService):
             subcategories.append(
                 BudgetSubCategoryResponse(
                     id=str(subcategory.id),
-                    name=self.e.decrypt_data(subcategory.name),
+                    name=self.encryption_service.decrypt_data(subcategory.name),
                     category_id=str(category.id),
-                    category_name=self.e.decrypt_data(category.name),
+                    category_name=self.encryption_service.decrypt_data(category.name),
                     budgeted=budgeted,
                     spent=spent,
                     available=available,
@@ -749,14 +602,14 @@ class FinanceService(BaseUserService):
         subcategory = BudgetSubCategory(
             user_id=self.user.id,
             category_id=category.id,
-            name=self.e.encrypt_data(name),
-            amount=self.e.encrypt_data(str(Decimal(amount))),
+            name=self.encryption_service.encrypt_data(name),
+            amount=self.encryption_service.encrypt_data(str(Decimal(amount))),
         )
         category.subcategories.append(subcategory)
         self.session.commit()
 
         # Fetch budgeted amount
-        budgeted = float(self.e.decrypt_data(subcategory.amount))
+        budgeted = float(self.encryption_service.decrypt_data(subcategory.amount))
 
         # Initially, there are no transactions, so spent is 0 and available equals the budgeted amount
         spent = 0.0
@@ -764,9 +617,9 @@ class FinanceService(BaseUserService):
 
         return BudgetSubCategoryResponse(
             id=str(subcategory.id),
-            name=self.e.decrypt_data(subcategory.name),
+            name=self.encryption_service.decrypt_data(subcategory.name),
             category_id=str(category.id),
-            category_name=self.e.decrypt_data(category.name),
+            category_name=self.encryption_service.decrypt_data(category.name),
             budgeted=budgeted,
             spent=spent,
             available=available,
@@ -783,17 +636,19 @@ class FinanceService(BaseUserService):
         )
         if subcategory is None:
             raise FinanceServiceException(404, "Subcategory not found")
-        subcategory.name = self.e.encrypt_data(name)
-        subcategory.amount = self.e.encrypt_data(str(Decimal(amount)))
+        subcategory.name = self.encryption_service.encrypt_data(name)
+        subcategory.amount = self.encryption_service.encrypt_data(str(Decimal(amount)))
         self.session.commit()
 
         budgeted, spent, available = self._get_budget_status(subcategory.id)
 
         return BudgetSubCategoryResponse(
             id=str(subcategory.id),
-            name=self.e.decrypt_data(subcategory.name),
+            name=self.encryption_service.decrypt_data(subcategory.name),
             category_id=str(subcategory.category_id),
-            category_name=self.e.decrypt_data(subcategory.category.name),
+            category_name=self.encryption_service.decrypt_data(
+                subcategory.category.name
+            ),
             budgeted=budgeted,
             spent=spent,
             available=available,
@@ -865,7 +720,7 @@ class FinanceService(BaseUserService):
             raise FinanceServiceException(404, "Subcategory not found")
 
         # Fetch budgeted amount
-        budgeted = float(self.e.decrypt_data(subcategory.amount))
+        budgeted = float(self.encryption_service.decrypt_data(subcategory.amount))
 
         # Calculate spent amount
         transactions = self._get_current_month_transactions_by_subcategory(

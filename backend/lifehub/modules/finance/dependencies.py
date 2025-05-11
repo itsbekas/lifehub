@@ -4,7 +4,7 @@ from fastapi import Depends
 
 from lifehub.core.common.api.dependencies import SessionDep
 from lifehub.core.user.api.dependencies import UserDep
-from lifehub.modules.finance.service import FinanceService
+from lifehub.modules.finance.service.finance_service import FinanceService
 
 
 def get_finance_service(session: SessionDep, user: UserDep) -> FinanceService:
