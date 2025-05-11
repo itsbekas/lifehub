@@ -141,7 +141,7 @@ class T212ExportTransaction:
     merchant_name: Optional[str]
     merchant_category: Optional[str]
 
-    @classmethod
+    @staticmethod
     def from_csv(row: list[str]) -> T212ExportTransaction:
         return T212ExportTransaction(
             action=row[0],
@@ -154,7 +154,9 @@ class T212ExportTransaction:
             no_shares=float(row[7]) if row[7] else None,
             share_price=float(row[8]) if row[8] else None,
             currency=row[9],
-            exchange_rate=float(row[10]) if row[10] else None,
+            exchange_rate=float(row[10])
+            if row[10] and row[10] != "Not available"
+            else None,
             result=float(row[11]) if row[11] else None,
             result_currency=row[12],
             total=float(row[13]),

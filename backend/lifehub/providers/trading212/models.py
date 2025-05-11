@@ -203,7 +203,7 @@ class ExportResponse:
     timeTo: str
     dataIncluded: ExportCSVDataIncluded
     status: str
-    downloadLink: str
+    downloadLink: Optional[str]
 
 
 @dataclass

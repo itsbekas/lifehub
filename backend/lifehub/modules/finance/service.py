@@ -1,5 +1,6 @@
 import csv
 import datetime as dt
+import time
 import uuid
 from decimal import Decimal
 from io import StringIO
@@ -9,6 +10,7 @@ import requests
 from sqlalchemy.orm import Session
 
 from lifehub.config.constants import cfg
+from lifehub.core.common.base.api_client import APIException
 from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
@@ -386,7 +388,7 @@ class FinanceService(BaseUserService):
     def _fetch_trading212_transactions(self, account: BankAccount) -> None:
         t212_api = Trading212APIClient(self.user, self.session)
 
-        to_date = dt.datetime.now() - dt.timedelta(minutes=30)
+        to_date = dt.datetime.now()
         from_date = to_date - dt.timedelta(weeks=52)
         export_res = t212_api.export_csv(
             include_dividends=True,
@@ -399,20 +401,110 @@ class FinanceService(BaseUserService):
 
         report_id = export_res.reportId
 
-        exports_res = t212_api.get_exports()
+        try:
+            time.sleep(3)  # Wait for the export to be generated
+            exports_res = t212_api.get_exports()
+        except APIException as e:
+            if e.status_code == 429:
+                time.sleep(60)
+                exports_res = t212_api.get_exports()
+            else:
+                raise e
+
         # Get the report with reportId = report_id
+        dl_link = None
         for r in exports_res:
             if r.reportId == report_id:
-                report = r
+                dl_link = r.downloadLink
                 break
 
-        file_res = requests.get(report.downloadLink, stream=True)
+        if not dl_link:
+            time.sleep(60)
+            exports_res = t212_api.get_exports()
+            for r in exports_res:
+                if r.reportId == report_id:
+                    dl_link = r.downloadLink
+                    break
+
+        if not dl_link:
+            return
+
+        file_res = requests.get(dl_link, stream=True)
 
         text_io = StringIO(file_res.text)
         csv_reader = csv.reader(text_io)
         data = list(csv_reader)
 
-        transactions = [T212ExportTransaction.from_csv(row) for row in data[1:]]
+        exported_transactions = [
+            T212ExportTransaction.from_csv(row) for row in data[1:]
+        ]
+
+        transactions = []
+        for t in exported_transactions:
+            new_t = BankTransaction(
+                user_id=self.user.id,
+                transaction_id=t.id,
+                account_id=account.id,
+                date=dt.datetime.fromisoformat(t.time),
+            )
+
+            description = None
+            counterparty = None
+            amount = 0.0  # Set separately to handle deposits
+
+            match t.action:
+                case "Deposit":
+                    amount = t.total
+                    description = f"{t.action} ({t.notes})"
+                case "Card debit":
+                    amount = -t.total
+                    description = (
+                        f"{t.merchant_name} ({t.notes})" if t.notes else t.merchant_name
+                    )
+                    counterparty = t.merchant_name
+                case "Card credit":
+                    amount = t.total
+                    description = (
+                        f"{t.merchant_name} ({t.notes})" if t.notes else t.merchant_name
+                    )
+                    counterparty = t.merchant_name
+                case "Spending cashback":
+                    amount = t.total
+                    description = t.action
+                case "Interest on cash":
+                    amount = t.total
+                    description = t.action
+                case "Lending interest":
+                    amount = t.total
+                    description = t.notes
+                case "Market buy":
+                    amount = -t.total
+                    description = f"{t.action} ({t.ticker})"
+                    counterparty = f"{t.name} ({t.ticker})"
+                case "Market sell":
+                    amount = t.total
+                    description = f"{t.action} ({t.ticker})"
+                    counterparty = f"{t.name} ({t.ticker})"
+                case "Dividend (Dividend)":
+                    amount = t.total
+                    description = t.action
+                    counterparty = f"{t.name} ({t.ticker})"
+                case _:
+                    pass
+
+            if description is not None:
+                new_t.description = self.e.encrypt_data(description)
+            if counterparty is not None:
+                new_t.counterparty = self.e.encrypt_data(counterparty)
+            new_t.amount = self.e.encrypt_data(str(amount))
+
+            transactions.append(new_t)
+
+        account.last_synced = dt.datetime.now()
+        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
+        bank_transaction_repo.add_all(transactions)
+
+        self.session.commit()
 
     def get_bank_transactions(
         self, request: BankTransactionFilterRequest

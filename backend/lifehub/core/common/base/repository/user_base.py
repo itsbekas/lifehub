@@ -19,6 +19,13 @@ class UserBaseRepository(BaseRepository[UserBaseModelType]):
             super().add(obj)
         else:
             raise ValueError("User ID does not match")
+    
+    def add_all(self, objs: list[UserBaseModelType]) -> None:
+        for obj in objs:
+            if obj.user_id == self.user.id:
+                super().add(obj)
+            else:
+                raise ValueError("User ID does not match")
 
     def get_one_or_none(self) -> UserBaseModelType | None:
         statement = select(self.model).where(self.model.user_id == self.user.id)
