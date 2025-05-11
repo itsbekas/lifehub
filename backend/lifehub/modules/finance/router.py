@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.user.api.dependencies import user_is_authenticated
 
-from .dependencies import FinanceServiceDep
+from .dependencies import BudgetServiceDep, FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
@@ -131,77 +131,77 @@ async def get_banks(
 
 @router.get("/budget/categories")
 async def get_budget_categories(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
 ) -> list[BudgetCategoryResponse]:
-    return finance_service.get_budget_categories()
+    return budget_service.get_budget_categories()
 
 
 @router.post("/budget/categories")
 async def create_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     budget_category: BudgetCategoryRequest,
 ) -> BudgetCategoryResponse:
-    return finance_service.create_budget_category(budget_category.name)
+    return budget_service.create_budget_category(budget_category.name)
 
 
 @router.get("/budget/categories/{category_id}")
 async def get_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
 ) -> BudgetCategoryResponse:
-    return finance_service.get_budget_category(uuid.UUID(category_id))
+    return budget_service.get_budget_category(uuid.UUID(category_id))
 
 
 @router.put("/budget/categories/{category_id}")
 async def update_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
     name: str,
 ) -> BudgetCategoryResponse:
-    return finance_service.update_budget_category(uuid.UUID(category_id), name)
+    return budget_service.update_budget_category(uuid.UUID(category_id), name)
 
 
 @router.delete("/budget/categories/{category_id}")
 async def delete_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
 ) -> None:
-    finance_service.delete_budget_category(uuid.UUID(category_id))
+    budget_service.delete_budget_category(uuid.UUID(category_id))
 
 
 @router.get("/budget/categories/{category_id}/subcategories")
 async def get_budget_subcategories(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
 ) -> list[BudgetSubCategoryResponse]:
-    return finance_service.get_budget_subcategories(uuid.UUID(category_id))
+    return budget_service.get_budget_subcategories(uuid.UUID(category_id))
 
 
 @router.post("/budget/categories/{category_id}/subcategories")
 async def create_budget_subcategory(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
     data: BudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.create_budget_subcategory(
+    return budget_service.create_budget_subcategory(
         uuid.UUID(category_id), data.name, data.amount
     )
 
 
 @router.put("/budget/subcategories/{subcategory_id}")
 async def update_budget_subcategory(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     subcategory_id: str,
     data: BudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.update_budget_subcategory(
+    return budget_service.update_budget_subcategory(
         uuid.UUID(subcategory_id), data.name, data.amount
     )
 
 
 @router.delete("/budget/subcategories/{subcategory_id}")
 async def delete_budget_subcategory(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     subcategory_id: str,
 ) -> None:
-    finance_service.delete_budget_subcategory(uuid.UUID(subcategory_id))
+    budget_service.delete_budget_subcategory(uuid.UUID(subcategory_id))
