@@ -12,7 +12,6 @@ from lifehub.modules.finance.models import (
 )
 from lifehub.modules.finance.repository import BankTransactionFilterRepository
 from lifehub.modules.finance.schema import BankTransaction, BankTransactionFilter
-from lifehub.modules.finance.service.finance_service import FinanceServiceException
 
 
 class FilterServiceException(ServiceException):
@@ -81,7 +80,7 @@ class FilterService(BaseUserService):
         )
         filter = bank_transaction_filters_repo.get_by_id(filter_id)
         if filter is None:
-            raise FinanceServiceException(404, "Filter not found")
+            raise FilterServiceException(404, "Filter not found")
         filter.description = (
             data.description if data.description else filter.description
         )
