@@ -61,6 +61,9 @@ class ConfigManager:
             "VAULT_TRANSIT_MOUNT_POINT": "transit/lifehub",
             "ADMIN_USERNAME": "admin",
             "VAULT_ADDR": self._getenv("VAULT_ADDR"),
+            "REDIS_HOST": self._getenv("REDIS_HOST"),
+            "REDIS_PORT": self._getenv("REDIS_PORT"),
+            "REDIS_PASSWORD": self._getenv("REDIS_PASSWORD"),
         }
 
         self.redis_client.hset("config", mapping=env_config)

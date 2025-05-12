@@ -56,6 +56,7 @@ export type Country = {
 
 export type Bank = {
   id: string;
+  type: string;
   name: string;
   logo: string;
 };
@@ -213,6 +214,34 @@ export const useAddBankAccount = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.balances() });
+    },
+  });
+};
+
+export const useAddTokenBankAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (bank_id: string) => {
+      await api.post(`/finance/bank/add?bank_id=${bank_id}`);
+    },
+    onSuccess: () => {
+      // Invalidate balances to refresh the data
+      queryClient.invalidateQueries({ queryKey: financeKeys.balances() });
+
+      // Invalidate both regular and paginated transaction queries
+      queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey as unknown[];
+          return (
+            queryKey.length > 2 &&
+            queryKey[0] === "finance" &&
+            queryKey[1] === "transactions" &&
+            typeof queryKey[2] === "object"
+          );
+        },
+      });
     },
   });
 };

@@ -107,7 +107,7 @@ class BudgetCategory(UserBaseModel):
     name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
 
     subcategories: Mapped[list[BudgetSubCategory]] = relationship(
-        back_populates="category"
+        back_populates="category", cascade="all, delete-orphan"
     )
 
 
@@ -118,7 +118,7 @@ class BudgetSubCategory(UserBaseModel):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     category_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("budget_category.id")
+        UUID(as_uuid=True), ForeignKey("budget_category.id", ondelete="CASCADE")
     )
     name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
     amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal

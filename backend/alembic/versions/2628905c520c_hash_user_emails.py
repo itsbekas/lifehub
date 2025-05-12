@@ -26,35 +26,44 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     # Add email_hash column
-    op.add_column(
-        "user", sa.Column("email_hash", sa.String(64), nullable=True, unique=True)
-    )
+    with op.get_context().autocommit_block():
+        conn = op.get_bind()
+        insp = sa.inspect(conn)
+        if not insp.has_table("user") or "email_hash" not in [
+            col["name"] for col in insp.get_columns("user")
+        ]:
+            op.add_column(
+                "user",
+                sa.Column("email_hash", sa.String(64), nullable=True, unique=True),
+            )
 
-    # Get a database connection and create a session
-    connection = op.get_bind()
-    Session = sessionmaker(bind=connection)
-    session = Session()
+            # Get a database connection and create a session
+            connection = op.get_bind()
+            Session = sessionmaker(bind=connection)
+            session = Session()
 
-    try:
-        # Update email_hash for all users
-        for user in session.query(User).all():
-            encryption_service = EncryptionService(session, user)
-            email = encryption_service.decrypt_data(user.email)
-            email_hash = EncryptionService.hmac(email.lower(), cfg.EMAIL_SECRET_KEY)
+            try:
+                # Update email_hash for all users
+                for user in session.query(User).all():
+                    encryption_service = EncryptionService(session, user)
+                    email = encryption_service.decrypt_data(user.email)
+                    email_hash = EncryptionService.hmac(
+                        email.lower(), cfg.EMAIL_SECRET_KEY
+                    )
 
-            user.email_hash = email_hash
-            session.commit()
+                    user.email_hash = email_hash
+                    session.commit()
 
-        # Make email_hash non-nullable
-        op.alter_column(
-            "user", "email_hash", existing_type=sa.String(64), nullable=False
-        )
+                # Make email_hash non-nullable
+                op.alter_column(
+                    "user", "email_hash", existing_type=sa.String(64), nullable=False
+                )
 
-    except Exception as e:
-        session.rollback()
-        raise e
-    finally:
-        session.close()
+            except Exception as e:
+                session.rollback()
+                raise e
+            finally:
+                session.close()
 
 
 def downgrade() -> None:

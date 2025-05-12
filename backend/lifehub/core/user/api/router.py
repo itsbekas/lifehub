@@ -5,12 +5,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from lifehub.core.user.api.dependencies import UserDep, UserServiceDep
 from lifehub.core.user.models import (
+    CreateUserRequest,
+    LoginUserRequest,
     UpdateUserRequest,
-    UserCreateRequest,
-    UserLoginRequest,
     UserResponse,
     UserTokenResponse,
-    UserVerifyRequest,
+    VerifyUserRequest,
 )
 
 router = APIRouter()
@@ -30,7 +30,7 @@ async def user_api_login(
 # Used to login in the frontend
 @router.post("/login")
 async def user_login(
-    user_data: UserLoginRequest,
+    user_data: LoginUserRequest,
     user_service: UserServiceDep,
 ) -> UserTokenResponse:
     user = user_service.login_user(user_data.username, user_data.password)
@@ -40,7 +40,7 @@ async def user_login(
 
 @router.post("/signup")
 async def user_signup(
-    user_data: UserCreateRequest,
+    user_data: CreateUserRequest,
     user_service: UserServiceDep,
 ) -> None:
     user_service.create_user(
@@ -71,7 +71,7 @@ async def delete_user(user: UserDep, user_service: UserServiceDep) -> None:
 
 @router.post("/verify-email")
 async def verify_user(
-    token: UserVerifyRequest,
+    token: VerifyUserRequest,
     user_service: UserServiceDep,
 ) -> UserTokenResponse:
     user = user_service.verify_user(token.token)

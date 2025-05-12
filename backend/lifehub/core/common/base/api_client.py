@@ -96,21 +96,16 @@ def request_handler(func: T) -> T:
                 if res.status_code == 429:
                     retry_after = int(res.headers.get("Retry-After", delay))
                     exponential_backoff(attempt, retry_after)
-                    continue
+                    res.raise_for_status()
                 if not (200 <= res.status_code < 300):
-                    raise APIException(
-                        type(self).__name__, url, res.status_code, self._error_msg(res)
-                    )
+                    res.raise_for_status()
                 if res.status_code == 204:
                     return None
                 return res.json()
             except requests.exceptions.RequestException as e:
                 if attempt == max_retries - 1:
                     raise APIException(
-                        type(self).__name__,
-                        url,
-                        500,
-                        f"Error accessing {self.base_url}: {str(e)}",
+                        type(self).__name__, url, res.status_code, str(e)
                     )
 
     return cast(T, wrapper)
@@ -250,10 +245,11 @@ class APIClient(ABC):
         endpoint: str,
         params: Optional[RequestParams] = None,
         data: Optional[RequestParams] = None,
+        json: Optional[RequestParams] = None,
         headers: Optional[dict[str, str]] = None,
     ) -> Any:
         return self._request(
-            "POST", endpoint, params=params, data=data, headers=headers
+            "POST", endpoint, params=params, data=data, json=json, headers=headers
         )
 
     def _put(

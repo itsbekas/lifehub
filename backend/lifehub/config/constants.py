@@ -16,6 +16,11 @@ class Config:
     __instance: Config | None = None
     redis_client: redis.Redis
 
+    # Redis Config
+    REDIS_HOST: str
+    REDIS_PORT: int
+    REDIS_PASSWORD: str
+
     # Type hints for IDE support
     ENVIRONMENT: str
     UVICORN_HOST: str

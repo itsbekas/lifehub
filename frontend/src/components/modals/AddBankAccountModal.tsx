@@ -1,11 +1,23 @@
 import { useState, useEffect } from "react";
 import { useDisclosure } from "@mantine/hooks";
-import { Modal, Button, Group, Select, Text, Loader } from "@mantine/core";
+import {
+  Modal,
+  Button,
+  Group,
+  Select,
+  Text,
+  Loader,
+  Alert,
+} from "@mantine/core";
+import { IconInfoCircle } from "@tabler/icons-react";
+import { Link } from "@tanstack/react-router";
 import {
   useAddBankAccount,
   useBanksByCountry,
   useCountries,
 } from "~/hooks/useFinanceQueries";
+import { useProviders } from "~/hooks/useUserProviderQueries";
+import { useAddTokenBankAccount } from "~/hooks/useFinanceQueries";
 
 export function AddBankAccountModal() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -18,23 +30,42 @@ export function AddBankAccountModal() {
   // Fetch banks by selected country
   const banksByCountryQuery = useBanksByCountry(selectedCountry);
 
-  const addBankAccount = useAddBankAccount();
+  const providersQuery = useProviders();
+  const addOAuthBankAccount = useAddBankAccount();
+  const addTokenBankAccount = useAddTokenBankAccount();
 
   // Reset selected bank when country changes
   useEffect(() => {
     setSelectedBank(null);
   }, [selectedCountry]);
 
+  const selectedBankData = banksByCountryQuery.data?.find(
+    (bank) => bank.id === selectedBank,
+  );
+
+  const hasRequiredProvider =
+    selectedBankData?.type === "oauth" ||
+    (selectedBankData?.type === "token" &&
+      providersQuery.data?.some((p) => p.id === selectedBankData.id));
+
   const handleSubmit = () => {
-    if (!selectedBank || !selectedCountry) {
+    if (!selectedBank || !selectedCountry || !hasRequiredProvider) {
       return;
     }
 
-    addBankAccount.mutate(selectedBank, {
-      onSuccess: (loginUrl) => {
-        window.location.href = loginUrl;
-      },
-    });
+    if (selectedBankData?.type === "oauth") {
+      addOAuthBankAccount.mutate(selectedBank, {
+        onSuccess: (loginUrl) => {
+          window.location.href = loginUrl;
+        },
+      });
+    } else if (selectedBankData?.type === "token") {
+      addTokenBankAccount.mutate(selectedBank, {
+        onSuccess: () => {
+          close();
+        },
+      });
+    }
   };
 
   return (
@@ -85,11 +116,42 @@ export function AddBankAccountModal() {
           />
         )}
 
+        {selectedBankData?.type === "token" && !hasRequiredProvider && (
+          <Alert
+            icon={<IconInfoCircle size="1rem" />}
+            title="Provider Required"
+            color="blue"
+            mb="md"
+          >
+            <Text mb="sm">
+              To connect this institution, you first need to set up your{" "}
+              {selectedBankData.name} provider.
+            </Text>
+            <Button
+              component={Link}
+              to="/settings"
+              onClick={() => close()}
+              variant="light"
+              color="blue"
+              size="xs"
+              fullWidth
+            >
+              Go to Provider Settings
+            </Button>
+          </Alert>
+        )}
+
         <Group align="right" mt="md">
           <Button variant="default" onClick={close}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={addBankAccount.isPending}>
+          <Button
+            onClick={handleSubmit}
+            loading={
+              addOAuthBankAccount.isPending || addTokenBankAccount.isPending
+            }
+            disabled={!hasRequiredProvider}
+          >
             Add
           </Button>
         </Group>

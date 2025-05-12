@@ -6,19 +6,21 @@ from fastapi import APIRouter, Depends
 from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.user.api.dependencies import user_is_authenticated
 
-from .dependencies import FinanceServiceDep
+from .dependencies import BudgetServiceDep, FilterServiceDep, FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
-    BankTransactionFilterRequest,
     BankTransactionFilterResponse,
     BankTransactionResponse,
-    BudgetCategoryRequest,
     BudgetCategoryResponse,
-    BudgetSubCategoryRequest,
     BudgetSubCategoryResponse,
     CountryResponse,
+    CreateBankTransactionFilterRequest,
+    CreateBudgetCategoryRequest,
+    CreateBudgetSubCategoryRequest,
+    GetBankTransactionsRequest,
     UpdateBankTransactionRequest,
+    UpdateBudgetSubCategoryRequest,
 )
 
 router = APIRouter(
@@ -32,6 +34,14 @@ async def get_bank_login(
     bank_id: str,
 ) -> str:
     return finance_service.get_bank_login(bank_id)
+
+
+@router.post("/bank/add")
+async def add_bank_account(
+    finance_service: FinanceServiceDep,
+    bank_id: str,
+) -> None:
+    return finance_service.add_bank_account(bank_id)
 
 
 @router.post("/bank/callback")
@@ -58,7 +68,7 @@ async def get_bank_transactions(
     description: Optional[str] = None,
 ) -> PaginatedResponse[BankTransactionResponse]:
     # Create a filter request from query parameters
-    request = BankTransactionFilterRequest(
+    request = GetBankTransactionsRequest(
         page=page,
         page_size=page_size,
         subcategory_id=subcategory_id,
@@ -69,25 +79,25 @@ async def get_bank_transactions(
 
 @router.get("/bank/transactions/filters")
 async def get_bank_transactions_filters(
-    finance_service: FinanceServiceDep,
+    filter_service: FilterServiceDep,
 ) -> list[BankTransactionFilterResponse]:
-    return finance_service.get_bank_transactions_filters()
+    return filter_service.get_bank_transactions_filters()
 
 
 @router.post("/bank/transactions/filters")
 async def create_bank_transactions_filter(
-    finance_service: FinanceServiceDep, data: BankTransactionFilterRequest
+    filter_service: FilterServiceDep, data: CreateBankTransactionFilterRequest
 ) -> BankTransactionFilterResponse:
-    return finance_service.create_bank_transactions_filter(data)
+    return filter_service.create_bank_transactions_filter(data)
 
 
 @router.put("/bank/transactions/filters/{filter_id}")
 async def update_bank_transactions_filter(
-    finance_service: FinanceServiceDep,
+    filter_service: FilterServiceDep,
     filter_id: str,
-    data: BankTransactionFilterRequest,
+    data: CreateBankTransactionFilterRequest,
 ) -> BankTransactionFilterResponse:
-    return finance_service.update_bank_transactions_filter(uuid.UUID(filter_id), data)
+    return filter_service.update_bank_transactions_filter(uuid.UUID(filter_id), data)
 
 
 @router.put("/bank/{account_id}/transactions/{transaction_id}")
@@ -123,77 +133,77 @@ async def get_banks(
 
 @router.get("/budget/categories")
 async def get_budget_categories(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
 ) -> list[BudgetCategoryResponse]:
-    return finance_service.get_budget_categories()
+    return budget_service.get_budget_categories()
 
 
 @router.post("/budget/categories")
 async def create_budget_category(
-    finance_service: FinanceServiceDep,
-    budget_category: BudgetCategoryRequest,
+    budget_service: BudgetServiceDep,
+    budget_category: CreateBudgetCategoryRequest,
 ) -> BudgetCategoryResponse:
-    return finance_service.create_budget_category(budget_category.name)
+    return budget_service.create_budget_category(budget_category.name)
 
 
 @router.get("/budget/categories/{category_id}")
 async def get_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
 ) -> BudgetCategoryResponse:
-    return finance_service.get_budget_category(uuid.UUID(category_id))
+    return budget_service.get_budget_category(uuid.UUID(category_id))
 
 
 @router.put("/budget/categories/{category_id}")
 async def update_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
     name: str,
 ) -> BudgetCategoryResponse:
-    return finance_service.update_budget_category(uuid.UUID(category_id), name)
+    return budget_service.update_budget_category(uuid.UUID(category_id), name)
 
 
 @router.delete("/budget/categories/{category_id}")
 async def delete_budget_category(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
 ) -> None:
-    finance_service.delete_budget_category(uuid.UUID(category_id))
+    budget_service.delete_budget_category(uuid.UUID(category_id))
 
 
 @router.get("/budget/categories/{category_id}/subcategories")
 async def get_budget_subcategories(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
 ) -> list[BudgetSubCategoryResponse]:
-    return finance_service.get_budget_subcategories(uuid.UUID(category_id))
+    return budget_service.get_budget_subcategories(uuid.UUID(category_id))
 
 
 @router.post("/budget/categories/{category_id}/subcategories")
 async def create_budget_subcategory(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     category_id: str,
-    data: BudgetSubCategoryRequest,
+    data: CreateBudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.create_budget_subcategory(
+    return budget_service.create_budget_subcategory(
         uuid.UUID(category_id), data.name, data.amount
     )
 
 
 @router.put("/budget/subcategories/{subcategory_id}")
 async def update_budget_subcategory(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     subcategory_id: str,
-    data: BudgetSubCategoryRequest,
+    data: UpdateBudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
-    return finance_service.update_budget_subcategory(
+    return budget_service.update_budget_subcategory(
         uuid.UUID(subcategory_id), data.name, data.amount
     )
 
 
 @router.delete("/budget/subcategories/{subcategory_id}")
 async def delete_budget_subcategory(
-    finance_service: FinanceServiceDep,
+    budget_service: BudgetServiceDep,
     subcategory_id: str,
 ) -> None:
-    finance_service.delete_budget_subcategory(uuid.UUID(subcategory_id))
+    budget_service.delete_budget_subcategory(uuid.UUID(subcategory_id))

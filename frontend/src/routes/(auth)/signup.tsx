@@ -23,7 +23,7 @@ interface SignupRequest {
 }
 
 // Create the route using Tanstack Router
-export const Route = createFileRoute("/signup")({
+export const Route = createFileRoute("/(auth)/signup")({
   component: SignupPage,
 });
 

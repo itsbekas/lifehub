@@ -4,13 +4,13 @@ from pydantic.dataclasses import dataclass
 
 
 @dataclass
-class UserLoginRequest:
+class LoginUserRequest:
     username: str
     password: str
 
 
 @dataclass
-class UserCreateRequest:
+class CreateUserRequest:
     username: str
     email: str
     password: str
@@ -18,7 +18,7 @@ class UserCreateRequest:
 
 
 @dataclass
-class UserVerifyRequest:
+class VerifyUserRequest:
     token: str
 
 

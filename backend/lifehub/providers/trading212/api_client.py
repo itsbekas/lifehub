@@ -11,6 +11,10 @@ from .models import (
     AccountCash,
     AccountMetadata,
     Dividend,
+    ExportCSVDataIncluded,
+    ExportCSVRequest,
+    ExportCSVResponse,
+    ExportResponse,
     Order,
     OrderHistoryRequest,
     Transaction,
@@ -106,6 +110,33 @@ class Trading212APIClient(APIClient):
         res = self._get("history/dividends")
         data = res.get("items", [])
         return [Dividend.from_response(d) for d in data]
+
+    def get_exports(self) -> list[ExportResponse]:
+        res = self._get("history/exports")
+        return [ExportResponse(**d) for d in res]
+
+    def export_csv(
+        self,
+        include_dividends: bool = False,
+        include_interest: bool = False,
+        include_orders: bool = False,
+        include_transactions: bool = False,
+        from_date: dt.datetime = dt.datetime(1970, 1, 1),
+        to_date: dt.datetime = dt.datetime.now(),
+    ) -> ExportCSVResponse:
+        data = ExportCSVRequest(
+            dataIncluded=ExportCSVDataIncluded(
+                includeDividends=include_dividends,
+                includeInterest=include_interest,
+                includeOrders=include_orders,
+                includeTransactions=include_transactions,
+            ),
+            timeFrom=from_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            timeTo=to_date.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+
+        res = self._post("history/exports", json=data)
+        return ExportCSVResponse(**res)
 
     def _error_msg(self, res: Any) -> Any:
         return res.text

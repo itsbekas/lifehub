@@ -186,3 +186,33 @@ class TransactionsRequest:
     limit: int = 20
     cursor: Optional[str] = None
     time: Optional[str] = None
+
+
+@dataclass
+class ExportCSVDataIncluded:
+    includeDividends: bool = False
+    includeInterest: bool = False
+    includeOrders: bool = False
+    includeTransactions: bool = False
+
+
+@dataclass
+class ExportResponse:
+    reportId: int
+    timeFrom: str
+    timeTo: str
+    dataIncluded: ExportCSVDataIncluded
+    status: str
+    downloadLink: Optional[str]
+
+
+@dataclass
+class ExportCSVRequest:
+    dataIncluded: ExportCSVDataIncluded
+    timeFrom: str
+    timeTo: str
+
+
+@dataclass
+class ExportCSVResponse:
+    reportId: int

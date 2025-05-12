@@ -23,19 +23,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Add the is_admin column
-    op.add_column(
-        "user",
-        sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.false()),
-    )
+    # Add the is_admin column if it doesn't exist
+    with op.get_context().autocommit_block():
+        conn = op.get_bind()
+        insp = sa.inspect(conn)
+        if not insp.has_table("user") or "is_admin" not in [
+            col["name"] for col in insp.get_columns("user")
+        ]:
+            op.add_column(
+                "user",
+                sa.Column(
+                    "is_admin", sa.Boolean(), nullable=False, server_default=sa.false()
+                ),
+            )
 
-    user = table(
-        "user",
-        column("username", String),
-        column("is_admin", Boolean),
-    )
-    # Give admin privileges to the admin user
-    op.execute(user.update().where(user.c.username == "admin").values(is_admin=True))
+            user = table(
+                "user",
+                column("username", String),
+                column("is_admin", Boolean),
+            )
+            # Give admin privileges to the admin user
+            op.execute(
+                user.update().where(user.c.username == "admin").values(is_admin=True)
+            )
 
 
 def downgrade() -> None:

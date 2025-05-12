@@ -1,11 +1,11 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from lifehub.core.common.api.dependencies import SessionDep
 from lifehub.core.user.schema import User
-from lifehub.core.user.service.user import UserService, UserServiceException
+from lifehub.core.user.service.user import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/api-login")
 
@@ -21,12 +21,7 @@ def get_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_service: UserServiceDep,
 ) -> User:
-    try:
-        user = user_service.authenticate_user(token)
-    except UserServiceException as e:
-        raise HTTPException(401, str(e))
-
-    return user
+    return user_service.authenticate_user(token)
 
 
 UserDep = Annotated[User, Depends(get_user)]

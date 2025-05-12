@@ -1,5 +1,6 @@
 import { Burger, Container, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { Link } from "@tanstack/react-router";
 import classes from "~/styles/HeaderMenu.module.css";
 
 const links = [
@@ -12,21 +13,18 @@ export function HeaderMenu() {
   const [opened, { toggle }] = useDisclosure(false);
 
   const items = links.map((link) => (
-    <a
-      key={link.label}
-      href={link.link}
-      className={classes.link}
-      onClick={(event) => event.preventDefault()}
-    >
+    <Link key={link.label} to={link.link} className={classes.link}>
       {link.label}
-    </a>
+    </Link>
   ));
 
   return (
     <header className={classes.header}>
       <Container size="md">
         <div className={classes.inner}>
-          <div>Lifehub</div>
+          <Link to="/" className={classes.link}>
+            Lifehub
+          </Link>
           <Group gap={5} visibleFrom="sm">
             {items}
           </Group>

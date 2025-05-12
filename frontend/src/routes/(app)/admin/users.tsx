@@ -4,7 +4,7 @@ import { UsersTable } from "~/components/UsersTable";
 import { useQuery } from "@tanstack/react-query";
 import { adminApi } from "~/api/admin";
 
-export const Route = createFileRoute("/admin/users")({
+export const Route = createFileRoute("/(app)/admin/users")({
   component: UsersPage,
 });
 

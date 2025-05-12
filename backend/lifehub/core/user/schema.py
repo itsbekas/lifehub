@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 user_provider = Table(
     "user_provider",
     BaseModel.metadata,
-    Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
     Column("provider_id", ForeignKey("provider.id"), primary_key=True),
 )
 
@@ -25,10 +25,9 @@ user_provider = Table(
 user_module = Table(
     "user_module",
     BaseModel.metadata,
-    Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
     Column("module_id", ForeignKey("module.id"), primary_key=True),
 )
-
 
 class User(BaseModel):
     __tablename__ = "user"
@@ -54,5 +53,9 @@ class User(BaseModel):
     providers: Mapped[list["Provider"]] = relationship(
         secondary=user_provider, back_populates="users"
     )
-    provider_tokens: Mapped[list["ProviderToken"]] = relationship(back_populates="user")
-    budget_categories: Mapped[list["BudgetCategory"]] = relationship()
+    provider_tokens: Mapped[list["ProviderToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    budget_categories: Mapped[list["BudgetCategory"]] = relationship(
+        cascade="all, delete-orphan"
+    )
