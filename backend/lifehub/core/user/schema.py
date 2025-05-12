@@ -54,5 +54,9 @@ class User(BaseModel):
     providers: Mapped[list["Provider"]] = relationship(
         secondary=user_provider, back_populates="users"
     )
-    provider_tokens: Mapped[list["ProviderToken"]] = relationship(back_populates="user")
-    budget_categories: Mapped[list["BudgetCategory"]] = relationship()
+    provider_tokens: Mapped[list["ProviderToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    budget_categories: Mapped[list["BudgetCategory"]] = relationship(
+        cascade="all, delete-orphan"
+    )
