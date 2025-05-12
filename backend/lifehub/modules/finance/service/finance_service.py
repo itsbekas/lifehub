@@ -229,7 +229,7 @@ class FinanceService(BaseUserService):
 
         return res
 
-    def _fetch_new_transactions(self, account: BankAccount) -> None:
+    def fetch_new_transactions(self, account: BankAccount) -> None:
         """
         Fetches the latest transactions from bank accounts based on their provider.
         """
@@ -334,7 +334,7 @@ class FinanceService(BaseUserService):
         # Sync transactions if needed
         for account in bank_account_repo.get_all():
             if account.synced_before(hours=6):
-                self._fetch_new_transactions(account)
+                self.fetch_new_transactions(account)
 
         # Get paginated transactions from repository
         paginated_transactions = bank_transaction_repo.get_paginated_transactions(

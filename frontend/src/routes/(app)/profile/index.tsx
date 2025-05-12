@@ -25,7 +25,7 @@ export const Route = createFileRoute("/(app)/profile/")({
 });
 
 export default function ProfilePage() {
-  const { data: user, isLoading } = useCurrentUser();
+  const { data: user } = useCurrentUser();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
   const navigate = useNavigate();

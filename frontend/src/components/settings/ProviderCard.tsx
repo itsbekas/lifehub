@@ -1,7 +1,11 @@
-import { Card, Group, Text, Button, Stack } from '@mantine/core';
-import { IconRefresh, IconTrash } from '@tabler/icons-react';
-import { useRemoveProvider, useTestProviderConnection, type ProviderWithModules } from '~/hooks/useUserProviderQueries';
-import { UpdateProviderModal } from './UpdateProviderModal';
+import { Card, Group, Text, Button, Stack } from "@mantine/core";
+import { IconRefresh, IconTrash } from "@tabler/icons-react";
+import {
+  useRemoveProvider,
+  useTestProviderConnection,
+  type ProviderWithModules,
+} from "~/hooks/useUserProviderQueries";
+import { UpdateProviderModal } from "./UpdateProviderModal";
 
 interface ProviderCardProps {
   provider: ProviderWithModules;
@@ -26,7 +30,7 @@ export function ProviderCard({ provider, isAvailable }: ProviderCardProps) {
         <Stack gap="xs">
           <Text fw={500}>{provider.name}</Text>
           <Text size="sm" c="dimmed">
-            {provider.modules.map(m => m.name).join(', ')}
+            {provider.modules.map((m) => m.name).join(", ")}
           </Text>
         </Stack>
 

@@ -228,7 +228,7 @@ export const useAddTokenBankAccount = () => {
     onSuccess: () => {
       // Invalidate balances to refresh the data
       queryClient.invalidateQueries({ queryKey: financeKeys.balances() });
-      
+
       // Invalidate both regular and paginated transaction queries
       queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
       queryClient.invalidateQueries({

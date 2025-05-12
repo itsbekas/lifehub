@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { useDisclosure } from '@mantine/hooks';
-import { Modal, Button, TextInput, Stack } from '@mantine/core';
-import { IconPencil } from '@tabler/icons-react';
-import { 
-  useUpdateTokenProvider, 
-  useUpdateBasicProvider, 
-  type ProviderWithModules 
-} from '~/hooks/useUserProviderQueries';
+import { useState } from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { Modal, Button, TextInput, Stack } from "@mantine/core";
+import { IconPencil } from "@tabler/icons-react";
+import {
+  useUpdateTokenProvider,
+  useUpdateBasicProvider,
+  type ProviderWithModules,
+} from "~/hooks/useUserProviderQueries";
 
 interface UpdateProviderModalProps {
   provider: ProviderWithModules;
@@ -14,22 +14,22 @@ interface UpdateProviderModalProps {
 
 export function UpdateProviderModal({ provider }: UpdateProviderModalProps) {
   const [opened, { open, close }] = useDisclosure(false);
-  const [token, setToken] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [customUrl, setCustomUrl] = useState('');
+  const [token, setToken] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [customUrl, setCustomUrl] = useState("");
 
   const updateTokenProvider = useUpdateTokenProvider();
   const updateBasicProvider = useUpdateBasicProvider();
 
   const handleSubmit = async () => {
-    if (provider.type === 'token') {
+    if (provider.type === "token") {
       await updateTokenProvider.mutateAsync({
         providerId: provider.id,
         token,
         customUrl: customUrl || undefined,
       });
-    } else if (provider.type === 'basic') {
+    } else if (provider.type === "basic") {
       await updateBasicProvider.mutateAsync({
         providerId: provider.id,
         username,
@@ -37,19 +37,19 @@ export function UpdateProviderModal({ provider }: UpdateProviderModalProps) {
         customUrl: customUrl || undefined,
       });
     }
-    
+
     close();
-    setToken('');
-    setUsername('');
-    setPassword('');
-    setCustomUrl('');
+    setToken("");
+    setUsername("");
+    setPassword("");
+    setCustomUrl("");
   };
 
   return (
     <>
       <Modal opened={opened} onClose={close} title={`Update ${provider.name}`}>
         <Stack>
-          {provider.type === 'token' && (
+          {provider.type === "token" && (
             <TextInput
               label="API Token"
               value={token}
@@ -58,7 +58,7 @@ export function UpdateProviderModal({ provider }: UpdateProviderModalProps) {
             />
           )}
 
-          {provider.type === 'basic' && (
+          {provider.type === "basic" && (
             <>
               <TextInput
                 label="Username"
@@ -85,9 +85,11 @@ export function UpdateProviderModal({ provider }: UpdateProviderModalProps) {
             />
           )}
 
-          <Button 
+          <Button
             onClick={handleSubmit}
-            loading={updateTokenProvider.isPending || updateBasicProvider.isPending}
+            loading={
+              updateTokenProvider.isPending || updateBasicProvider.isPending
+            }
           >
             Update
           </Button>
