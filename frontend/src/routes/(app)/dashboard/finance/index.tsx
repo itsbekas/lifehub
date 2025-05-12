@@ -1,6 +1,7 @@
 import { TransactionsTable } from "~/components/TransactionsTable";
 import { BankBalances } from "~/components/BankBalances";
 import { Categories } from "~/components/Categories";
+import { FinancialSummary } from "~/components/finance/FinancialSummary";
 import {
   Grid,
   Title,
@@ -19,11 +20,6 @@ import {
   useBanks,
 } from "~/hooks/useFinanceQueries";
 import type { SubCategory } from "~/hooks/useFinanceQueries";
-import {
-  IconArrowUpRight,
-  IconArrowDownRight,
-  IconCoin,
-} from "@tabler/icons-react";
 import classes from "~/styles/FinanceDashboard.module.css";
 
 export const Route = createFileRoute("/(app)/dashboard/finance/")({
@@ -62,14 +58,40 @@ export default function FinancePage() {
     return <QueryError error={banksQuery.error as Error} />;
   }
 
-  // Calculate total income, expenses, and balance
-  const calculateFinancialSummary = () => {
-    if (!allTransactions.length) return { income: 0, expenses: 0, balance: 0 };
+  // Calculate total balance from bank balances
+  const calculateTotalBalance = () => {
+    if (!balancesQuery.data || balancesQuery.data.length === 0) return 0;
+
+    return balancesQuery.data.reduce(
+      (total, account) => total + account.balance,
+      0,
+    );
+  };
+
+  const totalBalance = calculateTotalBalance();
+
+  // Calculate income and expenses from transactions for the current month
+  const calculateIncomeAndExpenses = () => {
+    if (!allTransactions.length) return { income: 0, expenses: 0 };
+
+    // Get current month and year
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    // Filter transactions for current month only
+    const currentMonthTransactions = allTransactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date);
+      return (
+        transactionDate.getMonth() === currentMonth &&
+        transactionDate.getFullYear() === currentYear
+      );
+    });
 
     let income = 0;
     let expenses = 0;
 
-    allTransactions.forEach((transaction) => {
+    currentMonthTransactions.forEach((transaction) => {
       if (transaction.amount > 0) {
         income += transaction.amount;
       } else {
@@ -77,14 +99,13 @@ export default function FinancePage() {
       }
     });
 
-    return {
-      income,
-      expenses,
-      balance: income - expenses,
-    };
+    return { income, expenses };
   };
 
-  const { income, expenses, balance } = calculateFinancialSummary();
+  const { income, expenses } = calculateIncomeAndExpenses();
+
+  // Calculate monthly balance (difference between income and expenses)
+  const monthlyBalance = income - expenses;
 
   // Calculate budget progress
   const calculateBudgetProgress = () => {
@@ -112,74 +133,12 @@ export default function FinancePage() {
       </div>
 
       {/* Financial Summary Cards */}
-      <Grid mb="xl">
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card className={classes.statsCard} withBorder>
-            <Group justify="space-between" align="flex-start">
-              <div>
-                <Text size="xs" c="dimmed">
-                  Total Balance
-                </Text>
-                <Text size="xl" fw={700}>
-                  {balance.toFixed(2)}€
-                </Text>
-                <Text size="sm" c={balance >= 0 ? "green" : "red"}>
-                  {balance >= 0 ? "Positive" : "Negative"} balance
-                </Text>
-              </div>
-              <div
-                className={`${classes.statsIcon} ${balance >= 0 ? classes.positive : classes.negative}`}
-              >
-                <IconCoin size={24} />
-              </div>
-            </Group>
-          </Card>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card className={classes.statsCard} withBorder>
-            <Group justify="space-between" align="flex-start">
-              <div>
-                <Text size="xs" c="dimmed">
-                  Income
-                </Text>
-                <Text size="xl" fw={700}>
-                  {income.toFixed(2)}€
-                </Text>
-                <Text size="sm" c="green">
-                  <IconArrowUpRight size={16} style={{ display: "inline" }} />{" "}
-                  Income this month
-                </Text>
-              </div>
-              <div className={`${classes.statsIcon} ${classes.positive}`}>
-                <IconArrowUpRight size={24} />
-              </div>
-            </Group>
-          </Card>
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card className={classes.statsCard} withBorder>
-            <Group justify="space-between" align="flex-start">
-              <div>
-                <Text size="xs" c="dimmed">
-                  Expenses
-                </Text>
-                <Text size="xl" fw={700}>
-                  {expenses.toFixed(2)}€
-                </Text>
-                <Text size="sm" c="red">
-                  <IconArrowDownRight size={16} style={{ display: "inline" }} />{" "}
-                  Expenses this month
-                </Text>
-              </div>
-              <div className={`${classes.statsIcon} ${classes.negative}`}>
-                <IconArrowDownRight size={24} />
-              </div>
-            </Group>
-          </Card>
-        </Grid.Col>
-      </Grid>
+      <FinancialSummary
+        totalBalance={totalBalance}
+        monthlyBalance={monthlyBalance}
+        income={income}
+        expenses={expenses}
+      />
 
       <Grid>
         {/* Bank Balances */}
