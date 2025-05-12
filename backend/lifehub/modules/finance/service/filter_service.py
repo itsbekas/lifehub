@@ -7,14 +7,11 @@ from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 from lifehub.modules.finance.models import (
-    BankTransactionFilterRequest,
     BankTransactionFilterResponse,
+    CreateBankTransactionFilterRequest,
 )
 from lifehub.modules.finance.repository import BankTransactionFilterRepository
-from lifehub.modules.finance.schema import (
-    BankTransactionFilter,
-    BankTransactionFilterMatch,
-)
+from lifehub.modules.finance.schema import BankTransaction, BankTransactionFilter
 from lifehub.modules.finance.service.finance_service import FinanceServiceException
 
 
@@ -50,7 +47,7 @@ class FilterService(BaseUserService):
         ]
 
     def create_bank_transactions_filter(
-        self, data: BankTransactionFilterRequest
+        self, data: CreateBankTransactionFilterRequest
     ) -> BankTransactionFilterResponse:
         bank_transaction_filters_repo = BankTransactionFilterRepository(
             self.user, self.session
@@ -63,13 +60,6 @@ class FilterService(BaseUserService):
             else None,
             matches=[],
         )
-
-        # Handle the case where matches is None
-        if data.matches is not None:
-            filter.matches = [
-                BankTransactionFilterMatch(filter_id=filter.id, match_string=match)
-                for match in data.matches
-            ]
 
         bank_transaction_filters_repo.add(filter)
 
@@ -84,7 +74,7 @@ class FilterService(BaseUserService):
         )
 
     def update_bank_transactions_filter(
-        self, filter_id: uuid.UUID, data: BankTransactionFilterRequest
+        self, filter_id: uuid.UUID, data: CreateBankTransactionFilterRequest
     ) -> BankTransactionFilterResponse:
         bank_transaction_filters_repo = BankTransactionFilterRepository(
             self.user, self.session
@@ -101,25 +91,6 @@ class FilterService(BaseUserService):
             else filter.subcategory_id
         )
 
-        # Update matches explicitly
-        existing_matches = {match.match_string for match in filter.matches}
-        new_matches = set(data.matches or [])
-
-        # Add new matches
-        for match_string in new_matches - existing_matches:
-            filter.matches.append(
-                BankTransactionFilterMatch(
-                    filter_id=filter.id, match_string=match_string
-                )
-            )
-
-        # Remove old matches explicitly
-        matches_to_remove = [
-            match for match in filter.matches if match.match_string not in new_matches
-        ]
-        for match in matches_to_remove:
-            self.session.delete(match)  # Explicitly delete match from the session
-
         self.session.commit()
 
         return BankTransactionFilterResponse(
@@ -130,3 +101,31 @@ class FilterService(BaseUserService):
             else None,
             matches=[match.match_string for match in filter.matches],
         )
+
+    def apply_filters_to_transaction(self, transaction: BankTransaction) -> None:
+        """
+        Apply user's filters to a given transaction. If any match rules of a filter are met,
+        update the transaction's subcategory_id and user_description.
+        """
+        bank_transaction_filters_repo = BankTransactionFilterRepository(
+            self.user, self.session
+        )
+        filters = bank_transaction_filters_repo.get_all()
+
+        for filter in filters:
+            for match_rule in filter.matches:
+                if (
+                    match_rule.match_string.lower() in transaction.description.lower()
+                    if transaction.description
+                    else False
+                ) or (
+                    match_rule.match_string.lower() in transaction.counterparty.lower()
+                    if transaction.counterparty
+                    else False
+                ):
+                    # Update the transaction's subcategory_id and user_description
+                    transaction.subcategory_id = filter.subcategory_id
+                    transaction.user_description = filter.description
+                    break  # Stop checking more match rules for this filter
+
+        self.session.commit()

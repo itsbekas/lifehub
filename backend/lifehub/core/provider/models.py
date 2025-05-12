@@ -23,13 +23,13 @@ class ProviderWithModulesResponse:
 
 
 @dataclass
-class ProviderTokenTokenRequest:
+class UpdateProviderTokenTokenRequest:
     token: str
     custom_url: Optional[str] = None
 
 
 @dataclass
-class ProviderTokenBasicRequest:
+class UpdateProviderTokenBasicRequest:
     username: str
     password: str
     custom_url: Optional[str] = None

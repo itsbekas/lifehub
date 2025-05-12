@@ -11,30 +11,23 @@ from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
+from lifehub.modules.finance.service.filter_service import FilterService
 from lifehub.modules.finance.service.t212_service import Trading212Service
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 
 from ..models import (
     BankBalanceResponse,
     BankInstitutionResponse,
-    BankTransactionFilterRequest,
-    BankTransactionFilterResponse,
     BankTransactionResponse,
     CountryResponse,
+    GetBankTransactionsRequest,
 )
 from ..repository import (
     AccountBalanceRepository,
     BankAccountRepository,
-    BankTransactionFilterRepository,
     BankTransactionRepository,
 )
-from ..schema import (
-    AccountBalance,
-    BankAccount,
-    BankTransaction,
-    BankTransactionFilter,
-    BankTransactionFilterMatch,
-)
+from ..schema import AccountBalance, BankAccount, BankTransaction
 
 
 class FinanceServiceException(ServiceException):
@@ -45,6 +38,7 @@ class FinanceServiceException(ServiceException):
 class FinanceService(BaseUserService):
     _encryption_service: EncryptionService | None = None
     _trading212_service: Trading212Service | None = None
+    _filter_service: FilterService | None = None
 
     def __init__(self, session: Session, user: User):
         super().__init__(session, user)
@@ -60,6 +54,12 @@ class FinanceService(BaseUserService):
         if self._trading212_service is None:
             self._trading212_service = Trading212Service(self.session, self.user)
         return self._trading212_service
+
+    @property
+    def filter_service(self) -> FilterService:
+        if self._filter_service is None:
+            self._filter_service = FilterService(self.session, self.user)
+        return self._filter_service
 
     def _fetch_new_balance(self, account: BankAccount) -> BankBalanceResponse:
         """
@@ -229,34 +229,6 @@ class FinanceService(BaseUserService):
 
         return res
 
-    def apply_filters_to_transaction(self, transaction: BankTransaction) -> None:
-        """
-        Apply user's filters to a given transaction. If any match rules of a filter are met,
-        update the transaction's subcategory_id and user_description.
-        """
-        bank_transaction_filters_repo = BankTransactionFilterRepository(
-            self.user, self.session
-        )
-        filters = bank_transaction_filters_repo.get_all()
-
-        for filter in filters:
-            for match_rule in filter.matches:
-                if (
-                    match_rule.match_string.lower() in transaction.description.lower()
-                    if transaction.description
-                    else False
-                ) or (
-                    match_rule.match_string.lower() in transaction.counterparty.lower()
-                    if transaction.counterparty
-                    else False
-                ):
-                    # Update the transaction's subcategory_id and user_description
-                    transaction.subcategory_id = filter.subcategory_id
-                    transaction.user_description = filter.description
-                    break  # Stop checking more match rules for this filter
-
-        self.session.commit()
-
     def _fetch_new_transactions(self, account: BankAccount) -> None:
         """
         Fetches the latest transactions from bank accounts based on their provider.
@@ -338,14 +310,14 @@ class FinanceService(BaseUserService):
                 bank_transaction_repo.add(db_t)
 
                 # Apply filters to update subcategory_id and user_description
-                self.apply_filters_to_transaction(db_t)
+                self.filter_service.apply_filters_to_transaction(db_t)
 
         account.last_synced = dt.datetime.now()
 
         self.session.commit()
 
     def get_bank_transactions(
-        self, request: BankTransactionFilterRequest
+        self, request: GetBankTransactionsRequest
     ) -> PaginatedResponse[BankTransactionResponse]:
         """
         Fetches paginated transactions with optional filtering.
@@ -444,31 +416,6 @@ class FinanceService(BaseUserService):
             subcategory_id=str(db_t.subcategory_id) if db_t.subcategory_id else None,
         )
 
-    def get_transactions_for_current_month(self) -> list[BankTransactionResponse]:
-        """
-        Fetches the user's transactions for the current month.
-        """
-        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        start_of_month = dt.datetime.now().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        transactions = bank_transaction_repo.get_transactions_since(start_of_month)
-
-        return [
-            BankTransactionResponse(
-                id=str(transaction.id),
-                account_id=str(transaction.account.id),
-                amount=float(transaction.amount),
-                date=transaction.date,
-                description=transaction.description,
-                counterparty=transaction.counterparty,
-                subcategory_id=str(transaction.subcategory_id)
-                if transaction.subcategory_id
-                else None,
-                user_description=transaction.user_description,
-            )
-            for transaction in transactions
-        ]
     def add_bank_account(self, bank_id: str) -> None:
         # Verify user has the required provider
         provider_repo = ProviderRepository(self.session)

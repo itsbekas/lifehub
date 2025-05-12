@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends
 
 from lifehub.core.provider.api.dependencies import ProviderDep, ProviderServiceDep
 from lifehub.core.provider.models import (
-    ProviderTokenBasicRequest,
-    ProviderTokenTokenRequest,
     ProviderWithModulesResponse,
+    UpdateProviderTokenBasicRequest,
+    UpdateProviderTokenTokenRequest,
 )
 from lifehub.core.user.api.dependencies import (
     UserDep,
@@ -68,7 +68,7 @@ async def add_token_provider(
     user: UserDep,
     user_service: UserServiceDep,
     provider_service: ProviderServiceDep,
-    req: ProviderTokenTokenRequest,
+    req: UpdateProviderTokenTokenRequest,
 ) -> None:
     provider_service.validate_token_provider(provider)
     user_service.add_provider_token_to_user(
@@ -82,7 +82,7 @@ async def update_basic_token(
     user: UserDep,
     user_service: UserServiceDep,
     provider_service: ProviderServiceDep,
-    req: ProviderTokenTokenRequest,
+    req: UpdateProviderTokenTokenRequest,
 ) -> None:
     provider_service.validate_token_provider(provider)
     user_service.update_provider_token(user, provider, req.token)
@@ -94,7 +94,7 @@ async def add_basic_provider(
     user: UserDep,
     user_service: UserServiceDep,
     provider_service: ProviderServiceDep,
-    req: ProviderTokenBasicRequest,
+    req: UpdateProviderTokenBasicRequest,
 ) -> None:
     provider_service.validate_basic_provider(provider)
     user_service.add_provider_token_to_user(
@@ -114,7 +114,7 @@ async def update_basic_login(
     user: UserDep,
     user_service: UserServiceDep,
     provider_service: ProviderServiceDep,
-    req: ProviderTokenBasicRequest,
+    req: UpdateProviderTokenBasicRequest,
 ) -> None:
     provider_service.validate_basic_provider(provider)
     user_service.update_provider_token(user, provider, f"{req.username}:{req.password}")

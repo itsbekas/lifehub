@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime as dt
-from dataclasses import field
 from typing import Optional
 
 from pydantic.dataclasses import dataclass
@@ -75,7 +74,12 @@ class BudgetSubCategoryResponse:
 
 
 @dataclass
-class BudgetCategoryRequest:
+class CreateBudgetCategoryRequest:
+    name: str
+
+
+@dataclass
+class UpdateBudgetCategoryRequest:
     name: str
 
 
@@ -87,7 +91,13 @@ class BudgetCategoryResponse:
 
 
 @dataclass
-class BudgetSubCategoryRequest:
+class CreateBudgetSubCategoryRequest:
+    name: str
+    amount: float
+
+
+@dataclass
+class UpdateBudgetSubCategoryRequest:
     name: str
     amount: float
 
@@ -100,15 +110,15 @@ class UpdateBankTransactionRequest:
 
 
 @dataclass
-class BankTransactionFilterRequest(PaginatedRequest):
-    """Request model for filtering bank transactions with pagination."""
-
+class GetBankTransactionsRequest(PaginatedRequest):
     subcategory_id: Optional[str] = None
     description: Optional[str] = None
-    matches: list[str] = field(default_factory=list)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
+
+@dataclass
+class CreateBankTransactionFilterRequest:
+    description: Optional[str]
+    subcategory_id: Optional[str]
 
 
 @dataclass

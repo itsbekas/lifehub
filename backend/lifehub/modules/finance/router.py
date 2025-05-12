@@ -10,15 +10,17 @@ from .dependencies import BudgetServiceDep, FilterServiceDep, FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
-    BankTransactionFilterRequest,
     BankTransactionFilterResponse,
     BankTransactionResponse,
-    BudgetCategoryRequest,
     BudgetCategoryResponse,
-    BudgetSubCategoryRequest,
     BudgetSubCategoryResponse,
     CountryResponse,
+    CreateBankTransactionFilterRequest,
+    CreateBudgetCategoryRequest,
+    CreateBudgetSubCategoryRequest,
+    GetBankTransactionsRequest,
     UpdateBankTransactionRequest,
+    UpdateBudgetSubCategoryRequest,
 )
 
 router = APIRouter(
@@ -66,7 +68,7 @@ async def get_bank_transactions(
     description: Optional[str] = None,
 ) -> PaginatedResponse[BankTransactionResponse]:
     # Create a filter request from query parameters
-    request = BankTransactionFilterRequest(
+    request = GetBankTransactionsRequest(
         page=page,
         page_size=page_size,
         subcategory_id=subcategory_id,
@@ -84,7 +86,7 @@ async def get_bank_transactions_filters(
 
 @router.post("/bank/transactions/filters")
 async def create_bank_transactions_filter(
-    filter_service: FilterServiceDep, data: BankTransactionFilterRequest
+    filter_service: FilterServiceDep, data: CreateBankTransactionFilterRequest
 ) -> BankTransactionFilterResponse:
     return filter_service.create_bank_transactions_filter(data)
 
@@ -93,7 +95,7 @@ async def create_bank_transactions_filter(
 async def update_bank_transactions_filter(
     filter_service: FilterServiceDep,
     filter_id: str,
-    data: BankTransactionFilterRequest,
+    data: CreateBankTransactionFilterRequest,
 ) -> BankTransactionFilterResponse:
     return filter_service.update_bank_transactions_filter(uuid.UUID(filter_id), data)
 
@@ -139,7 +141,7 @@ async def get_budget_categories(
 @router.post("/budget/categories")
 async def create_budget_category(
     budget_service: BudgetServiceDep,
-    budget_category: BudgetCategoryRequest,
+    budget_category: CreateBudgetCategoryRequest,
 ) -> BudgetCategoryResponse:
     return budget_service.create_budget_category(budget_category.name)
 
@@ -181,7 +183,7 @@ async def get_budget_subcategories(
 async def create_budget_subcategory(
     budget_service: BudgetServiceDep,
     category_id: str,
-    data: BudgetSubCategoryRequest,
+    data: CreateBudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
     return budget_service.create_budget_subcategory(
         uuid.UUID(category_id), data.name, data.amount
@@ -192,7 +194,7 @@ async def create_budget_subcategory(
 async def update_budget_subcategory(
     budget_service: BudgetServiceDep,
     subcategory_id: str,
-    data: BudgetSubCategoryRequest,
+    data: UpdateBudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
     return budget_service.update_budget_subcategory(
         uuid.UUID(subcategory_id), data.name, data.amount
