@@ -100,43 +100,35 @@ class Trading212Service(BaseUserService):
 
             description = None
             counterparty = None
-            amount = 0.0  # Set separately to handle deposits
+            amount = t.total  # Set separately to handle deposits
 
             match t.action:
                 case "Deposit":
-                    amount = t.total
                     description = f"{t.action} ({t.notes})"
                 case "Card debit":
-                    amount = -t.total
                     description = (
                         f"{t.merchant_name} ({t.notes})" if t.notes else t.merchant_name
                     )
                     counterparty = t.merchant_name
                 case "Card credit":
-                    amount = t.total
                     description = (
                         f"{t.merchant_name} ({t.notes})" if t.notes else t.merchant_name
                     )
                     counterparty = t.merchant_name
                 case "Spending cashback":
-                    amount = t.total
                     description = t.action
                 case "Interest on cash":
-                    amount = t.total
                     description = t.action
                 case "Lending interest":
-                    amount = t.total
                     description = t.notes
                 case "Market buy":
-                    amount = -t.total
+                    amount = -amount
                     description = f"{t.action} ({t.ticker})"
                     counterparty = f"{t.name} ({t.ticker})"
                 case "Market sell":
-                    amount = t.total
                     description = f"{t.action} ({t.ticker})"
                     counterparty = f"{t.name} ({t.ticker})"
                 case "Dividend (Dividend)":
-                    amount = t.total
                     description = t.action
                     counterparty = f"{t.name} ({t.ticker})"
                 case _:

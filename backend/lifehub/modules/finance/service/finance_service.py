@@ -432,13 +432,15 @@ class FinanceService(BaseUserService):
         # Some fields are empty because I didn't feel like changing the db fields
         # to nullable (alembic wasn't cooperating either)
         # Either way, it ends up providing some obfuscation into the account type
-        bank_account_repo.add(
-            BankAccount(
-                user_id=self.user.id,
-                account_id=self.encryption_service.encrypt_data(""),
-                institution_id=self.encryption_service.encrypt_data(bank_id),
-                requisition_id=self.encryption_service.encrypt_data(""),
-            )
+        new_account = BankAccount(
+            user_id=self.user.id,
+            account_id=self.encryption_service.encrypt_data(""),
+            institution_id=self.encryption_service.encrypt_data(bank_id),
+            requisition_id=self.encryption_service.encrypt_data(""),
         )
+        bank_account_repo.add(new_account)
+
+        if bank_id == "trading212":
+            self.trading212_service.fetch_all_transactions(new_account)
 
         self.session.commit()
