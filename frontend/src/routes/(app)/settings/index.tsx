@@ -66,7 +66,7 @@ export default function SettingsPage() {
                       <Stack gap="xs">
                         <Text fw={500}>{provider.name}</Text>
                         <Text size="sm" c="dimmed">
-                          {provider.modules.map(m => m.name).join(', ')}
+                          {provider.modules.map((m) => m.name).join(", ")}
                         </Text>
                       </Stack>
                       <AddProviderModal provider={provider} />
