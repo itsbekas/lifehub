@@ -1,0 +1,79 @@
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mantine-shadow-sm);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--mantine-spacing-xs);
+}
+
+.name {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.amounts {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: var(--mantine-spacing-xs) 0;
+}
+
+.spent {
+  font-weight: 700;
+}
+
+.budgeted {
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-5));
+  font-size: var(--mantine-font-size-xs);
+}
+
+.available {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.availablePositive {
+  color: var(--mantine-color-success-6);
+}
+
+.availableNegative {
+  color: var(--mantine-color-error-6);
+}
+
+.progressLow {
+  &[data-progress] {
+    background-color: var(--mantine-color-success-1);
+  }
+  
+  &[data-progress] .mantine-Progress-bar {
+    background-color: var(--mantine-color-success-6);
+  }
+}
+
+.progressMedium {
+  &[data-progress] {
+    background-color: var(--mantine-color-warning-1);
+  }
+  
+  &[data-progress] .mantine-Progress-bar {
+    background-color: var(--mantine-color-warning-6);
+  }
+}
+
+.progressHigh {
+  &[data-progress] {
+    background-color: var(--mantine-color-error-1);
+  }
+  
+  &[data-progress] .mantine-Progress-bar {
+    background-color: var(--mantine-color-error-6);
+  }
+}

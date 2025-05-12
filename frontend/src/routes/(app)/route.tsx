@@ -1,8 +1,9 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import { HeaderMenu } from "~/components/HeaderMenu";
-import { Container } from "@mantine/core";
+import { AppShell, Container } from "@mantine/core";
 import { isAuthenticated } from "~/lib/cookies";
 import { ErrorAlert } from "~/components/ErrorAlert";
+import { Sidebar } from "~/components/Sidebar";
+import classes from "~/styles/AppLayout.module.css";
 
 export const Route = createFileRoute("/(app)")({
   beforeLoad: () => {
@@ -23,13 +24,18 @@ function DashboardLayout() {
   const { error } = Route.useLoaderData();
 
   return (
-    <div>
-      <HeaderMenu />
-      <Container size="lg" style={{ paddingTop: "1rem" }}>
-        <ErrorAlert error={error} />
-        <Outlet />
-      </Container>
-    </div>
+    <AppShell navbar={{ width: 250, breakpoint: "sm" }} padding="md">
+      <AppShell.Navbar>
+        <Sidebar />
+      </AppShell.Navbar>
+
+      <AppShell.Main className={classes.main}>
+        <Container size="xl">
+          <ErrorAlert error={error} />
+          <Outlet />
+        </Container>
+      </AppShell.Main>
+    </AppShell>
   );
 }
 
