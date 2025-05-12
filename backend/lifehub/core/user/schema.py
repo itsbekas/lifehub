@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 user_provider = Table(
     "user_provider",
     BaseModel.metadata,
-    Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
     Column("provider_id", ForeignKey("provider.id"), primary_key=True),
 )
 
@@ -25,10 +25,9 @@ user_provider = Table(
 user_module = Table(
     "user_module",
     BaseModel.metadata,
-    Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
     Column("module_id", ForeignKey("module.id"), primary_key=True),
 )
-
 
 class User(BaseModel):
     __tablename__ = "user"

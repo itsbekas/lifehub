@@ -13,7 +13,7 @@ class UserBaseModel(BaseModel):
     __abstract__ = True
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("user.id"), primary_key=True
+        UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
     )
 
 
