@@ -10,7 +10,10 @@ from lifehub.modules.finance.models import (
     BankTransactionFilterResponse,
     CreateBankTransactionFilterRequest,
 )
-from lifehub.modules.finance.repository import BankTransactionFilterRepository
+from lifehub.modules.finance.repository import (
+    BankTransactionFilterRepository,
+    BudgetSubCategoryRepository,
+)
 from lifehub.modules.finance.schema import BankTransaction, BankTransactionFilter
 
 
@@ -51,12 +54,24 @@ class FilterService(BaseUserService):
         bank_transaction_filters_repo = BankTransactionFilterRepository(
             self.user, self.session
         )
+
+        try:
+            subcategory_id = uuid.UUID(data.subcategory_id)
+        except ValueError:
+            raise FilterServiceException(400, "Invalid subcategory ID")
+
+        if (
+            BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+                subcategory_id
+            )
+            is None
+        ):
+            raise FilterServiceException(404, "Subcategory not found")
+
         filter = BankTransactionFilter(
             user_id=self.user.id,
             description=data.description if data.description else None,
-            subcategory_id=uuid.UUID(data.subcategory_id)
-            if data.subcategory_id
-            else None,
+            subcategory_id=subcategory_id,
             matches=[],
         )
 
