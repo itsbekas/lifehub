@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import cx from "clsx";
 import {
   ScrollArea,
@@ -9,6 +9,9 @@ import {
   Group,
   TextInput,
   Select,
+  Button,
+  Loader,
+  Center,
 } from "@mantine/core";
 import {
   IconSearch,
@@ -41,15 +44,63 @@ type Transaction = {
 type TransactionsTableProps = {
   transactions: Transaction[];
   categories: SubCategory[];
+  isLoading?: boolean;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  fetchNextPage?: () => void;
+  isInfinite?: boolean;
 };
 
 export function TransactionsTable({
   transactions,
   categories,
+  isLoading = false,
+  isFetchingNextPage = false,
+  hasNextPage = false,
+  fetchNextPage = () => {},
+  isInfinite = false,
 }: TransactionsTableProps) {
   const [scrolled, setScrolled] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  // Create a ref for the loader element that will trigger loading more data
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer to detect when the loader is visible
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (
+        entry.isIntersecting &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        isInfinite
+      ) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isInfinite],
+  );
+
+  // Set up the intersection observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.1,
+    });
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [handleObserver]);
 
   // Sort transactions from most recent to oldest
   const sortedTransactions = [...transactions].sort(
@@ -163,7 +214,25 @@ export function TransactionsTable({
               <Table.Th />
             </Table.Tr>
           </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
+          <Table.Tbody>
+            {rows}
+            {isInfinite && (
+              <Table.Tr>
+                <Table.Td colSpan={5}>
+                  <div
+                    ref={loaderRef}
+                    style={{ height: "20px", margin: "10px 0" }}
+                  >
+                    {isFetchingNextPage && (
+                      <Center>
+                        <Loader size="sm" />
+                      </Center>
+                    )}
+                  </div>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
         </Table>
       </ScrollArea.Autosize>
 
@@ -172,6 +241,11 @@ export function TransactionsTable({
           Showing {filteredTransactions.length} of {transactions.length}{" "}
           transactions
         </Text>
+        {isInfinite && hasNextPage && !isFetchingNextPage && (
+          <Button variant="light" onClick={() => fetchNextPage()} size="xs">
+            Load More
+          </Button>
+        )}
       </Group>
     </div>
   );

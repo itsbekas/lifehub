@@ -4,22 +4,17 @@ import { Categories } from "~/components/Categories";
 import {
   Grid,
   Title,
-  Stack,
   Skeleton,
   Center,
   Text,
   Card,
   Group,
-  RingProgress,
-  Paper,
-  Flex,
   Badge,
-  Divider,
 } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   useCategories,
-  useTransactions,
+  useInfiniteTransactions,
   useBalances,
   useBanks,
 } from "~/hooks/useFinanceQueries";
@@ -44,10 +39,14 @@ function QueryError({ error }: { error: Error }) {
 }
 
 export default function FinancePage() {
-  const transactionsQuery = useTransactions();
+  const transactionsQuery = useInfiniteTransactions(20);
   const categoriesQuery = useCategories();
   const balancesQuery = useBalances();
   const banksQuery = useBanks();
+
+  // Flatten the transactions from all pages
+  const allTransactions =
+    transactionsQuery.data?.pages.flatMap((page) => page.items) || [];
 
   // Check for errors
   if (transactionsQuery.isError) {
@@ -65,14 +64,12 @@ export default function FinancePage() {
 
   // Calculate total income, expenses, and balance
   const calculateFinancialSummary = () => {
-    if (!transactionsQuery.data?.items)
-      return { income: 0, expenses: 0, balance: 0 };
+    if (!allTransactions.length) return { income: 0, expenses: 0, balance: 0 };
 
-    const transactions = transactionsQuery.data.items;
     let income = 0;
     let expenses = 0;
 
-    transactions.forEach((transaction) => {
+    allTransactions.forEach((transaction) => {
       if (transaction.amount > 0) {
         income += transaction.amount;
       } else {
@@ -213,7 +210,7 @@ export default function FinancePage() {
               <Skeleton height={300} />
             ) : (
               <TransactionsTable
-                transactions={transactionsQuery.data?.items || []}
+                transactions={allTransactions}
                 categories={
                   categoriesQuery.data
                     ? categoriesQuery.data.flatMap(
@@ -222,6 +219,11 @@ export default function FinancePage() {
                       )
                     : []
                 }
+                isInfinite={true}
+                isLoading={transactionsQuery.isLoading}
+                isFetchingNextPage={transactionsQuery.isFetchingNextPage}
+                hasNextPage={transactionsQuery.hasNextPage}
+                fetchNextPage={transactionsQuery.fetchNextPage}
               />
             )}
           </Card>
