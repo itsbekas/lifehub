@@ -4,8 +4,6 @@ import {
   ScrollArea,
   Table,
   Text,
-  Badge,
-  ActionIcon,
   Group,
   TextInput,
   Select,
@@ -13,13 +11,7 @@ import {
   Loader,
   Center,
 } from "@mantine/core";
-import {
-  IconSearch,
-  IconFilter,
-  IconEdit,
-  IconArrowUp,
-  IconArrowDown,
-} from "@tabler/icons-react";
+import { IconSearch, IconFilter } from "@tabler/icons-react";
 import classes from "~/styles/TransactionsTable.module.css";
 import { EditTransactionModal } from "~/components/modals/EditTransactionModal";
 

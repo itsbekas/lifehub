@@ -298,7 +298,7 @@ export const useEditTransaction = () => {
       amount: number;
       subcategory_id: string;
     }) => {
-      const { data } = await api.put(
+      const { data } = await api.put<Transaction>(
         `/finance/bank/${account_id}/transactions/${transaction_id}`,
         {
           description,
@@ -308,25 +308,47 @@ export const useEditTransaction = () => {
       );
       return data;
     },
-    onSuccess: () => {
-      // Invalidate both the regular and paginated transaction queries
-      queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
-      queryClient.invalidateQueries({
-        queryKey: financeKeys.infiniteTransactions(),
-      });
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey as unknown[];
-          return (
-            queryKey.length > 2 &&
-            queryKey[0] === "finance" &&
-            queryKey[1] === "transactions" &&
-            typeof queryKey[2] === "object"
-          );
-        },
-      });
+    onSuccess: (updatedTransaction) => {
+      // Update the transaction in the regular query cache
+      queryClient.setQueryData(
+        financeKeys.transactions(),
+        (oldData: PaginatedResponse<Transaction> | undefined) => {
+          if (!oldData) return oldData;
 
-      // Also invalidate categories to update the amounts
+          return {
+            ...oldData,
+            items: oldData.items.map((transaction) =>
+              transaction.id === updatedTransaction.id
+                ? updatedTransaction
+                : transaction,
+            ),
+          };
+        },
+      );
+
+      // Update the transaction in the infinite query cache
+      queryClient.setQueryData(
+        financeKeys.infiniteTransactions(),
+        (oldData: any) => {
+          if (!oldData || !oldData.pages) return oldData;
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map(
+              (page: PaginatedResponse<Transaction>) => ({
+                ...page,
+                items: page.items.map((transaction) =>
+                  transaction.id === updatedTransaction.id
+                    ? updatedTransaction
+                    : transaction,
+                ),
+              }),
+            ),
+          };
+        },
+      );
+
+      // Only invalidate categories to update the amounts
       queryClient.invalidateQueries({ queryKey: financeKeys.categories() });
     },
   });

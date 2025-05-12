@@ -64,7 +64,7 @@ export function EditTransactionModal({
         subcategory_id: selectedSubCategory,
       },
       {
-        onSuccess: () => {
+        onSuccess: (updatedTransaction) => {
           // Close modal on success
           close();
         },
