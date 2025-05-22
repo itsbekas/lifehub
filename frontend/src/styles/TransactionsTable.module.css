@@ -18,3 +18,52 @@
 .scrolled {
   box-shadow: var(--mantine-shadow-sm);
 }
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.tableRow {
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: light-dark(
+      var(--mantine-color-gray-0),
+      var(--mantine-color-dark-6)
+    );
+  }
+}
+
+.amountCell {
+  font-weight: 600;
+  text-align: right;
+}
+
+.positive {
+  color: var(--mantine-color-success-6);
+}
+
+.negative {
+  color: var(--mantine-color-error-6);
+}
+
+.categoryBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: light-dark(
+    var(--mantine-color-gray-1),
+    var(--mantine-color-dark-5)
+  );
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-gray-3));
+  display: inline-block;
+}
+
+.dateCell {
+  white-space: nowrap;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-5));
+  font-size: 0.85rem;
+}

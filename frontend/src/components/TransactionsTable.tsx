@@ -1,6 +1,17 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import cx from "clsx";
-import { ScrollArea, Table } from "@mantine/core";
+import {
+  ScrollArea,
+  Table,
+  Text,
+  Group,
+  TextInput,
+  Select,
+  Button,
+  Loader,
+  Center,
+} from "@mantine/core";
+import { IconSearch, IconFilter } from "@tabler/icons-react";
 import classes from "~/styles/TransactionsTable.module.css";
 import { EditTransactionModal } from "~/components/modals/EditTransactionModal";
 
@@ -25,17 +36,82 @@ type Transaction = {
 type TransactionsTableProps = {
   transactions: Transaction[];
   categories: SubCategory[];
+  isLoading?: boolean;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  fetchNextPage?: () => void;
+  isInfinite?: boolean;
 };
 
 export function TransactionsTable({
   transactions,
   categories,
+  isFetchingNextPage = false,
+  hasNextPage = false,
+  fetchNextPage = () => {},
+  isInfinite = false,
 }: TransactionsTableProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+
+  // Create a ref for the loader element that will trigger loading more data
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer to detect when the loader is visible
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      if (
+        entry.isIntersecting &&
+        hasNextPage &&
+        !isFetchingNextPage &&
+        isInfinite
+      ) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage, isInfinite],
+  );
+
+  // Set up the intersection observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.1,
+    });
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
+    }
+
+    return () => {
+      if (loaderRef.current) {
+        observer.unobserve(loaderRef.current);
+      }
+    };
+  }, [handleObserver]);
+
   // Sort transactions from most recent to oldest
   const sortedTransactions = [...transactions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
+
+  // Filter transactions based on search term and category filter
+  const filteredTransactions = sortedTransactions.filter((transaction) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      transaction.description
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      transaction.counterparty.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory =
+      categoryFilter === null || transaction.subcategory_id === categoryFilter;
+
+    return matchesSearch && matchesCategory;
+  });
 
   // Custom date formatter for DD-MM-YYYY
   const formatDate = (date: string) => {
@@ -46,19 +122,42 @@ export function TransactionsTable({
     return `${day}-${month}-${year}`;
   };
 
-  const rows = sortedTransactions.map((transaction) => {
+  // Prepare category options for the filter dropdown
+  const categoryOptions = categories.map((cat) => ({
+    value: cat.id,
+    label: `${cat.category_name}: ${cat.name}`,
+  }));
+
+  const rows = filteredTransactions.map((transaction) => {
     // Find the sub-category name using subcategory_id
     const subcategory = categories.find(
       (cat) => cat.id === transaction.subcategory_id,
     );
     const categoryName = subcategory?.name || "";
+    const isPositive = transaction.amount >= 0;
 
     return (
-      <Table.Tr key={transaction.id}>
-        <Table.Td>{formatDate(transaction.date)}</Table.Td>
-        <Table.Td>{transaction.description}</Table.Td>
-        <Table.Td>{categoryName}</Table.Td>
-        <Table.Td>{transaction.amount.toFixed(2)}€</Table.Td>
+      <Table.Tr key={transaction.id} className={classes.tableRow}>
+        <Table.Td className={classes.dateCell}>
+          {formatDate(transaction.date)}
+        </Table.Td>
+        <Table.Td>
+          <Text fw={500}>{transaction.description}</Text>
+          {transaction.user_description && (
+            <Text size="xs" c="dimmed">
+              {transaction.user_description}
+            </Text>
+          )}
+        </Table.Td>
+        <Table.Td>
+          <span className={classes.categoryBadge}>{categoryName}</span>
+        </Table.Td>
+        <Table.Td
+          className={`${classes.amountCell} ${isPositive ? classes.positive : classes.negative}`}
+        >
+          {isPositive ? "+" : ""}
+          {transaction.amount.toFixed(2)}€
+        </Table.Td>
         <Table.Td>
           <EditTransactionModal
             subCategories={categories}
@@ -70,24 +169,75 @@ export function TransactionsTable({
   });
 
   return (
-    <ScrollArea.Autosize
-      h={500}
-      onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
-    >
-      <Table>
-        <Table.Thead
-          className={cx(classes.header, { [classes.scrolled]: scrolled })}
-        >
-          <Table.Tr>
-            <Table.Th>Date</Table.Th>
-            <Table.Th>Description</Table.Th>
-            <Table.Th>Category</Table.Th>
-            <Table.Th>Amount</Table.Th>
-            <Table.Th />
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
-    </ScrollArea.Autosize>
+    <div>
+      <Group mb="md">
+        <TextInput
+          placeholder="Search transactions..."
+          leftSection={<IconSearch size={16} />}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.currentTarget.value)}
+          style={{ flex: 1 }}
+        />
+        <Select
+          placeholder="Filter by category"
+          data={categoryOptions}
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          leftSection={<IconFilter size={16} />}
+          clearable
+          style={{ width: 250 }}
+        />
+      </Group>
+
+      <ScrollArea.Autosize
+        h={400}
+        onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
+      >
+        <Table className={classes.table}>
+          <Table.Thead
+            className={cx(classes.header, { [classes.scrolled]: scrolled })}
+          >
+            <Table.Tr>
+              <Table.Th>Date</Table.Th>
+              <Table.Th>Description</Table.Th>
+              <Table.Th>Category</Table.Th>
+              <Table.Th style={{ textAlign: "right" }}>Amount</Table.Th>
+              <Table.Th />
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {rows}
+            {isInfinite && (
+              <Table.Tr>
+                <Table.Td colSpan={5}>
+                  <div
+                    ref={loaderRef}
+                    style={{ height: "20px", margin: "10px 0" }}
+                  >
+                    {isFetchingNextPage && (
+                      <Center>
+                        <Loader size="sm" />
+                      </Center>
+                    )}
+                  </div>
+                </Table.Td>
+              </Table.Tr>
+            )}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea.Autosize>
+
+      <Group justify="space-between" mt="xs">
+        <Text size="sm" c="dimmed">
+          Showing {filteredTransactions.length} of {transactions.length}{" "}
+          transactions
+        </Text>
+        {isInfinite && hasNextPage && !isFetchingNextPage && (
+          <Button variant="light" onClick={() => fetchNextPage()} size="xs">
+            Load More
+          </Button>
+        )}
+      </Group>
+    </div>
   );
 }

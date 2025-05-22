@@ -1,0 +1,42 @@
+.sidebar {
+  height: 100%;
+  padding: var(--mantine-spacing-md);
+  background-color: light-dark(
+    var(--mantine-color-white),
+    var(--mantine-color-dark-7)
+  );
+  border-right: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+}
+
+.header {
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs);
+  margin-bottom: var(--mantine-spacing-md);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.footer {
+  margin-top: auto;
+}
+
+/* Add subtle hover effect to nav items */
+:global(.mantine-NavLink-root) {
+  border-radius: var(--mantine-radius-md);
+  transition: all 0.2s ease;
+}
+
+:global(.mantine-NavLink-root:hover) {
+  transform: translateX(3px);
+}
+
+.activeLink {
+  background-color: var(--mantine-color-primary-light);
+  border-left: 3px solid var(--mantine-color-primary-filled);
+}
+
+.activeLink :global(.mantine-NavLink-label) {
+  color: var(--mantine-color-primary-filled);
+  font-weight: 600;
+}

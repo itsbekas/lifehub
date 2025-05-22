@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import { api } from "~/lib/query";
 
 // Types
@@ -47,6 +52,9 @@ export type BankBalance = {
   bank: string;
   account_id: string;
   balance: number;
+  monthly_income: number;
+  monthly_expenses: number;
+  monthly_last_updated: string | null;
 };
 
 export type Country = {
@@ -66,8 +74,11 @@ export const financeKeys = {
   all: ["finance"] as const,
   transactions: (page: number = 1, pageSize: number = 20) =>
     [...financeKeys.all, "transactions", { page, pageSize }] as const,
+  infiniteTransactions: (pageSize: number = 20) =>
+    [...financeKeys.all, "transactions", "infinite", { pageSize }] as const,
   categories: () => [...financeKeys.all, "categories"] as const,
   balances: () => [...financeKeys.all, "balances"] as const,
+
   banks: () => [...financeKeys.all, "banks"] as const,
   banksByCountry: (country: string) =>
     [...financeKeys.banks(), country] as const,
@@ -85,6 +96,31 @@ export const useTransactions = (page: number = 1, pageSize: number = 20) => {
       );
 
       return data;
+    },
+  });
+};
+
+export const useInfiniteTransactions = (pageSize: number = 20) => {
+  return useInfiniteQuery({
+    queryKey: financeKeys.infiniteTransactions(pageSize),
+    queryFn: async ({ pageParam = 1 }) => {
+      const { data } = await api.get<PaginatedResponse<Transaction>>(
+        `/finance/bank/transactions?page=${pageParam}&page_size=${pageSize}`,
+      );
+      return data;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // If there's a next page, return the next page number, otherwise return undefined
+      return lastPage.pagination.has_next
+        ? lastPage.pagination.page + 1
+        : undefined;
+    },
+    getPreviousPageParam: (firstPage) => {
+      // If there's a previous page, return the previous page number, otherwise return undefined
+      return firstPage.pagination.has_prev
+        ? firstPage.pagination.page - 1
+        : undefined;
     },
   });
 };
@@ -232,6 +268,9 @@ export const useAddTokenBankAccount = () => {
       // Invalidate both regular and paginated transaction queries
       queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
       queryClient.invalidateQueries({
+        queryKey: financeKeys.infiniteTransactions(),
+      });
+      queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey as unknown[];
           return (
@@ -263,7 +302,7 @@ export const useEditTransaction = () => {
       amount: number;
       subcategory_id: string;
     }) => {
-      const { data } = await api.put(
+      const { data } = await api.put<Transaction>(
         `/finance/bank/${account_id}/transactions/${transaction_id}`,
         {
           description,
@@ -273,22 +312,51 @@ export const useEditTransaction = () => {
       );
       return data;
     },
-    onSuccess: () => {
-      // Invalidate both the regular and paginated transaction queries
-      queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey as unknown[];
-          return (
-            queryKey.length > 2 &&
-            queryKey[0] === "finance" &&
-            queryKey[1] === "transactions" &&
-            typeof queryKey[2] === "object"
-          );
-        },
-      });
+    onSuccess: (updatedTransaction) => {
+      // Update the transaction in the regular query cache
+      queryClient.setQueryData(
+        financeKeys.transactions(),
+        (oldData: PaginatedResponse<Transaction> | undefined) => {
+          if (!oldData) return oldData;
 
-      // Also invalidate categories to update the amounts
+          return {
+            ...oldData,
+            items: oldData.items.map((transaction) =>
+              transaction.id === updatedTransaction.id
+                ? updatedTransaction
+                : transaction,
+            ),
+          };
+        },
+      );
+
+      // Update the transaction in the infinite query cache
+      queryClient.setQueryData(
+        financeKeys.infiniteTransactions(),
+        (
+          oldData:
+            | { pages: PaginatedResponse<Transaction>[]; pageParams: unknown[] }
+            | undefined,
+        ) => {
+          if (!oldData || !oldData.pages) return oldData;
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map(
+              (page: PaginatedResponse<Transaction>) => ({
+                ...page,
+                items: page.items.map((transaction) =>
+                  transaction.id === updatedTransaction.id
+                    ? updatedTransaction
+                    : transaction,
+                ),
+              }),
+            ),
+          };
+        },
+      );
+
+      // Only invalidate categories to update the amounts
       queryClient.invalidateQueries({ queryKey: financeKeys.categories() });
     },
   });

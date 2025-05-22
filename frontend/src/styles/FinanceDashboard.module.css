@@ -1,0 +1,57 @@
+.statsCard {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--mantine-shadow-md);
+  }
+}
+
+.statsIcon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.positive {
+  color: var(--mantine-color-success-6);
+  background-color: var(--mantine-color-success-0);
+}
+
+.negative {
+  color: var(--mantine-color-error-6);
+  background-color: var(--mantine-color-error-0);
+}
+
+.neutral {
+  color: var(--mantine-color-primary-6);
+  background-color: var(--mantine-color-primary-0);
+}
+
+.sectionTitle {
+  margin-bottom: var(--mantine-spacing-md);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+}
+
+.dashboardHeader {
+  margin-bottom: var(--mantine-spacing-xl);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.categoryProgress {
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}

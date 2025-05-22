@@ -35,6 +35,9 @@ class BankBalanceResponse:
     bank: str
     account_id: str
     balance: float
+    monthly_income: float = 0.0
+    monthly_expenses: float = 0.0
+    monthly_last_updated: Optional[dt.datetime] = None
 
 
 @dataclass

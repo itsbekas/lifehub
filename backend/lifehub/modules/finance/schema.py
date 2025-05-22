@@ -64,6 +64,15 @@ class AccountBalance(FetchBaseModel):
     )
     amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
 
+    # Monthly summary fields
+    monthly_income: Mapped[Optional[bytes]] = mapped_column(
+        EncryptedDataType(64), nullable=True
+    )  # float
+    monthly_expenses: Mapped[Optional[bytes]] = mapped_column(
+        EncryptedDataType(64), nullable=True
+    )  # float
+    monthly_last_updated: Mapped[Optional[dt.datetime]] = mapped_column(nullable=True)
+
     account: Mapped[BankAccount] = relationship(back_populates="balances")
 
 
