@@ -211,6 +211,14 @@ class Trading212Service(BaseUserService):
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
         bank_transaction_repo.add_all(transactions)
 
+        # Import the FinanceService to use the incremental update method
+        from lifehub.modules.finance.service.finance_service import FinanceService
+
+        # Only update monthly summary if we have new transactions
+        if transactions:
+            finance_service = FinanceService(self.session, self.user)
+            finance_service._update_monthly_summary_incremental(account, transactions)
+
         self.session.commit()
 
     def fetch_new_transactions(self, account: BankAccount) -> None:
@@ -223,5 +231,13 @@ class Trading212Service(BaseUserService):
         account.last_synced = dt.datetime.now()
         bank_transaction_repo = BankTransactionRepository(self.user, self.session)
         bank_transaction_repo.add_all(transactions)
+
+        # Import the FinanceService to use the incremental update method
+        from lifehub.modules.finance.service.finance_service import FinanceService
+
+        # Only update monthly summary if we have new transactions
+        if transactions:
+            finance_service = FinanceService(self.session, self.user)
+            finance_service._update_monthly_summary_incremental(account, transactions)
 
         self.session.commit()
