@@ -1,4 +1,4 @@
-import { Card, Progress, Text, Group, ActionIcon } from "@mantine/core";
+import { Card, Progress, Text, ActionIcon } from "@mantine/core";
 import { IconDotsVertical } from "@tabler/icons-react";
 import classes from "~/styles/SubCategoryCard.module.css";
 

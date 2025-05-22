@@ -1,6 +1,8 @@
 .card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: var(--mantine-shadow-sm);
@@ -52,7 +54,7 @@
   &[data-progress] {
     background-color: var(--mantine-color-success-1);
   }
-  
+
   &[data-progress] .mantine-Progress-bar {
     background-color: var(--mantine-color-success-6);
   }
@@ -62,7 +64,7 @@
   &[data-progress] {
     background-color: var(--mantine-color-warning-1);
   }
-  
+
   &[data-progress] .mantine-Progress-bar {
     background-color: var(--mantine-color-warning-6);
   }
@@ -72,7 +74,7 @@
   &[data-progress] {
     background-color: var(--mantine-color-error-1);
   }
-  
+
   &[data-progress] .mantine-Progress-bar {
     background-color: var(--mantine-color-error-6);
   }

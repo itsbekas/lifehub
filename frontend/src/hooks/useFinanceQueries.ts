@@ -52,6 +52,9 @@ export type BankBalance = {
   bank: string;
   account_id: string;
   balance: number;
+  monthly_income: number;
+  monthly_expenses: number;
+  monthly_last_updated: string | null;
 };
 
 export type Country = {
@@ -75,6 +78,7 @@ export const financeKeys = {
     [...financeKeys.all, "transactions", "infinite", { pageSize }] as const,
   categories: () => [...financeKeys.all, "categories"] as const,
   balances: () => [...financeKeys.all, "balances"] as const,
+
   banks: () => [...financeKeys.all, "banks"] as const,
   banksByCountry: (country: string) =>
     [...financeKeys.banks(), country] as const,
@@ -329,7 +333,11 @@ export const useEditTransaction = () => {
       // Update the transaction in the infinite query cache
       queryClient.setQueryData(
         financeKeys.infiniteTransactions(),
-        (oldData: any) => {
+        (
+          oldData:
+            | { pages: PaginatedResponse<Transaction>[]; pageParams: unknown[] }
+            | undefined,
+        ) => {
           if (!oldData || !oldData.pages) return oldData;
 
           return {

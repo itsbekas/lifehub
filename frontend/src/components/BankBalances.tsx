@@ -48,11 +48,15 @@ export function BankBalances({ balances, banks }: BankBalancesProps) {
               className={classes.bankCard}
             >
               <Group justify="space-between" mb="xs">
-                <Group gap="sm">
+                <Group
+                  gap="sm"
+                  wrap="nowrap"
+                  style={{ flex: 1, overflow: "hidden" }}
+                >
                   <div className={classes.bankIcon}>
                     <IconBuildingBank size={20} />
                   </div>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <Text fw={600} size="md" truncate>
                       {bank?.name || balance.bank}
                     </Text>
@@ -67,7 +71,11 @@ export function BankBalances({ balances, banks }: BankBalancesProps) {
                     </Group>
                   </div>
                 </Group>
-                <ActionIcon variant="subtle" color="gray">
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  style={{ flexShrink: 0 }}
+                >
                   <IconDotsVertical size={16} />
                 </ActionIcon>
               </Group>

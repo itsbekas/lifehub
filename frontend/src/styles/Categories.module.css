@@ -1,7 +1,8 @@
 .categorySection {
   margin-bottom: var(--mantine-spacing-md);
   padding-bottom: var(--mantine-spacing-md);
-  border-bottom: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  border-bottom: 1px solid
+    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
 }
 
 .categorySection:last-child {
@@ -31,12 +32,19 @@
 
 .addButton {
   background-color: transparent;
-  border: 1px dashed light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
+  border: 1px dashed
+    light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
   color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-gray-5));
   transition: all 0.2s ease;
-  
+
   &:hover {
-    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
-    border-color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-dark-3));
+    background-color: light-dark(
+      var(--mantine-color-gray-0),
+      var(--mantine-color-dark-6)
+    );
+    border-color: light-dark(
+      var(--mantine-color-gray-5),
+      var(--mantine-color-dark-3)
+    );
   }
 }

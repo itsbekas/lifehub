@@ -70,42 +70,29 @@ export default function FinancePage() {
 
   const totalBalance = calculateTotalBalance();
 
-  // Calculate income and expenses from transactions for the current month
-  const calculateIncomeAndExpenses = () => {
-    if (!allTransactions.length) return { income: 0, expenses: 0 };
+  // Get monthly summary data from account balances
+  const getMonthlySummary = () => {
+    if (!balancesQuery.data || balancesQuery.data.length === 0) {
+      return { income: 0, expenses: 0, balance: 0 };
+    }
 
-    // Get current month and year
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    // Sum up monthly income and expenses from all accounts
+    let totalIncome = 0;
+    let totalExpenses = 0;
 
-    // Filter transactions for current month only
-    const currentMonthTransactions = allTransactions.filter((transaction) => {
-      const transactionDate = new Date(transaction.date);
-      return (
-        transactionDate.getMonth() === currentMonth &&
-        transactionDate.getFullYear() === currentYear
-      );
+    balancesQuery.data.forEach((account) => {
+      totalIncome += account.monthly_income;
+      totalExpenses += account.monthly_expenses;
     });
 
-    let income = 0;
-    let expenses = 0;
-
-    currentMonthTransactions.forEach((transaction) => {
-      if (transaction.amount > 0) {
-        income += transaction.amount;
-      } else {
-        expenses += Math.abs(transaction.amount);
-      }
-    });
-
-    return { income, expenses };
+    return {
+      income: totalIncome,
+      expenses: totalExpenses,
+      balance: totalIncome - totalExpenses,
+    };
   };
 
-  const { income, expenses } = calculateIncomeAndExpenses();
-
-  // Calculate monthly balance (difference between income and expenses)
-  const monthlyBalance = income - expenses;
+  const { income, expenses, balance: monthlyBalance } = getMonthlySummary();
 
   // Calculate budget progress
   const calculateBudgetProgress = () => {

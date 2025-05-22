@@ -1,8 +1,8 @@
 import { SubCategoryCard } from "~/components/SubCategoryCard";
-import { Button, Group, Text, ActionIcon, Accordion } from "@mantine/core";
+import { Group, Text, Accordion } from "@mantine/core";
 import { AddCategoryModal } from "~/components/modals/AddCategoryModal";
 import { AddSubCategoryModal } from "~/components/modals/AddSubCategoryModal";
-import { IconPlus, IconFolder } from "@tabler/icons-react";
+import { IconFolder } from "@tabler/icons-react";
 import classes from "~/styles/Categories.module.css";
 
 type SubCategory = {

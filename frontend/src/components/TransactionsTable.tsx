@@ -46,7 +46,6 @@ type TransactionsTableProps = {
 export function TransactionsTable({
   transactions,
   categories,
-  isLoading = false,
   isFetchingNextPage = false,
   hasNextPage = false,
   fetchNextPage = () => {},

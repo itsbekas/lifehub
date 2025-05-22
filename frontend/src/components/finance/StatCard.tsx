@@ -10,7 +10,13 @@ interface StatCardProps {
   iconClass: string;
 }
 
-export function StatCard({ title, value, description, icon, iconClass }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  description,
+  icon,
+  iconClass,
+}: StatCardProps) {
   return (
     <Card className={classes.statsCard} withBorder>
       <Group justify="space-between" align="flex-start">
@@ -23,9 +29,7 @@ export function StatCard({ title, value, description, icon, iconClass }: StatCar
           </Text>
           {description}
         </div>
-        <div className={iconClass}>
-          {icon}
-        </div>
+        <div className={iconClass}>{icon}</div>
       </Group>
     </Card>
   );

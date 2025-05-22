@@ -14,8 +14,8 @@ export function IncomeCard({ income }: IncomeCardProps) {
       value={`${income.toFixed(2)}€`}
       description={
         <Text size="sm" c="green">
-          <IconArrowUpRight size={16} style={{ display: "inline" }} />{" "}
-          Income this month
+          <IconArrowUpRight size={16} style={{ display: "inline" }} /> Income
+          this month
         </Text>
       }
       icon={<IconArrowUpRight size={24} />}

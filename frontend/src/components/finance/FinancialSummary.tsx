@@ -19,13 +19,16 @@ export function FinancialSummary({
   return (
     <Grid mb="xl">
       <Grid.Col span={{ base: 12, md: 4 }}>
-        <BalanceCard totalBalance={totalBalance} monthlyBalance={monthlyBalance} />
+        <BalanceCard
+          totalBalance={totalBalance}
+          monthlyBalance={monthlyBalance}
+        />
       </Grid.Col>
-      
+
       <Grid.Col span={{ base: 12, md: 4 }}>
         <IncomeCard income={income} />
       </Grid.Col>
-      
+
       <Grid.Col span={{ base: 12, md: 4 }}>
         <ExpensesCard expenses={expenses} />
       </Grid.Col>

@@ -8,9 +8,12 @@ interface BalanceCardProps {
   monthlyBalance: number;
 }
 
-export function BalanceCard({ totalBalance, monthlyBalance }: BalanceCardProps) {
+export function BalanceCard({
+  totalBalance,
+  monthlyBalance,
+}: BalanceCardProps) {
   const isPositive = monthlyBalance >= 0;
-  
+
   return (
     <StatCard
       title="Total Balance"
