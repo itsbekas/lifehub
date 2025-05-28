@@ -10,9 +10,7 @@ from lifehub.config.providers import PROVIDER_CLIENTS
 from lifehub.core.common.base.api_client import APIClient
 from lifehub.core.common.base.service.base import BaseService
 from lifehub.core.common.exceptions import ServiceException
-from lifehub.core.module.models import ModuleResponse, ModuleWithProvidersResponse
-from lifehub.core.module.schema import Module
-from lifehub.core.provider.models import ProviderResponse, ProviderWithModulesResponse
+from lifehub.core.provider.models import ProviderResponse
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.repository.provider_token import ProviderTokenRepository
 from lifehub.core.provider.schema import Provider, ProviderToken
@@ -31,6 +29,7 @@ class UserService(BaseService):
     def __init__(self, session: Session) -> None:
         super().__init__(session)
         self.user_repository = UserRepository(self.session)
+        self.provider_repository = ProviderRepository(self.session)
         self.provider_token_repository = ProviderTokenRepository(self.session)
         self.password_hasher = argon2.PasswordHasher()
 
@@ -237,57 +236,28 @@ class UserService(BaseService):
             for provider in user.providers
         ]
 
+    def get_missing_providers(self, user: User) -> list[ProviderResponse]:
+        all_providers = self.provider_repository.get_all()
+        user_provider_ids = self.get_user_provider_ids(user)
+
+        return [
+            ProviderResponse(
+                id=provider.id,
+                name=provider.name,
+                allow_custom_url=provider.config.allow_custom_url,
+            )
+            for provider in all_providers
+            if provider.id not in user_provider_ids
+        ]
+
     def get_user_provider_ids(self, user: User) -> list[str]:
         return [provider.id for provider in user.providers]
-
-    def get_user_providers_with_modules(
-        self, user: User
-    ) -> list[ProviderWithModulesResponse]:
-        return [
-            ProviderWithModulesResponse(
-                id=provider.id,
-                name=provider.name,
-                type=provider.config.auth_type,
-                allow_custom_url=provider.config.allow_custom_url,
-                modules=[
-                    ModuleResponse(id=module.id, name=module.name)
-                    for module in provider.modules
-                ],
-            )
-            for provider in user.providers
-        ]
-
-    def get_missing_providers_with_modules(
-        self, user: User
-    ) -> list[ProviderWithModulesResponse]:
-        provider_repository = ProviderRepository(self.session)
-        providers = provider_repository.get_all()
-        user_providers = [provider.id for provider in user.providers]
-        return [
-            ProviderWithModulesResponse(
-                id=provider.id,
-                name=provider.name,
-                type=provider.config.auth_type,
-                allow_custom_url=provider.config.allow_custom_url,
-                modules=[
-                    ModuleResponse(id=module.id, name=module.name)
-                    for module in provider.modules
-                ],
-            )
-            for provider in providers
-            if provider.id not in user_providers
-        ]
-
-    def add_provider_to_user(self, user: User, provider: Provider) -> None:
-        user.providers.append(provider)
-        self.user_repository.commit()
 
     def remove_provider_from_user(self, user: User, provider: Provider) -> None:
         token = self.provider_token_repository.get(user, provider)
         if token is None:
             raise UserServiceException(404, "Token not found")
         self.provider_token_repository.delete(token)
-        user.providers.remove(provider)
         self.user_repository.commit()
 
     def add_provider_token_to_user(
@@ -326,7 +296,6 @@ class UserService(BaseService):
         )
 
         self.provider_token_repository.add(provider_token)
-        user.providers.append(provider)
         self.user_repository.add(user)
         if not skip_test:
             self.test_provider_token(user, provider)
@@ -372,61 +341,6 @@ class UserService(BaseService):
         api_client: APIClient = PROVIDER_CLIENTS[provider.id](user, self.session)  # type: ignore
         if not api_client.test_connection():
             raise UserServiceException(400, "Token is invalid")
-
-    def get_user_modules(self, user: User) -> list[ModuleResponse]:
-        return [
-            ModuleResponse(id=module.id, name=module.name) for module in user.modules
-        ]
-
-    def get_user_modules_with_providers(
-        self, user: User
-    ) -> list[ModuleWithProvidersResponse]:
-        return [
-            ModuleWithProvidersResponse(
-                id=module.id,
-                name=module.name,
-                providers=[
-                    ProviderResponse(
-                        id=provider.id,
-                        name=provider.name,
-                        allow_custom_url=provider.config.allow_custom_url,
-                    )
-                    for provider in module.providers
-                ],
-            )
-            for module in user.modules
-        ]
-
-    def add_module_to_user(self, user: User, module: Module) -> None:
-        if module in user.modules:
-            raise UserServiceException(409, "Module already added to user")
-
-        missed_providers = []
-
-        module = self.session.merge(module)
-        user = self.session.merge(user)
-
-        for provider in module.providers:
-            if provider not in user.providers:
-                missed_providers.append(provider.name)
-
-        if missed_providers:
-            raise UserServiceException(
-                409, f"User is missing providers: {', '.join(missed_providers)}"
-            )
-
-        user.modules.append(module)
-        self.user_repository.commit()
-
-    def remove_module_from_user(self, user: User, module: Module) -> None:
-        user = self.session.merge(user)
-        module = self.session.merge(module)
-
-        if module not in user.modules:
-            raise UserServiceException(404, f"User does not have module {module.name}")
-
-        user.modules.remove(module)
-        self.user_repository.commit()
 
     def __del__(self) -> None:
         self.user_repository.close()

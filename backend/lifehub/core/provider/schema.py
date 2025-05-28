@@ -9,12 +9,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.config.constants import cfg
 from lifehub.core.common.base.db_model import BaseModel, UserBaseModel
-from lifehub.core.module.schema import module_provider
 from lifehub.core.security.encrypted_data import EncryptedDataType
-from lifehub.core.user.schema import user_provider
 
 if TYPE_CHECKING:
-    from lifehub.core.module.schema import Module
     from lifehub.core.user.schema import User
 
 
@@ -45,10 +42,6 @@ class Provider(BaseModel):
 
     config: Mapped[ProviderConfig] = relationship(
         back_populates="provider", uselist=False
-    )
-
-    modules: Mapped[list[Module]] = relationship(
-        secondary=module_provider, back_populates="providers"
     )
     users: Mapped[list[User]] = relationship(
         secondary=user_provider, back_populates="providers"

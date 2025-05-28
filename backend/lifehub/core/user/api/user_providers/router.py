@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from lifehub.core.provider.api.dependencies import ProviderDep, ProviderServiceDep
 from lifehub.core.provider.models import (
-    ProviderWithModulesResponse,
+    ProviderResponse,
     UpdateProviderTokenBasicRequest,
     UpdateProviderTokenTokenRequest,
 )
@@ -20,15 +20,15 @@ router = APIRouter(
 @router.get("")
 async def get_user_providers(
     user: UserDep, user_service: UserServiceDep
-) -> list[ProviderWithModulesResponse]:
-    return user_service.get_user_providers_with_modules(user)
+) -> list[ProviderResponse]:
+    return user_service.get_user_providers(user)
 
 
 @router.get("/missing")
 async def get_missing_providers(
     user: UserDep, user_service: UserServiceDep
-) -> list[ProviderWithModulesResponse]:
-    return user_service.get_missing_providers_with_modules(user)
+) -> list[ProviderResponse]:
+    return user_service.get_missing_providers(user)
 
 
 @router.delete("/{provider_id}")

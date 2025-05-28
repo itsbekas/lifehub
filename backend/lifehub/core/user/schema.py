@@ -9,25 +9,9 @@ from lifehub.core.common.base.db_model import BaseModel
 from lifehub.core.security.encrypted_data import EncryptedDataType
 
 if TYPE_CHECKING:
-    from lifehub.core.module.schema import Module
     from lifehub.core.provider.schema import Provider, ProviderToken
-    from lifehub.modules.finance.schema import BudgetCategory
+    from lifehub.modules.finance.schema import BankAccount, BudgetCategory
 
-
-user_provider = Table(
-    "user_provider",
-    BaseModel.metadata,
-    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
-    Column("provider_id", ForeignKey("provider.id"), primary_key=True),
-)
-
-
-user_module = Table(
-    "user_module",
-    BaseModel.metadata,
-    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
-    Column("module_id", ForeignKey("module.id"), primary_key=True),
-)
 
 class User(BaseModel):
     __tablename__ = "user"
@@ -47,9 +31,6 @@ class User(BaseModel):
     is_admin: Mapped[bool] = mapped_column(default=False, nullable=False)
     data_key: Mapped[str] = mapped_column(String(256), nullable=True)
 
-    modules: Mapped[list["Module"]] = relationship(
-        secondary=user_module, back_populates="users"
-    )
     providers: Mapped[list["Provider"]] = relationship(
         secondary=user_provider, back_populates="users"
     )

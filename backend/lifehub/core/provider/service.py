@@ -7,8 +7,7 @@ from sqlalchemy.orm import Session
 from lifehub.config.constants import cfg
 from lifehub.core.common.base.service.base import BaseService
 from lifehub.core.common.exceptions import ServiceException
-from lifehub.core.module.models import ModuleResponse
-from lifehub.core.provider.models import ProviderResponse, ProviderWithModulesResponse
+from lifehub.core.provider.models import ProviderResponse
 from lifehub.core.provider.repository.provider import ProviderRepository
 from lifehub.core.provider.schema import (
     BasicProviderConfig,
@@ -53,26 +52,6 @@ class ProviderService(BaseService):
         providers = self.provider_repository.get_all()
 
         return [provider.id for provider in providers]
-
-    def get_providers_with_modules(self) -> list[ProviderWithModulesResponse]:
-        providers = self.provider_repository.get_all()
-
-        return [
-            ProviderWithModulesResponse(
-                id=provider.id,
-                name=provider.name,
-                type=provider.config.auth_type,
-                allow_custom_url=provider.config.allow_custom_url,
-                modules=[
-                    ModuleResponse(
-                        id=module.id,
-                        name=module.name,
-                    )
-                    for module in provider.modules
-                ],
-            )
-            for provider in providers
-        ]
 
     def validate_basic_provider(self, provider: Provider) -> None:
         if not is_basic_config(provider.config):
