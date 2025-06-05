@@ -44,7 +44,15 @@ class Provider(BaseModel):
         back_populates="provider", uselist=False
     )
     users: Mapped[list[User]] = relationship(
-        secondary=user_provider, back_populates="providers"
+        secondary="provider_token",
+        back_populates="providers",
+        primaryjoin="Provider.id == ProviderToken.provider_id",
+        secondaryjoin="User.id == ProviderToken.user_id",
+        viewonly=True,
+    )
+    tokens: Mapped[list[ProviderToken]] = relationship(
+        back_populates="provider",
+        cascade="all, delete-orphan",
     )
 
 
@@ -60,6 +68,11 @@ class ProviderToken(UserBaseModel):
     created_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
     expires_at: Mapped[dt.datetime] = mapped_column(default=dt.datetime.max)
 
+    provider: Mapped[Provider] = relationship(
+        back_populates="tokens",
+        single_parent=True,
+        cascade="all, delete-orphan",
+    )
     user: Mapped[User] = relationship(back_populates="provider_tokens")
 
 

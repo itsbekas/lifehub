@@ -2,7 +2,7 @@ import datetime as dt
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import UUID, Column, ForeignKey, String, Table
+from sqlalchemy import UUID, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.core.common.base.db_model import BaseModel
@@ -32,10 +32,17 @@ class User(BaseModel):
     data_key: Mapped[str] = mapped_column(String(256), nullable=True)
 
     providers: Mapped[list["Provider"]] = relationship(
-        secondary=user_provider, back_populates="users"
+        secondary="provider_token",
+        back_populates="users",
+        primaryjoin="User.id == ProviderToken.user_id",
+        secondaryjoin="Provider.id == ProviderToken.provider_id",
+        viewonly=True,
     )
     provider_tokens: Mapped[list["ProviderToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+    bank_accounts: Mapped[list["BankAccount"]] = relationship(
+        cascade="all, delete-orphan"
     )
     budget_categories: Mapped[list["BudgetCategory"]] = relationship(
         cascade="all, delete-orphan"

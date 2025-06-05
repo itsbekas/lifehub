@@ -1,5 +1,5 @@
 import { Card, Group, Text } from "@mantine/core";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import classes from "~/styles/FinanceDashboard.module.css";
 
 interface StatCardProps {

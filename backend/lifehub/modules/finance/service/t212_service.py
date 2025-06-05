@@ -13,9 +13,8 @@ from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 from lifehub.providers.trading212.api_client import Trading212APIClient
 
-from ..models import BankBalanceResponse, T212ExportTransaction
-from ..repository import AccountBalanceRepository, BankTransactionRepository
-from ..schema import AccountBalance, BankAccount, BankTransaction
+from ..models import T212ExportTransaction
+from ..schema import BankAccount, BankTransaction
 
 
 class Trading212ServiceException(ServiceException):
@@ -42,48 +41,11 @@ class Trading212Service(BaseUserService):
             self._t212_api = Trading212APIClient(self.user, self.session)
         return self._t212_api
 
-    def fetch_balance(self, account: BankAccount) -> BankBalanceResponse:
+    def fetch_balance(self) -> float:
         """
-        Fetches the latest balance from Trading212 and stores it in the database.
-        If the local balance is less than an hour old, it will be returned instead.
+        Fetches the latest balance from Trading212.
         """
-        t212_api = Trading212APIClient(self.user, self.session)
-        balance_repo = AccountBalanceRepository(self.user, self.session)
-
-        db_balance = balance_repo.get_by_account_id(account.id)
-
-        if db_balance is not None and not account.synced_before(hours=1):
-            # Local balance is updated
-            balance = db_balance
-            balance_amount = float(self.encryption_service.decrypt_data(balance.amount))
-        else:
-            api_balance = t212_api.get_account_cash()
-            if api_balance is None:
-                raise Trading212ServiceException(500, "Balance not found")
-
-            balance_amount = float(api_balance.free)
-            encrypted_balance = self.encryption_service.encrypt_data(
-                str(api_balance.free)
-            )
-
-            if db_balance is None:
-                balance = AccountBalance(
-                    user_id=self.user.id,
-                    account_id=account.id,
-                    amount=encrypted_balance,
-                )
-                balance_repo.add(balance)
-            else:
-                db_balance.amount = encrypted_balance
-                balance = db_balance
-
-        res = BankBalanceResponse(
-            bank="trading212",
-            account_id=str(account.id),
-            balance=balance_amount,
-        )
-        self.session.commit()
-        return res
+        return Trading212APIClient(self.user, self.session).get_account_cash().free
 
     def _parse_transactions(
         self, account: BankAccount, t212_transactions: list[T212ExportTransaction]
@@ -91,13 +53,6 @@ class Trading212Service(BaseUserService):
         transactions = []
 
         for t in t212_transactions:
-            new_t = BankTransaction(
-                user_id=self.user.id,
-                transaction_id=t.id,
-                account_id=account.id,
-                date=dt.datetime.fromisoformat(t.time),
-            )
-
             description = None
             counterparty = None
             amount = t.total  # Set separately to handle deposits
@@ -134,11 +89,23 @@ class Trading212Service(BaseUserService):
                 case _:
                     pass
 
-            if description is not None:
-                new_t.description = self.encryption_service.encrypt_data(description)
-            if counterparty is not None:
-                new_t.counterparty = self.encryption_service.encrypt_data(counterparty)
-            new_t.amount = self.encryption_service.encrypt_data(str(amount))
+            encrypted_description = self.encryption_service.encrypt_data(
+                description if description is not None else ""
+            )
+            encrypted_counterparty = self.encryption_service.encrypt_data(
+                counterparty if counterparty is not None else ""
+            )
+            encrypted_amount = self.encryption_service.encrypt_data(str(amount))
+
+            new_t = BankTransaction(
+                user_id=self.user.id,
+                transaction_id=t.id,
+                account_id=account.id,
+                date=dt.datetime.fromisoformat(t.time),
+                amount=encrypted_amount,
+                description=encrypted_description,
+                counterparty=encrypted_counterparty,
+            )
 
             transactions.append(new_t)
 
@@ -200,44 +167,25 @@ class Trading212Service(BaseUserService):
 
         return exported_transactions
 
-    def fetch_all_transactions(self, account: BankAccount) -> None:
-        exported_transactions = self._get_exported_transactions(
-            dt.datetime.now(), dt.datetime.now() - dt.timedelta(weeks=52)
-        )
-
-        transactions = self._parse_transactions(account, exported_transactions)
-
-        account.last_synced = dt.datetime.now()
-        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        bank_transaction_repo.add_all(transactions)
-
-        # Import the FinanceService to use the incremental update method
-        from lifehub.modules.finance.service.finance_service import FinanceService
-
-        # Only update monthly summary if we have new transactions
-        if transactions:
-            finance_service = FinanceService(self.session, self.user)
-            finance_service._update_monthly_summary_incremental(account, transactions)
-
-        self.session.commit()
-
     def fetch_new_transactions(self, account: BankAccount) -> None:
         exported_transactions = self._get_exported_transactions(
             dt.datetime.now(), account.last_synced
         )
 
         transactions = self._parse_transactions(account, exported_transactions)
-
         account.last_synced = dt.datetime.now()
-        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        bank_transaction_repo.add_all(transactions)
 
-        # Import the FinanceService to use the incremental update method
-        from lifehub.modules.finance.service.finance_service import FinanceService
+        self.session.add(transactions)
+        self.session.commit()
 
-        # Only update monthly summary if we have new transactions
-        if transactions:
-            finance_service = FinanceService(self.session, self.user)
-            finance_service._update_monthly_summary_incremental(account, transactions)
+    def fetch_all_transactions(self, account: BankAccount) -> None:
+        # TODO: Eventually this might also be used to get transactions older than a year
+        exported_transactions = self._get_exported_transactions(
+            dt.datetime.now(), dt.datetime.now() - dt.timedelta(weeks=52)
+        )
 
+        transactions = self._parse_transactions(account, exported_transactions)
+        account.last_synced = dt.datetime.now()
+
+        self.session.add(transactions)
         self.session.commit()

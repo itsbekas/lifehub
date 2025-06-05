@@ -7,7 +7,7 @@ from typing import Optional
 from sqlalchemy import UUID, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from lifehub.core.common.base.db_model import BaseModel, FetchBaseModel, UserBaseModel
+from lifehub.core.common.base.db_model import BaseModel, UserBaseModel
 from lifehub.core.security.encrypted_data import EncryptedDataType
 
 
@@ -29,7 +29,10 @@ class BankAccount(UserBaseModel):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    balances: Mapped[list[AccountBalance]] = relationship(
+    balance: Mapped[AccountBalance] = relationship(
+        back_populates="account", uselist=False, cascade="all, delete-orphan"
+    )
+    monthly_summaries: Mapped[list[MonthlySummary]] = relationship(
         back_populates="account", cascade="all, delete-orphan", passive_deletes=True
     )
 
@@ -54,7 +57,7 @@ class BankAccount(UserBaseModel):
         )
 
 
-class AccountBalance(FetchBaseModel):
+class AccountBalance(BaseModel):
     __tablename__ = "account_balance"
 
     account_id: Mapped[uuid.UUID] = mapped_column(
@@ -63,20 +66,27 @@ class AccountBalance(FetchBaseModel):
         primary_key=True,
     )
     amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
-
-    # Monthly summary fields
-    monthly_income: Mapped[Optional[bytes]] = mapped_column(
-        EncryptedDataType(64), nullable=True
-    )  # float
-    monthly_expenses: Mapped[Optional[bytes]] = mapped_column(
-        EncryptedDataType(64), nullable=True
-    )  # float
-    monthly_last_updated: Mapped[Optional[dt.datetime]] = mapped_column(nullable=True)
-
-    account: Mapped[BankAccount] = relationship(back_populates="balances")
+    account: Mapped[BankAccount] = relationship(back_populates="balance")
 
 
-class BankTransaction(UserBaseModel):
+class MonthlySummary(BaseModel):
+    __tablename__ = "monthly_summary"
+
+    account_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("bank_account.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    year: Mapped[int] = mapped_column(primary_key=True)
+    month: Mapped[int] = mapped_column(primary_key=True)
+    income: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
+    expenses: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
+    balance: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
+
+    account: Mapped[BankAccount] = relationship(single_parent=True)
+
+
+class BankTransaction(BaseModel):
     __tablename__ = "bank_transaction"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -84,7 +94,9 @@ class BankTransaction(UserBaseModel):
     )
     transaction_id: Mapped[str] = mapped_column(String(64))
     account_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("bank_account.id", ondelete="CASCADE")
+        UUID(as_uuid=True),
+        ForeignKey("bank_account.id", ondelete="CASCADE"),
+        index=True,
     )
     amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
     date: Mapped[dt.datetime] = mapped_column()
@@ -120,7 +132,7 @@ class BudgetCategory(UserBaseModel):
     )
 
 
-class BudgetSubCategory(UserBaseModel):
+class BudgetSubCategory(BaseModel):
     __tablename__ = "budget_subcategory"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -137,7 +149,7 @@ class BudgetSubCategory(UserBaseModel):
     )
 
 
-class BankTransactionFilter(UserBaseModel):
+class BankTransactionFilter(BaseModel):
     __tablename__ = "bank_transaction_rule"
 
     id: Mapped[uuid.UUID] = mapped_column(

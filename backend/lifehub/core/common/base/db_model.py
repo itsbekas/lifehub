@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 import datetime as dt
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import UUID, ForeignKey
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+if TYPE_CHECKING:
+    from lifehub.core.user.schema import User
 
 
 class BaseModel(DeclarativeBase):
@@ -14,6 +20,9 @@ class UserBaseModel(BaseModel):
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    )
+    user: Mapped[User] = relationship(
+        "User", back_populates="models", single_parent=True, uselist=False
     )
 
 
@@ -43,7 +52,3 @@ class TimeBaseModel(BaseModel):
             milliseconds=milliseconds,
             microseconds=microseconds,
         )
-
-
-class FetchBaseModel(UserBaseModel, TimeBaseModel):
-    __abstract__ = True

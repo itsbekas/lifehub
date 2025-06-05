@@ -17,7 +17,6 @@ import {
   useCountries,
 } from "~/hooks/useFinanceQueries";
 import { useProviders } from "~/hooks/useUserProviderQueries";
-import { useAddTokenBankAccount } from "~/hooks/useFinanceQueries";
 
 export function AddBankAccountModal() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -32,7 +31,6 @@ export function AddBankAccountModal() {
 
   const providersQuery = useProviders();
   const addOAuthBankAccount = useAddBankAccount();
-  const addTokenBankAccount = useAddTokenBankAccount();
 
   // Reset selected bank when country changes
   useEffect(() => {
@@ -57,12 +55,6 @@ export function AddBankAccountModal() {
       addOAuthBankAccount.mutate(selectedBank, {
         onSuccess: (loginUrl) => {
           window.location.href = loginUrl;
-        },
-      });
-    } else if (selectedBankData?.type === "token") {
-      addTokenBankAccount.mutate(selectedBank, {
-        onSuccess: () => {
-          close();
         },
       });
     }
@@ -147,9 +139,7 @@ export function AddBankAccountModal() {
           </Button>
           <Button
             onClick={handleSubmit}
-            loading={
-              addOAuthBankAccount.isPending || addTokenBankAccount.isPending
-            }
+            loading={addOAuthBankAccount.isPending}
             disabled={!hasRequiredProvider}
           >
             Add
