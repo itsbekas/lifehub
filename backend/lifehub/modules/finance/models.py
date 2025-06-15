@@ -109,7 +109,6 @@ class UpdateBankTransactionRequest:
     amount: Optional[float]
 
 
-@dataclass
 class GetBankTransactionsRequest(PaginatedRequest):
     subcategory_id: Optional[str] = None
     description: Optional[str] = None

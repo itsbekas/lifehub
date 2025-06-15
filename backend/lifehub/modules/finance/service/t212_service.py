@@ -98,7 +98,6 @@ class Trading212Service(BaseUserService):
             encrypted_amount = self.encryption_service.encrypt_data(str(amount))
 
             new_t = BankTransaction(
-                user_id=self.user.id,
                 transaction_id=t.id,
                 account_id=account.id,
                 date=dt.datetime.fromisoformat(t.time),
@@ -175,7 +174,7 @@ class Trading212Service(BaseUserService):
         transactions = self._parse_transactions(account, exported_transactions)
         account.last_synced = dt.datetime.now()
 
-        self.session.add(transactions)
+        self.session.add_all(transactions)
         self.session.commit()
 
     def fetch_all_transactions(self, account: BankAccount) -> None:
@@ -187,5 +186,5 @@ class Trading212Service(BaseUserService):
         transactions = self._parse_transactions(account, exported_transactions)
         account.last_synced = dt.datetime.now()
 
-        self.session.add(transactions)
+        self.session.add_all(transactions)
         self.session.commit()

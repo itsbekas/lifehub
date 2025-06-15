@@ -1,3 +1,4 @@
+import datetime as dt
 import uuid
 from typing import Optional
 
@@ -22,7 +23,7 @@ from ..models import (
     GetBankTransactionsRequest,
 )
 from ..repository import BankAccountRepository, BankTransactionRepository
-from ..schema import BankAccount
+from ..schema import AccountBalance, BankAccount
 
 
 class FinanceServiceException(ServiceException):
@@ -208,14 +209,17 @@ class FinanceService(BaseUserService):
         bank_account_repo = BankAccountRepository(self.user, self.session)
         bank_transaction_repo = BankTransactionRepository(self.session)
 
+        user_accounts = bank_account_repo.get_all()
+
         # Sync transactions if needed
-        for account in bank_account_repo.get_all():
+        for account in user_accounts:
             if account.synced_before(hours=6):
                 self._fetch_new_transactions(account)
 
         # Get paginated transactions from repository
         paginated_transactions = bank_transaction_repo.get_paginated_transactions(
             request=request,
+            accounts=user_accounts,
             subcategory_id=uuid.UUID(request.subcategory_id)
             if request.subcategory_id
             else None,
@@ -259,8 +263,14 @@ class FinanceService(BaseUserService):
         """
         Updates a bank transaction with user description and subcategory.
         """
-        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        db_t = bank_transaction_repo.get_by_id(transaction_id)
+        bank_account = BankAccountRepository(self.user, self.session).get_by_id(
+            account_id
+        )
+        if bank_account is None:
+            raise FinanceServiceException(404, "Bank account not found")
+
+        bank_transaction_repo = BankTransactionRepository(self.session)
+        db_t = bank_transaction_repo.get_by_id(bank_account, transaction_id)
 
         if db_t is None:
             raise FinanceServiceException(404, "Transaction not found")
@@ -312,10 +322,19 @@ class FinanceService(BaseUserService):
         new_account = BankAccount(
             user_id=self.user.id,
             account_id=self.encryption_service.encrypt_data(""),
+            last_synced=dt.datetime.now() - dt.timedelta(weeks=52),
             institution_id=self.encryption_service.encrypt_data(bank_id),
             requisition_id=self.encryption_service.encrypt_data(""),
         )
         bank_account_repo.add(new_account)
+        self.session.flush()
+
+        self.session.add(
+            AccountBalance(
+                account_id=new_account.id,
+                amount=self.encryption_service.encrypt_data("0.0"),
+            )
+        )
 
         if bank_id == "trading212":
             self.trading212_service.fetch_all_transactions(new_account)

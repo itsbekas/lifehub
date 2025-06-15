@@ -58,6 +58,10 @@ class BaseRepository(Generic[BaseModelType]):
     def refresh(self, obj: BaseModelType) -> None:
         self.session.refresh(obj)
 
+    def flush(self) -> None:
+        """Flush the current session to apply changes without committing."""
+        self.session.flush()
+
     def rollback(self) -> None:
         self.session.rollback()
 

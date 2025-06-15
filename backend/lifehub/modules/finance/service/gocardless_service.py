@@ -9,7 +9,7 @@ from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 from lifehub.modules.finance.models import BankInstitutionResponse
 from lifehub.modules.finance.repository import BankAccountRepository
-from lifehub.modules.finance.schema import BankAccount, BankTransaction
+from lifehub.modules.finance.schema import AccountBalance, BankAccount, BankTransaction
 from lifehub.providers.gocardless.api_client import GoCardlessAPIClient
 from lifehub.providers.gocardless.models import Transaction
 
@@ -66,12 +66,20 @@ class GoCardlessService(BaseUserService):
             bank_account = BankAccount(
                 user_id=self.user.id,
                 account_id=encrypted_account_id,
+                last_synced=dt.datetime.now() - dt.timedelta(weeks=52),
                 institution_id=self.encryption_service.encrypt_data(
                     requisition.institution_id
                 ),
                 requisition_id=self.encryption_service.encrypt_data(ref),
             )
             bank_account_repo.add(bank_account)
+            self.session.flush()
+            self.session.add(
+                AccountBalance(
+                    account_id=bank_account.id,
+                    amount=self.encryption_service.encrypt_data("0.0"),
+                )
+            )
 
         self.session.commit()
 
@@ -131,7 +139,6 @@ class GoCardlessService(BaseUserService):
             )
 
             new_t = BankTransaction(
-                user_id=self.user.id,
                 transaction_id=t.transactionId,
                 account_id=account.id,
                 date=date,
@@ -151,5 +158,5 @@ class GoCardlessService(BaseUserService):
         transactions = self._parse_transactions(account, api_transactions.booked)
         account.last_synced = dt.datetime.now()
 
-        self.session.add(transactions)
+        self.session.add_all(transactions)
         self.session.commit()

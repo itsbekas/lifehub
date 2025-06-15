@@ -22,6 +22,13 @@ class BankAccountRepository(UserBaseRepository[BankAccount]):
     def __init__(self, user: User, session: Session) -> None:
         super().__init__(BankAccount, user=user, session=session)
 
+    def get_by_id(self, account_id: uuid.UUID) -> BankAccount | None:
+        return (
+            self.session.query(BankAccount)
+            .filter_by(user_id=self.user.id, id=account_id)
+            .one_or_none()
+        )
+
 
 class BankTransactionRepository(BaseRepository[BankTransaction]):
     def __init__(self, session: Session):

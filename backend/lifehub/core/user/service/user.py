@@ -53,10 +53,7 @@ class UserService(BaseService):
             name=bytes([0]),
         )
         self.user_repository.add(new_user)
-
-        # Necessary to get the newly generated ID
-        self.session.commit()
-        self.user_repository.refresh(new_user)
+        self.session.flush()
 
         try:
             encryption_service = EncryptionService(self.session, new_user)

@@ -3,31 +3,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Generic, List, Sequence, TypeVar
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import BaseModel, Field
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
 T = TypeVar("T")
 
 
-@pydantic_dataclass
-class PaginatedRequest:
+class PaginatedRequest(BaseModel):
     """Base class for paginated requests.
 
     This class can be extended by other request models to add pagination parameters.
     """
 
-    page: int = 1
-    page_size: int = 20
-
-    def __post_init__(self) -> None:
-        # Ensure page and page_size are valid
-        if self.page < 1:
-            self.page = 1
-        if self.page_size < 1:
-            self.page_size = 20
-        if self.page_size > 100:
-            self.page_size = 100
+    page: int = Field(1, ge=1)
+    page_size: int = Field(20, ge=1, le=100)
 
     @property
     def offset(self) -> int:
@@ -48,8 +38,6 @@ class PaginationInfo:
     page_size: int
     total_items: int
     total_pages: int
-    has_next: bool
-    has_prev: bool
 
     @classmethod
     def from_request(
@@ -66,8 +54,6 @@ class PaginationInfo:
             page_size=request.page_size,
             total_items=total_items,
             total_pages=total_pages,
-            has_next=request.page < total_pages,
-            has_prev=request.page > 1,
         )
 
 
@@ -89,36 +75,8 @@ class PaginatedResponse(Generic[T]):
 
 
 def paginate_query(
-    session: Session,
-    query: Select[Any],
-    request: PaginatedRequest,
-    count_column: Any = None,
+    session: Session, query: Select[Any], request: PaginatedRequest
 ) -> tuple[Sequence[Any], int]:
-    """
-    Apply pagination to a SQLAlchemy query and return results with total count.
-
-    Args:
-        session: SQLAlchemy session
-        query: SQLAlchemy select statement
-        request: Pagination request with page and page_size
-        count_column: Column to use for count query (defaults to first column in query)
-
-    Returns:
-        Tuple of (paginated results, total count)
-    """
-    # If no count column specified, use the first column in the query
-    if count_column is None:
-        # Extract the first entity from the query
-        if hasattr(query, "column_descriptions") and query.column_descriptions:
-            count_column = query.column_descriptions[0]["entity"]
-        else:
-            # For select() statements
-            count_column = (
-                query.columns[0]
-                if hasattr(query, "columns") and query.columns
-                else None
-            )
-
     # Execute count query
     count_query = select(func.count()).select_from(query.subquery())
     total = session.execute(count_query).scalar() or 0

@@ -29,7 +29,7 @@ PROVIDER_CLIENTS = {
 }
 
 
-def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
+def init_setup_data() -> dict[str, dict[str, Any]]:
     provider_configs: dict[str, dict[str, Any]] = {
         "gocardless": {
             "name": "GoCardless",
@@ -86,16 +86,11 @@ def init_setup_data() -> tuple[dict[str, dict[str, Any]], dict[str, list[str]]]:
         },
     }
 
-    module_providers: dict[str, list[str]] = {
-        "networth": ["trading212", "ynab"],
-        "t212history": ["trading212"],
-    }
-
-    return provider_configs, module_providers
+    return provider_configs
 
 
 def setup_providers() -> None:
-    provider_configs, module_providers = init_setup_data()
+    provider_configs = init_setup_data()
 
     session = get_session()
     providers_dict = {}
@@ -138,16 +133,4 @@ def setup_providers() -> None:
         session.add(provider_config)
 
     session.commit()
-
-    # modules = []
-    # for module_name, provider_names in module_providers.items():
-    #     module_providers_list = [
-    #         providers_dict[provider_name] for provider_name in provider_names
-    #     ]
-    #     module = Module(name=module_name, providers=module_providers_list)
-    #     modules.append(module)
-    #     session.add(module)
-
-    # session.commit()
-
     session.close()

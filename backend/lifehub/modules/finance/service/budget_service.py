@@ -1,4 +1,3 @@
-import datetime as dt
 import uuid
 from decimal import Decimal
 
@@ -10,12 +9,8 @@ from lifehub.core.security.encryption import EncryptionService
 from lifehub.core.user.schema import User
 
 from ..models import BudgetCategoryResponse, BudgetSubCategoryResponse
-from ..repository import (
-    BankTransactionRepository,
-    BudgetCategoryRepository,
-    BudgetSubCategoryRepository,
-)
-from ..schema import BankTransaction, BudgetCategory, BudgetSubCategory
+from ..repository import BudgetCategoryRepository, BudgetSubCategoryRepository
+from ..schema import BudgetCategory, BudgetSubCategory
 
 
 class BudgetServiceException(ServiceException):
@@ -41,7 +36,7 @@ class BudgetService(BaseUserService):
         """
         Fetches the budgeted, spent, and available amounts for a specific subcategory.
         """
-        subcategory = BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+        subcategory = BudgetSubCategoryRepository(self.session).get_by_id(
             subcategory_id
         )
 
@@ -51,34 +46,11 @@ class BudgetService(BaseUserService):
         # Fetch budgeted amount
         budgeted = float(self.encryption_service.decrypt_data(subcategory.amount))
 
-        # Calculate spent amount
-        transactions = self._get_current_month_transactions_by_subcategory(
-            subcategory_id
-        )
-        spent = -float(
-            sum(
-                float(self.encryption_service.decrypt_data(transaction.amount))
-                for transaction in transactions
-            )
-        )
+        spent = 0  # TODO: Get monthly spent
 
         # Calculate available amount
         available = budgeted - spent
         return round(budgeted, 2), round(spent, 2), round(available, 2)
-
-    def _get_current_month_transactions_by_subcategory(
-        self, subcategory_id: uuid.UUID
-    ) -> list[BankTransaction]:
-        """
-        Fetches all transactions related to a specific subcategory for the current month.
-        """
-        bank_transaction_repo = BankTransactionRepository(self.user, self.session)
-        start_of_month = dt.datetime.now().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        return bank_transaction_repo.get_transactions_since(
-            start_of_month, subcategory_id=subcategory_id
-        )
 
     def get_budget_categories(self) -> list[BudgetCategoryResponse]:
         """
@@ -260,7 +232,7 @@ class BudgetService(BaseUserService):
         """
         Updates a budget subcategory by ID.
         """
-        subcategory = BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+        subcategory = BudgetSubCategoryRepository(self.session).get_by_id(
             subcategory_id
         )
         if subcategory is None:
@@ -287,7 +259,7 @@ class BudgetService(BaseUserService):
         """
         Deletes a budget subcategory by ID.
         """
-        subcategory = BudgetSubCategoryRepository(self.user, self.session).get_by_id(
+        subcategory = BudgetSubCategoryRepository(self.session).get_by_id(
             subcategory_id
         )
         if subcategory is None:
