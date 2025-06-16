@@ -2,6 +2,7 @@ import csv
 import datetime as dt
 import time
 from io import StringIO
+from typing import Any
 
 import requests
 from sqlalchemy.orm import Session
@@ -110,9 +111,26 @@ class Trading212Service(BaseUserService):
 
         return transactions
 
-    def _get_exported_transactions(
-        self, to_date: dt.datetime, from_date: dt.datetime
-    ) -> list[T212ExportTransaction]:
+    def _read_export_csv(self, csv_data: str) -> list[T212ExportTransaction]:
+        """
+        Normalizes the CSV data from Trading212 export to a list of T212ExportTransaction.
+        """
+        text_io = StringIO(csv_data)
+        csv_reader = csv.DictReader(text_io)
+
+        exported_transactions = []
+
+        row: dict[str, Any]
+        for row in csv_reader:
+            # Convert '' to None
+            for key, value in row.items():
+                if value == "":
+                    row[key] = None
+            exported_transactions.append(T212ExportTransaction(**row))
+
+        return exported_transactions
+
+    def _get_export_url(self, from_date: dt.datetime, to_date: dt.datetime) -> str:
         export_res = self.t212_api.export_csv(
             include_dividends=True,
             include_interest=True,
@@ -125,7 +143,7 @@ class Trading212Service(BaseUserService):
         report_id = export_res.reportId
 
         try:
-            time.sleep(3)  # Wait for the export to be generated
+            time.sleep(10)  # Wait for the export to be generated
             exports_res = self.t212_api.get_exports()
         except APIException as e:
             if e.status_code == 429:
@@ -154,17 +172,14 @@ class Trading212Service(BaseUserService):
         if not dl_link:
             raise Trading212ServiceException(500, "Export not found")
 
+        return dl_link
+
+    def _get_exported_transactions(
+        self, to_date: dt.datetime, from_date: dt.datetime
+    ) -> list[T212ExportTransaction]:
+        dl_link = self._get_export_url(from_date, to_date)
         file_res = requests.get(dl_link, stream=True)
-
-        text_io = StringIO(file_res.text)
-        csv_reader = csv.reader(text_io)
-        data = list(csv_reader)
-
-        exported_transactions = [
-            T212ExportTransaction.from_csv(row) for row in data[1:]
-        ]
-
-        return exported_transactions
+        return self._read_export_csv(file_res.text)
 
     def fetch_new_transactions(self, account: BankAccount) -> None:
         exported_transactions = self._get_exported_transactions(

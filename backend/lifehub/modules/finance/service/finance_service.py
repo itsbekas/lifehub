@@ -153,6 +153,7 @@ class FinanceService(BaseUserService):
 
         encrypted_balance = self.encryption_service.encrypt_data(str(balance))
         account.balance.amount = encrypted_balance
+        account.balance.last_synced = dt.datetime.now()
         self.session.commit()
 
         return BankBalanceResponse(
@@ -167,7 +168,7 @@ class FinanceService(BaseUserService):
         balances: list[BankBalanceResponse] = []
 
         for account in bank_account_repo.get_all():
-            if account.synced_before(hours=6):
+            if account.balance.synced_before(hours=6):
                 balances.append(self._sync_balance(account))
             else:
                 balances.append(
@@ -333,10 +334,8 @@ class FinanceService(BaseUserService):
             AccountBalance(
                 account_id=new_account.id,
                 amount=self.encryption_service.encrypt_data("0.0"),
+                last_synced=dt.datetime.now() - dt.timedelta(weeks=1),
             )
         )
-
-        if bank_id == "trading212":
-            self.trading212_service.fetch_all_transactions(new_account)
 
         self.session.commit()

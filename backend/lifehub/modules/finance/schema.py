@@ -67,6 +67,27 @@ class AccountBalance(BaseModel):
     )
     amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
     account: Mapped[BankAccount] = relationship(back_populates="balance")
+    last_synced: Mapped[dt.datetime] = mapped_column(default=dt.datetime.now)
+
+    def synced_before(
+        self,
+        weeks: int = 0,
+        days: int = 0,
+        hours: int = 0,
+        minutes: int = 0,
+        seconds: int = 0,
+        milliseconds: int = 0,
+        microseconds: int = 0,
+    ) -> bool:
+        return self.last_synced < dt.datetime.now() - dt.timedelta(
+            weeks=weeks,
+            days=days,
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds,
+            milliseconds=milliseconds,
+            microseconds=microseconds,
+        )
 
 
 class MonthlySummary(BaseModel):

@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Optional
 
+from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
 from lifehub.core.common.base.pagination import PaginatedRequest
@@ -128,50 +129,77 @@ class BankTransactionFilterResponse:
     description: Optional[str]
 
 
-@dataclass
-class T212ExportTransaction:
-    action: str
-    time: str
-    isin: Optional[str]
-    ticker: Optional[str]
-    name: Optional[str]
-    notes: Optional[str]
-    id: Optional[str]
-    no_shares: Optional[float]
-    share_price: Optional[float]
-    currency: Optional[str]
-    exchange_rate: Optional[float]
-    result: Optional[float]
-    result_currency: Optional[str]
-    total: float
-    total_currency: str
-    withholding_tax: Optional[float]
-    withholding_tax_currency: Optional[str]
-    merchant_name: Optional[str]
-    merchant_category: Optional[str]
-
-    @staticmethod
-    def from_csv(row: list[str]) -> T212ExportTransaction:
-        return T212ExportTransaction(
-            action=row[0],
-            time=row[1],
-            isin=row[2],
-            ticker=row[3],
-            name=row[4],
-            notes=row[5],
-            id=row[6],
-            no_shares=float(row[7]) if row[7] else None,
-            share_price=float(row[8]) if row[8] else None,
-            currency=row[9],
-            exchange_rate=float(row[10])
-            if row[10] and row[10] != "Not available"
-            else None,
-            result=float(row[11]) if row[11] else None,
-            result_currency=row[12],
-            total=float(row[13]),
-            total_currency=row[14],
-            withholding_tax=float(row[15]) if row[15] else None,
-            withholding_tax_currency=row[16],
-            merchant_name=row[17],
-            merchant_category=row[18],
-        )
+class T212ExportTransaction(BaseModel):
+    action: str = Field(
+        ...,
+        alias="Action",
+    )
+    time: str = Field(
+        ...,
+        alias="Time",
+    )  # e.g., "2023-10-01 12:34:56.789" or "2023-10-01 12:34:56"
+    isin: Optional[str] = Field(
+        None,
+        alias="ISIN",
+    )
+    ticker: Optional[str] = Field(
+        None,
+        alias="Ticker",
+    )
+    name: Optional[str] = Field(
+        None,
+        alias="Name",
+    )
+    notes: Optional[str] = Field(
+        None,
+        alias="Notes",
+    )
+    id: Optional[str] = Field(
+        None,
+        alias="ID",
+    )
+    no_shares: Optional[float] = Field(
+        None,
+        alias="No. of shares",
+    )
+    share_price: Optional[float] = Field(
+        None,
+        alias="Price / share",
+    )
+    currency: Optional[str] = Field(
+        None,
+        alias="Currency (Price / share)",
+    )
+    exchange_rate: Optional[float] = Field(
+        None,
+        alias="Exchange rate",
+    )
+    result: Optional[float] = Field(
+        None,
+        alias="Result",
+    )
+    result_currency: Optional[str] = Field(None, alias="Currency (Result)")
+    total: float = Field(
+        ...,
+        alias="Total",
+    )
+    total_currency: str = Field(
+        ...,
+        alias="Currency (Total)",
+    )
+    withholding_tax: Optional[float] = Field(
+        None,
+        alias="Withholding tax",
+    )
+    withholding_tax_currency: Optional[str] = Field(
+        None,
+        alias="Currency (Withholding tax)",
+    )
+    merchant_name: Optional[str] = Field(
+        None,
+        alias="Merchant name",
+    )
+    merchant_category: Optional[str] = Field(
+        None,
+        alias="Merchant category",
+    )

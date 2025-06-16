@@ -250,6 +250,7 @@ export const useAddOAuthBankAccount = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeKeys.balances() });
+      queryClient.invalidateQueries({ queryKey: financeKeys.transactions() });
     },
   });
 };
