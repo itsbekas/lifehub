@@ -32,6 +32,17 @@ export type PaginatedResponse<T> = {
   pagination: PaginationInfo;
 };
 
+export type CategoryMonthlySummary = {
+  subcategory_id: string;
+  balance: number;
+};
+
+export type MonthlySummary = {
+  income: number;
+  expenses: number;
+  categories: CategoryMonthlySummary[];
+};
+
 export type SubCategory = {
   id: string;
   name: string;
@@ -78,7 +89,7 @@ export const financeKeys = {
     [...financeKeys.all, "transactions", "infinite", { pageSize }] as const,
   categories: () => [...financeKeys.all, "categories"] as const,
   balances: () => [...financeKeys.all, "balances"] as const,
-
+  monthlySummary: () => [...financeKeys.all, "monthly_summary"] as const,
   banks: () => [...financeKeys.all, "banks"] as const,
   banksByCountry: (country: string) =>
     [...financeKeys.banks(), country] as const,
@@ -150,6 +161,18 @@ export const useBanks = () => {
     queryKey: financeKeys.banks(),
     queryFn: async () => {
       const { data } = await api.get<Bank[]>("/finance/bank/banks");
+      return data;
+    },
+  });
+};
+
+export const useMonthlySummary = () => {
+  return useQuery({
+    queryKey: financeKeys.monthlySummary(),
+    queryFn: async () => {
+      const { data } = await api.get<MonthlySummary>(
+        "/finance/bank/monthly-summary",
+      );
       return data;
     },
   });

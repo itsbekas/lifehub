@@ -24,13 +24,19 @@ function DashboardLayout() {
   const { error } = Route.useLoaderData();
 
   return (
-    <AppShell padding="md">
+    <AppShell
+      padding="md"
+      navbar={{
+        width: 80,
+        breakpoint: "sm",
+        collapsed: { desktop: false, mobile: true },
+      }}
+    >
       <AppShell.Navbar>
         <Sidebar />
       </AppShell.Navbar>
-
       <AppShell.Main className={classes.main}>
-        <Container size="xl">
+        <Container fluid size="responsive">
           <ErrorAlert error={error} />
           <Outlet />
         </Container>

@@ -78,6 +78,7 @@ class GoCardlessService(BaseUserService):
                 AccountBalance(
                     account_id=bank_account.id,
                     amount=self.encryption_service.encrypt_data("0.0"),
+                    last_synced=dt.datetime.now() - dt.timedelta(weeks=1),
                 )
             )
 

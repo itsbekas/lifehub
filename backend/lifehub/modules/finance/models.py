@@ -64,6 +64,19 @@ class BankInstitutionResponse:
 
 
 @dataclass
+class BankMonthlySummaryCategoryResponse:
+    subcategory_id: str
+    balance: float
+
+
+@dataclass
+class BankMonthlySummaryResponse:
+    income: float
+    expenses: float
+    categories: list[BankMonthlySummaryCategoryResponse]
+
+
+@dataclass
 class BudgetSubCategoryResponse:
     id: str
     name: str

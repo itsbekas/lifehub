@@ -17,6 +17,7 @@ import {
   useCategories,
   useInfiniteTransactions,
   useBalances,
+  useMonthlySummary,
   useBanks,
 } from "~/hooks/useFinanceQueries";
 import type { SubCategory } from "~/hooks/useFinanceQueries";
@@ -39,6 +40,7 @@ export default function FinancePage() {
   const categoriesQuery = useCategories();
   const balancesQuery = useBalances();
   const banksQuery = useBanks();
+  const monthlySummaryQuery = useMonthlySummary();
 
   // Flatten the transactions from all pages
   const allTransactions =
@@ -57,42 +59,22 @@ export default function FinancePage() {
   if (banksQuery.isError) {
     return <QueryError error={banksQuery.error as Error} />;
   }
+  if (monthlySummaryQuery.isError) {
+    return <QueryError error={monthlySummaryQuery.error as Error} />;
+  }
 
   // Calculate total balance from bank balances
-  const calculateTotalBalance = () => {
-    if (!balancesQuery.data || balancesQuery.data.length === 0) return 0;
-
-    return balancesQuery.data.reduce(
+  const totalBalance =
+    balancesQuery.data?.reduce(
       (total, account) => total + account.balance,
       0,
-    );
-  };
+    ) || 0;
 
-  const totalBalance = calculateTotalBalance();
-
-  // Get monthly summary data from account balances
-  const getMonthlySummary = () => {
-    if (!balancesQuery.data || balancesQuery.data.length === 0) {
-      return { income: 0, expenses: 0, balance: 0 };
-    }
-
-    // Sum up monthly income and expenses from all accounts
-    let totalIncome = 0;
-    let totalExpenses = 0;
-
-    balancesQuery.data.forEach((account) => {
-      totalIncome += account.monthly_income;
-      totalExpenses += account.monthly_expenses;
-    });
-
-    return {
-      income: totalIncome,
-      expenses: totalExpenses,
-      balance: totalIncome - totalExpenses,
-    };
-  };
-
-  const { income, expenses, balance: monthlyBalance } = getMonthlySummary();
+  // Get monthly summary data
+  const monthlySummary = monthlySummaryQuery.data;
+  const monthlyIncome = monthlySummary?.income || 0;
+  const monthlyExpenses = monthlySummary?.expenses || 0;
+  const monthlyBalance = monthlyIncome - monthlyExpenses;
 
   // Calculate budget progress
   const calculateBudgetProgress = () => {
@@ -123,37 +105,37 @@ export default function FinancePage() {
       <FinancialSummary
         totalBalance={totalBalance}
         monthlyBalance={monthlyBalance}
-        income={income}
-        expenses={expenses}
+        income={monthlyIncome}
+        expenses={monthlyExpenses}
       />
 
+      {/* Bank Balances - Stacked vertically above everything */}
+      <Card withBorder mb="md">
+        <Title order={3} className={classes.sectionTitle}>
+          Bank Accounts
+        </Title>
+        {balancesQuery.isLoading || banksQuery.isLoading ? (
+          <Skeleton height={150} />
+        ) : (
+          <BankBalances
+            balances={balancesQuery.data || []}
+            banks={banksQuery.data || []}
+          />
+        )}
+      </Card>
+
       <Grid>
-        {/* Bank Balances */}
+        {/* Transactions - Now takes more space */}
         <Grid.Col
           span={{ base: 12, md: 12, lg: 8 }}
           order={{ base: 2, md: 2, lg: 1 }}
         >
-          <Card withBorder mb="md">
-            <Title order={3} className={classes.sectionTitle}>
-              Bank Accounts
-            </Title>
-            {balancesQuery.isLoading || banksQuery.isLoading ? (
-              <Skeleton height={150} />
-            ) : (
-              <BankBalances
-                balances={balancesQuery.data || []}
-                banks={banksQuery.data || []}
-              />
-            )}
-          </Card>
-
-          {/* Transactions */}
           <Card withBorder>
             <Title order={3} className={classes.sectionTitle}>
               Recent Transactions
             </Title>
             {transactionsQuery.isLoading || categoriesQuery.isLoading ? (
-              <Skeleton height={300} />
+              <Skeleton height={600} />
             ) : (
               <TransactionsTable
                 transactions={allTransactions}

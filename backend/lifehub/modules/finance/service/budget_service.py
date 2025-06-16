@@ -201,7 +201,6 @@ class BudgetService(BaseUserService):
             raise BudgetServiceException(404, "Category not found")
 
         subcategory = BudgetSubCategory(
-            user_id=self.user.id,
             category_id=category.id,
             name=self.encryption_service.encrypt_data(name),
             amount=self.encryption_service.encrypt_data(str(Decimal(amount))),

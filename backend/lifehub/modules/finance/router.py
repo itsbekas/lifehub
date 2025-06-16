@@ -10,6 +10,7 @@ from .dependencies import BudgetServiceDep, FilterServiceDep, FinanceServiceDep
 from .models import (
     BankBalanceResponse,
     BankInstitutionResponse,
+    BankMonthlySummaryResponse,
     BankTransactionFilterResponse,
     BankTransactionResponse,
     BudgetCategoryResponse,
@@ -57,6 +58,13 @@ async def get_bank_balances(
     finance_service: FinanceServiceDep,
 ) -> list[BankBalanceResponse]:
     return finance_service.get_bank_balances()
+
+
+@router.get("/bank/monthly-summary")
+async def get_monthly_summary(
+    finance_service: FinanceServiceDep,
+) -> BankMonthlySummaryResponse:
+    return finance_service.get_monthly_summary()
 
 
 @router.get("/bank/transactions")

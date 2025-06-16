@@ -1,3 +1,4 @@
+import datetime as dt
 import uuid
 from typing import Optional
 
@@ -56,6 +57,21 @@ class BankTransactionRepository(BaseRepository[BankTransaction]):
     def get_by_account(self, account: BankAccount) -> list[BankTransaction]:
         return (
             self.session.query(BankTransaction).filter_by(account_id=account.id).all()
+        )
+
+    def get_since(
+        self, accounts: list[BankAccount], since: dt.datetime
+    ) -> list[BankTransaction]:
+        """
+        Get transactions for an account since a specific date.
+        """
+        return (
+            self.session.query(BankTransaction)
+            .filter(
+                BankTransaction.account_id.in_([account.id for account in accounts]),
+                BankTransaction.date >= since,
+            )
+            .all()
         )
 
     def get_paginated_transactions(

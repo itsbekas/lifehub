@@ -8,14 +8,8 @@ import {
 } from "@mantine/core";
 import { AddBankAccountModal } from "~/components/modals/AddBankAccountModal";
 import { IconBuildingBank, IconDotsVertical } from "@tabler/icons-react";
-import type { Bank } from "~/hooks/useFinanceQueries";
+import type { Bank, BankBalance } from "~/hooks/useFinanceQueries";
 import classes from "~/styles/BankBalances.module.css";
-
-type BankBalance = {
-  bank: string;
-  account_id: string;
-  balance: number;
-};
 
 type BankBalancesProps = {
   balances: BankBalance[];

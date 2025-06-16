@@ -18,6 +18,8 @@ from lifehub.modules.finance.service.t212_service import Trading212Service
 from ..models import (
     BankBalanceResponse,
     BankInstitutionResponse,
+    BankMonthlySummaryCategoryResponse,
+    BankMonthlySummaryResponse,
     BankTransactionResponse,
     CountryResponse,
     GetBankTransactionsRequest,
@@ -183,6 +185,45 @@ class FinanceService(BaseUserService):
                     )
                 )
         return balances
+
+    def get_monthly_summary(self) -> BankMonthlySummaryResponse:
+        bank_transaction_repo = BankTransactionRepository(self.session)
+        start_date = dt.datetime.now().replace(day=1, hour=0, minute=0, second=0)
+        transactions = bank_transaction_repo.get_since(
+            accounts=BankAccountRepository(self.user, self.session).get_all(),
+            since=start_date,
+        )
+        income = 0.0
+        expenses = 0.0
+        categories = {}
+
+        for t in transactions:
+            amount = float(self.encryption_service.decrypt_data(t.amount))
+            if amount >= 0:
+                income += amount
+            else:
+                expenses += abs(amount)
+
+            subcategory_id = str(t.subcategory_id) if t.subcategory_id else None
+            if subcategory_id not in categories:
+                categories[subcategory_id] = {
+                    "budgeted": 0.0,
+                    "spent": 0.0,
+                }
+            categories[subcategory_id]["spent"] += abs(amount)
+
+        return BankMonthlySummaryResponse(
+            income=income,
+            expenses=expenses,
+            categories=[
+                BankMonthlySummaryCategoryResponse(
+                    subcategory_id=subcat_id,
+                    balance=cat_data["spent"],
+                )
+                for subcat_id, cat_data in categories.items()
+                if subcat_id is not None
+            ],
+        )
 
     def _fetch_new_transactions(self, account: BankAccount) -> None:
         """
