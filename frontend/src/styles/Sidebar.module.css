@@ -1,42 +1,39 @@
-.sidebar {
-  height: 100%;
+.navbar {
+  width: 80px;
+  height: 100vh;
   padding: var(--mantine-spacing-md);
-  background-color: light-dark(
-    var(--mantine-color-white),
-    var(--mantine-color-dark-7)
-  );
+  display: flex;
+  flex-direction: column;
   border-right: 1px solid
-    light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
-.header {
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-xs);
-  margin-bottom: var(--mantine-spacing-md);
+.navbarMain {
+  flex: 1;
+  margin-top: 50px;
+}
+
+.link {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--mantine-radius-md);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-}
+  justify-content: center;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-0));
 
-.footer {
-  margin-top: auto;
-}
+  &:hover {
+    background-color: light-dark(
+      var(--mantine-color-gray-0),
+      var(--mantine-color-dark-5)
+    );
+  }
 
-/* Add subtle hover effect to nav items */
-:global(.mantine-NavLink-root) {
-  border-radius: var(--mantine-radius-md);
-  transition: all 0.2s ease;
-}
-
-:global(.mantine-NavLink-root:hover) {
-  transform: translateX(3px);
-}
-
-.activeLink {
-  background-color: var(--mantine-color-primary-light);
-  border-left: 3px solid var(--mantine-color-primary-filled);
-}
-
-.activeLink :global(.mantine-NavLink-label) {
-  color: var(--mantine-color-primary-filled);
-  font-weight: 600;
+  &[data-active] {
+    &,
+    &:hover {
+      background-color: var(--mantine-color-blue-light);
+      color: var(--mantine-color-blue-light-color);
+    }
+  }
 }

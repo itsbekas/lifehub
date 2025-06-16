@@ -24,7 +24,7 @@ function DashboardLayout() {
   const { error } = Route.useLoaderData();
 
   return (
-    <AppShell navbar={{ width: 250, breakpoint: "sm" }} padding="md">
+    <AppShell padding="md">
       <AppShell.Navbar>
         <Sidebar />
       </AppShell.Navbar>
