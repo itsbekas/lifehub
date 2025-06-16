@@ -43,6 +43,7 @@ class ProviderService(BaseService):
             ProviderResponse(
                 id=provider.id,
                 name=provider.name,
+                type=provider.config.auth_type,
                 allow_custom_url=provider.config.allow_custom_url,
             )
             for provider in providers
@@ -55,7 +56,9 @@ class ProviderService(BaseService):
 
     def validate_basic_provider(self, provider: Provider) -> None:
         if not is_basic_config(provider.config):
-            raise ProviderServiceException(404, "Provider must be a basic login provider")
+            raise ProviderServiceException(
+                404, "Provider must be a basic login provider"
+            )
 
     def validate_oauth_provider(self, provider: Provider) -> None:
         if not is_oauth_config(provider.config):
@@ -77,7 +80,9 @@ class ProviderService(BaseService):
 
     def get_basic_config(self, provider: Provider) -> BasicProviderConfig:
         if not is_basic_config(provider.config):
-            raise ProviderServiceException(404, "Provider must be a basic login provider")
+            raise ProviderServiceException(
+                404, "Provider must be a basic login provider"
+            )
         return provider.config
 
     def process_oauth_token(

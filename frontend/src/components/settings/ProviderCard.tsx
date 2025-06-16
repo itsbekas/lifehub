@@ -29,9 +29,6 @@ export function ProviderCard({ provider, isAvailable }: ProviderCardProps) {
       <Group justify="space-between" wrap="nowrap">
         <Stack gap="xs">
           <Text fw={500}>{provider.name}</Text>
-          <Text size="sm" c="dimmed">
-            {provider.modules.map((m) => m.name).join(", ")}
-          </Text>
         </Stack>
 
         <Group gap="xs">

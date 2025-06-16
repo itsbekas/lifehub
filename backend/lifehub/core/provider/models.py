@@ -7,6 +7,7 @@ from pydantic.dataclasses import dataclass
 class ProviderResponse:
     id: str
     name: str
+    type: str
     allow_custom_url: bool
 
 

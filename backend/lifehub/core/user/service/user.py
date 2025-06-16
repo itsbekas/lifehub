@@ -228,6 +228,7 @@ class UserService(BaseService):
             ProviderResponse(
                 id=provider.id,
                 name=provider.name,
+                type=provider.config.auth_type,
                 allow_custom_url=provider.config.allow_custom_url,
             )
             for provider in user.providers
@@ -241,6 +242,7 @@ class UserService(BaseService):
             ProviderResponse(
                 id=provider.id,
                 name=provider.name,
+                type=provider.config.auth_type,
                 allow_custom_url=provider.config.allow_custom_url,
             )
             for provider in all_providers

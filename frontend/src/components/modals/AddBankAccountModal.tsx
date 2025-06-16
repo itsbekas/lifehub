@@ -12,7 +12,8 @@ import {
 import { IconInfoCircle } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import {
-  useAddBankAccount,
+  useAddOAuthBankAccount,
+  useAddTokenBankAccount,
   useBanksByCountry,
   useCountries,
 } from "~/hooks/useFinanceQueries";
@@ -30,7 +31,8 @@ export function AddBankAccountModal() {
   const banksByCountryQuery = useBanksByCountry(selectedCountry);
 
   const providersQuery = useProviders();
-  const addOAuthBankAccount = useAddBankAccount();
+  const addOAuthBankAccount = useAddOAuthBankAccount();
+  const addTokenBankAccount = useAddTokenBankAccount();
 
   // Reset selected bank when country changes
   useEffect(() => {
@@ -55,6 +57,12 @@ export function AddBankAccountModal() {
       addOAuthBankAccount.mutate(selectedBank, {
         onSuccess: (loginUrl) => {
           window.location.href = loginUrl;
+        },
+      });
+    } else if (selectedBankData?.type === "token") {
+      addTokenBankAccount.mutate(selectedBank, {
+        onSuccess: () => {
+          close();
         },
       });
     }
