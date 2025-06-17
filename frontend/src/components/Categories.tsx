@@ -1,9 +1,7 @@
 import { SubCategoryCard } from "~/components/SubCategoryCard";
-import { Group, Text, Accordion } from "@mantine/core";
-import { AddCategoryModal } from "~/components/modals/AddCategoryModal";
+import { Divider, Group, Text, Stack, Space } from "@mantine/core";
 import { AddSubCategoryModal } from "~/components/modals/AddSubCategoryModal";
-import { IconFolder } from "@tabler/icons-react";
-import classes from "~/styles/Categories.module.css";
+import type { CategoryMonthlySummary } from "~/hooks/useFinanceQueries";
 
 type SubCategory = {
   id: string;
@@ -11,8 +9,6 @@ type SubCategory = {
   category_id: string;
   category_name: string;
   budgeted: number;
-  spent: number;
-  available: number;
 };
 
 type Category = {
@@ -23,79 +19,40 @@ type Category = {
 
 type CategoriesProps = {
   categories: Category[];
+  summary: CategoryMonthlySummary[];
 };
 
-export function Categories({ categories }: CategoriesProps) {
-  // Calculate total budgeted and spent for each category
-  const getCategoryTotals = (subcategories: SubCategory[]) => {
-    return subcategories.reduce(
-      (acc, subcategory) => {
-        acc.budgeted += subcategory.budgeted;
-        acc.spent += subcategory.spent;
-        return acc;
-      },
-      { budgeted: 0, spent: 0 },
-    );
-  };
+export function Categories({ categories, summary }: CategoriesProps) {
+  const subcatBalances: Record<string, number> = {};
+
+  summary.forEach((item) => {
+    subcatBalances[item.subcategory_id] = item.balance;
+  });
 
   return (
-    <div>
-      <Group justify="end" mb="md">
-        <AddCategoryModal />
-      </Group>
-
-      <Accordion variant="separated">
-        {categories.map((category) => {
-          const { budgeted, spent } = getCategoryTotals(category.subcategories);
-          const percentage =
-            budgeted > 0 ? Math.round((spent / budgeted) * 100) : 0;
-
-          return (
-            <Accordion.Item key={category.id} value={category.id}>
-              <Accordion.Control icon={<IconFolder size={20} />}>
-                <Group justify="space-between" wrap="nowrap">
-                  <Text fw={600}>{category.name}</Text>
-                  <Group gap="xs">
-                    <Text size="sm" c="dimmed">
-                      {spent.toFixed(2)}€ / {budgeted.toFixed(2)}€
-                    </Text>
-                    <Text
-                      size="sm"
-                      fw={500}
-                      c={
-                        percentage > 90
-                          ? "red"
-                          : percentage > 75
-                            ? "yellow"
-                            : "green"
-                      }
-                    >
-                      {percentage}%
-                    </Text>
-                  </Group>
-                </Group>
-              </Accordion.Control>
-
-              <Accordion.Panel>
-                <Group justify="end" mb="sm">
-                  <AddSubCategoryModal categoryId={category.id} />
-                </Group>
-
-                <div className={classes.subcategoryGrid}>
-                  {category.subcategories.map((subcategory) => (
-                    <SubCategoryCard
-                      key={subcategory.id}
-                      name={subcategory.name}
-                      budgeted={subcategory.budgeted}
-                      spent={subcategory.spent}
-                    />
-                  ))}
-                </div>
-              </Accordion.Panel>
-            </Accordion.Item>
-          );
-        })}
-      </Accordion>
-    </div>
+    <Stack p={4} gap="md">
+      {categories.map((category) => {
+        return (
+          <Stack mb={4}>
+            <Space h="md" />
+            <Group justify="space-between" wrap="nowrap">
+              <Text fw={600}>{category.name}</Text>
+              <AddSubCategoryModal categoryId={category.id} />
+            </Group>
+            <Divider />
+            <Stack>
+              {category.subcategories.map((subcategory) => (
+                <SubCategoryCard
+                  key={subcategory.id}
+                  name={subcategory.name}
+                  budgeted={subcategory.budgeted}
+                  spent={subcatBalances[subcategory.id] || 0}
+                />
+              ))}
+            </Stack>
+          </Stack>
+        );
+      })}
+    </Stack>
   );
 }

@@ -1,17 +1,8 @@
 import { TransactionsTable } from "~/components/TransactionsTable";
 import { BankBalances } from "~/components/BankBalances";
-import { Categories } from "~/components/Categories";
+import { BudgetCategories } from "~/components/finance/BudgetCategories";
 import { FinancialSummary } from "~/components/finance/FinancialSummary";
-import {
-  Grid,
-  Title,
-  Skeleton,
-  Center,
-  Text,
-  Card,
-  Group,
-  Badge,
-} from "@mantine/core";
+import { Grid, Title, Skeleton, Center, Text, Card } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   useCategories,
@@ -76,60 +67,36 @@ export default function FinancePage() {
   const monthlyExpenses = monthlySummary?.expenses || 0;
   const monthlyBalance = monthlyIncome - monthlyExpenses;
 
-  // Calculate budget progress
-  const calculateBudgetProgress = () => {
-    if (!categoriesQuery.data) return 0;
-
-    let totalBudgeted = 0;
-    let totalSpent = 0;
-
-    categoriesQuery.data.forEach((category) => {
-      category.subcategories.forEach((subcategory) => {
-        totalBudgeted += subcategory.budgeted;
-        totalSpent += subcategory.spent;
-      });
-    });
-
-    return totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
-  };
-
-  const budgetProgress = calculateBudgetProgress();
-
   return (
     <div>
       <div className={classes.dashboardHeader}>
         <Title order={1}>Finance Dashboard</Title>
       </div>
 
-      {/* Financial Summary Cards */}
-      <FinancialSummary
-        totalBalance={totalBalance}
-        monthlyBalance={monthlyBalance}
-        income={monthlyIncome}
-        expenses={monthlyExpenses}
-      />
-
-      {/* Bank Balances - Stacked vertically above everything */}
-      <Card withBorder mb="md">
-        <Title order={3} className={classes.sectionTitle}>
-          Bank Accounts
-        </Title>
-        {balancesQuery.isLoading || banksQuery.isLoading ? (
-          <Skeleton height={150} />
-        ) : (
-          <BankBalances
-            balances={balancesQuery.data || []}
-            banks={banksQuery.data || []}
-          />
-        )}
-      </Card>
-
       <Grid>
-        {/* Transactions - Now takes more space */}
-        <Grid.Col
-          span={{ base: 12, md: 12, lg: 8 }}
-          order={{ base: 2, md: 2, lg: 1 }}
-        >
+        <Grid.Col span={4}>
+          <FinancialSummary
+            totalBalance={totalBalance}
+            monthlyBalance={monthlyBalance}
+            income={monthlyIncome}
+            expenses={monthlyExpenses}
+          />
+
+          <Card withBorder mb="md">
+            <Title order={3} className={classes.sectionTitle}>
+              Bank Accounts
+            </Title>
+            {balancesQuery.isLoading || banksQuery.isLoading ? (
+              <Skeleton height={150} />
+            ) : (
+              <BankBalances
+                balances={balancesQuery.data || []}
+                banks={banksQuery.data || []}
+              />
+            )}
+          </Card>
+        </Grid.Col>
+        <Grid.Col span={5}>
           <Card withBorder>
             <Title order={3} className={classes.sectionTitle}>
               Recent Transactions
@@ -156,37 +123,8 @@ export default function FinancePage() {
             )}
           </Card>
         </Grid.Col>
-
-        {/* Categories */}
-        <Grid.Col
-          span={{ base: 12, md: 12, lg: 4 }}
-          order={{ base: 1, md: 1, lg: 2 }}
-        >
-          <Card withBorder h="100%">
-            <Group justify="space-between" mb="md">
-              <Title order={3} className={classes.sectionTitle}>
-                Budget Categories
-              </Title>
-              <Badge
-                size="lg"
-                color={
-                  budgetProgress > 90
-                    ? "red"
-                    : budgetProgress > 75
-                      ? "yellow"
-                      : "green"
-                }
-              >
-                {Math.round(budgetProgress)}% Used
-              </Badge>
-            </Group>
-
-            {categoriesQuery.isLoading ? (
-              <Skeleton height={400} />
-            ) : (
-              <Categories categories={categoriesQuery.data || []} />
-            )}
-          </Card>
+        <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
+          <BudgetCategories />
         </Grid.Col>
       </Grid>
     </div>
