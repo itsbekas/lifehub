@@ -6,8 +6,6 @@ from typing import Optional
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
-from lifehub.core.common.base.pagination import PaginatedRequest
-
 
 @dataclass
 class T212BalanceResponse:
@@ -123,7 +121,15 @@ class UpdateBankTransactionRequest:
     amount: Optional[float]
 
 
-class GetBankTransactionsRequest(PaginatedRequest):
+class GetBankTransactionsRequest(BaseModel):
+    start_date: Optional[str] = Field(
+        None,
+        description="Start date in ISO format (YYYY-MM-DD).",
+    )
+    end_date: Optional[str] = Field(
+        None,
+        description="End date in ISO format (YYYY-MM-DD).",
+    )
     subcategory_id: Optional[str] = None
     description: Optional[str] = None
 

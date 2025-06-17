@@ -1,9 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useInfiniteQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "~/lib/query";
 
 // Types
@@ -80,16 +75,18 @@ export type Bank = {
   logo: string;
 };
 
+export type TimeRange = {
+  startDate: string;
+  endDate: string;
+};
+
 // Query keys
 export const financeKeys = {
   all: ["finance"] as const,
-  transactions: (page: number = 1, pageSize: number = 20) =>
-    [...financeKeys.all, "transactions", { page, pageSize }] as const,
-  infiniteTransactions: (pageSize: number = 20) =>
-    [...financeKeys.all, "transactions", "infinite", { pageSize }] as const,
   categories: () => [...financeKeys.all, "categories"] as const,
   balances: () => [...financeKeys.all, "balances"] as const,
-  monthlySummary: () => [...financeKeys.all, "monthly_summary"] as const,
+  transactions: (timeRange: TimeRange) =>
+    [...financeKeys.all, "transactions", timeRange] as const,
   banks: () => [...financeKeys.all, "banks"] as const,
   banksByCountry: (country: string) =>
     [...financeKeys.banks(), country] as const,
@@ -97,41 +94,16 @@ export const financeKeys = {
 };
 
 // Query hooks
-export const useTransactions = (page: number = 1, pageSize: number = 20) => {
+export const useTransactions = (timeRange: TimeRange) => {
   return useQuery({
-    queryKey: financeKeys.transactions(page, pageSize),
+    queryKey: financeKeys.transactions(timeRange),
     queryFn: async () => {
       // Use the paginated endpoint with query parameters
-      const { data } = await api.get<PaginatedResponse<Transaction>>(
-        `/finance/bank/transactions?page=${page}&page_size=${pageSize}`,
+      const { data } = await api.get<Transaction[]>(
+        `/finance/bank/transactions?start_date=${timeRange.startDate}&end_date=${timeRange.endDate}`,
       );
 
       return data;
-    },
-  });
-};
-
-export const useInfiniteTransactions = (pageSize: number = 20) => {
-  return useInfiniteQuery({
-    queryKey: financeKeys.infiniteTransactions(pageSize),
-    queryFn: async ({ pageParam = 1 }) => {
-      const { data } = await api.get<PaginatedResponse<Transaction>>(
-        `/finance/bank/transactions?page=${pageParam}&page_size=${pageSize}`,
-      );
-      return data;
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      // If there's a next page, return the next page number, otherwise return undefined
-      return lastPage.pagination.has_next
-        ? lastPage.pagination.page + 1
-        : undefined;
-    },
-    getPreviousPageParam: (firstPage) => {
-      // If there's a previous page, return the previous page number, otherwise return undefined
-      return firstPage.pagination.has_prev
-        ? firstPage.pagination.page - 1
-        : undefined;
     },
   });
 };
@@ -161,18 +133,6 @@ export const useBanks = () => {
     queryKey: financeKeys.banks(),
     queryFn: async () => {
       const { data } = await api.get<Bank[]>("/finance/bank/banks");
-      return data;
-    },
-  });
-};
-
-export const useMonthlySummary = () => {
-  return useQuery({
-    queryKey: financeKeys.monthlySummary(),
-    queryFn: async () => {
-      const { data } = await api.get<MonthlySummary>(
-        "/finance/bank/monthly-summary",
-      );
       return data;
     },
   });
@@ -346,32 +306,6 @@ export const useEditTransaction = () => {
               transaction.id === updatedTransaction.id
                 ? updatedTransaction
                 : transaction,
-            ),
-          };
-        },
-      );
-
-      // Update the transaction in the infinite query cache
-      queryClient.setQueryData(
-        financeKeys.infiniteTransactions(),
-        (
-          oldData:
-            | { pages: PaginatedResponse<Transaction>[]; pageParams: unknown[] }
-            | undefined,
-        ) => {
-          if (!oldData || !oldData.pages) return oldData;
-
-          return {
-            ...oldData,
-            pages: oldData.pages.map(
-              (page: PaginatedResponse<Transaction>) => ({
-                ...page,
-                items: page.items.map((transaction) =>
-                  transaction.id === updatedTransaction.id
-                    ? updatedTransaction
-                    : transaction,
-                ),
-              }),
             ),
           };
         },

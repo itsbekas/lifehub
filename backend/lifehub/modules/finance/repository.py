@@ -4,7 +4,6 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from lifehub.core.common.base.pagination import PaginatedRequest, PaginatedResponse
 from lifehub.core.common.base.repository.base import BaseRepository
 from lifehub.core.common.base.repository.user_base import UserBaseRepository
 from lifehub.core.user.schema import User
@@ -59,58 +58,42 @@ class BankTransactionRepository(BaseRepository[BankTransaction]):
             self.session.query(BankTransaction).filter_by(account_id=account.id).all()
         )
 
-    def get_since(
-        self, accounts: list[BankAccount], since: dt.datetime
-    ) -> list[BankTransaction]:
-        """
-        Get transactions for an account since a specific date.
-        """
-        return (
-            self.session.query(BankTransaction)
-            .filter(
-                BankTransaction.account_id.in_([account.id for account in accounts]),
-                BankTransaction.date >= since,
-            )
-            .all()
-        )
-
-    def get_paginated_transactions(
+    def get_filtered_transactions(
         self,
-        request: PaginatedRequest,
         accounts: list[BankAccount],
+        start_date: Optional[dt.datetime] = None,
+        end_date: Optional[dt.datetime] = None,
         subcategory_id: Optional[uuid.UUID] = None,
         description: Optional[str] = None,
-    ) -> PaginatedResponse[BankTransaction]:
-        """Get paginated transactions with optional filtering.
+    ) -> list[BankTransaction]:
+        """Get transactions filtered by date range, subcategory, and description.
 
         Args:
-            request: Pagination parameters
+            accounts: List of bank accounts to filter transactions for
+            start_date: Start date for filtering transactions
+            end_date: End date for filtering transactions
             subcategory_id: Filter by subcategory ID
             description: Filter by user description
 
         Returns:
-            Paginated response with filtered transactions
+            List of filtered BankTransaction objects
         """
         account_ids = [account.id for account in accounts]
 
-        # Start with the base query for BankTransaction
         query = self.session.query(BankTransaction).filter(
             BankTransaction.account_id.in_(account_ids),
         )
 
-        # Apply subcategory filter
+        if start_date:
+            query = query.filter(BankTransaction.date >= start_date)
+        if end_date:
+            query = query.filter(BankTransaction.date <= end_date)
         if subcategory_id:
-            query = query.where(BankTransaction.subcategory_id == subcategory_id)
-
-        # Apply description filter
+            query = query.filter(BankTransaction.subcategory_id == subcategory_id)
         if description:
-            query = query.where(BankTransaction.user_description == description)
+            query = query.filter(BankTransaction.user_description == description)
 
-        # Order by date descending (newest first)
-        query = query.order_by(BankTransaction.date.desc())
-
-        # Use the paginated query method from the base repository
-        return self.get_paginated(request, query)
+        return query.all()
 
 
 class BudgetCategoryRepository(UserBaseRepository[BudgetCategory]):

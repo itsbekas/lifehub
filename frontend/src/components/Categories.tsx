@@ -1,32 +1,25 @@
 import { SubCategoryCard } from "~/components/SubCategoryCard";
 import { Divider, Group, Text, Stack, Space } from "@mantine/core";
 import { AddSubCategoryModal } from "~/components/modals/AddSubCategoryModal";
-import type { CategoryMonthlySummary } from "~/hooks/useFinanceQueries";
+import { useCategories, useTransactions } from "~/hooks/useFinanceQueries";
+import { useContext } from "react";
+import { TimeRangeContext } from "~/context/finance";
 
-type SubCategory = {
-  id: string;
-  name: string;
-  category_id: string;
-  category_name: string;
-  budgeted: number;
-};
-
-type Category = {
-  id: string;
-  name: string;
-  subcategories: SubCategory[];
-};
-
-type CategoriesProps = {
-  categories: Category[];
-  summary: CategoryMonthlySummary[];
-};
-
-export function Categories({ categories, summary }: CategoriesProps) {
+export function Categories() {
   const subcatBalances: Record<string, number> = {};
 
-  summary.forEach((item) => {
-    subcatBalances[item.subcategory_id] = item.balance;
+  const { timeRange } = useContext(TimeRangeContext);
+  const transactions = useTransactions(timeRange)?.data || [];
+  const categories = useCategories()?.data || [];
+
+  // Calculate balances for each subcategory
+  transactions.forEach((transaction) => {
+    if (transaction.subcategory_id) {
+      if (!subcatBalances[transaction.subcategory_id]) {
+        subcatBalances[transaction.subcategory_id] = 0;
+      }
+      subcatBalances[transaction.subcategory_id] -= transaction.amount;
+    }
   });
 
   return (

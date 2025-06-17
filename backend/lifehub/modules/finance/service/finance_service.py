@@ -5,7 +5,6 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from lifehub.config.constants import cfg
-from lifehub.core.common.base.pagination import PaginatedResponse
 from lifehub.core.common.base.service.user import BaseUserService
 from lifehub.core.common.exceptions import ServiceException
 from lifehub.core.provider.repository.provider import ProviderRepository
@@ -18,8 +17,6 @@ from lifehub.modules.finance.service.t212_service import Trading212Service
 from ..models import (
     BankBalanceResponse,
     BankInstitutionResponse,
-    BankMonthlySummaryCategoryResponse,
-    BankMonthlySummaryResponse,
     BankTransactionResponse,
     CountryResponse,
     GetBankTransactionsRequest,
@@ -186,45 +183,6 @@ class FinanceService(BaseUserService):
                 )
         return balances
 
-    def get_monthly_summary(self) -> BankMonthlySummaryResponse:
-        bank_transaction_repo = BankTransactionRepository(self.session)
-        start_date = dt.datetime.now().replace(day=1, hour=0, minute=0, second=0)
-        transactions = bank_transaction_repo.get_since(
-            accounts=BankAccountRepository(self.user, self.session).get_all(),
-            since=start_date,
-        )
-        income = 0.0
-        expenses = 0.0
-        categories = {}
-
-        for t in transactions:
-            amount = float(self.encryption_service.decrypt_data(t.amount))
-            if amount >= 0:
-                income += amount
-            else:
-                expenses += abs(amount)
-
-            subcategory_id = str(t.subcategory_id) if t.subcategory_id else None
-            if subcategory_id not in categories:
-                categories[subcategory_id] = {
-                    "budgeted": 0.0,
-                    "spent": 0.0,
-                }
-            categories[subcategory_id]["spent"] += abs(amount)
-
-        return BankMonthlySummaryResponse(
-            income=income,
-            expenses=expenses,
-            categories=[
-                BankMonthlySummaryCategoryResponse(
-                    subcategory_id=subcat_id,
-                    balance=cat_data["spent"],
-                )
-                for subcat_id, cat_data in categories.items()
-                if subcat_id is not None
-            ],
-        )
-
     def _fetch_new_transactions(self, account: BankAccount) -> None:
         """
         Fetches the latest transactions from bank accounts based on their provider.
@@ -238,7 +196,7 @@ class FinanceService(BaseUserService):
 
     def get_bank_transactions(
         self, request: GetBankTransactionsRequest
-    ) -> PaginatedResponse[BankTransactionResponse]:
+    ) -> list[BankTransactionResponse]:
         """
         Fetches paginated transactions with optional filtering.
 
@@ -258,18 +216,32 @@ class FinanceService(BaseUserService):
             if account.synced_before(hours=6):
                 self._fetch_new_transactions(account)
 
+        # request.start_date is YYYY-MM-DD
+        start_date = (
+            dt.datetime.fromisoformat(request.start_date)
+            if request.start_date
+            else dt.datetime.now() - dt.timedelta(days=30)
+        )
+        end_date = (
+            dt.datetime.fromisoformat(request.end_date)
+            if request.end_date
+            else dt.datetime.now()
+        )
+        subcategory_id = (
+            uuid.UUID(request.subcategory_id) if request.subcategory_id else None
+        )
+
         # Get paginated transactions from repository
-        paginated_transactions = bank_transaction_repo.get_paginated_transactions(
-            request=request,
+        transactions = bank_transaction_repo.get_filtered_transactions(
             accounts=user_accounts,
-            subcategory_id=uuid.UUID(request.subcategory_id)
-            if request.subcategory_id
-            else None,
+            start_date=start_date,
+            end_date=end_date,
+            subcategory_id=subcategory_id,
             description=request.description,
         )
 
         # Convert DB models to response models
-        transaction_responses = [
+        return [
             BankTransactionResponse(
                 id=str(transaction.id),
                 account_id=str(transaction.account_id),
@@ -286,13 +258,8 @@ class FinanceService(BaseUserService):
                 if transaction.subcategory_id
                 else None,
             )
-            for transaction in paginated_transactions.items
+            for transaction in transactions
         ]
-
-        # Create a new PaginatedResponse with the converted items
-        return PaginatedResponse(
-            items=transaction_responses, pagination=paginated_transactions.pagination
-        )
 
     def update_bank_transaction(
         self,

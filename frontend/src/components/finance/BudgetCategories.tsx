@@ -1,11 +1,10 @@
 import { Card, Group, Title, Badge, Skeleton } from "@mantine/core";
-import { useCategories, useMonthlySummary } from "~/hooks/useFinanceQueries";
+import { useCategories } from "~/hooks/useFinanceQueries";
 import { Categories } from "~/components/Categories";
 import classes from "~/styles/FinanceDashboard.module.css";
 
 export function BudgetCategories() {
   const categoriesQuery = useCategories();
-  const monthlySummaryQuery = useMonthlySummary();
 
   const calculateBudgetProgress = () => {
     if (!categoriesQuery.data) return 0;
@@ -47,10 +46,7 @@ export function BudgetCategories() {
       {categoriesQuery.isLoading ? (
         <Skeleton height={400} />
       ) : (
-        <Categories
-          categories={categoriesQuery.data || []}
-          summary={monthlySummaryQuery.data?.categories || []}
-        />
+        <Categories categories={categoriesQuery.data || []} summary={[]} />
       )}
     </Card>
   );

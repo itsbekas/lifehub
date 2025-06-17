@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState } from "react";
 import cx from "clsx";
 import {
   ScrollArea,
@@ -7,9 +7,6 @@ import {
   Group,
   TextInput,
   Select,
-  Button,
-  Loader,
-  Center,
 } from "@mantine/core";
 import { IconSearch, IconFilter } from "@tabler/icons-react";
 import classes from "~/styles/TransactionsTable.module.css";
@@ -46,52 +43,10 @@ type TransactionsTableProps = {
 export function TransactionsTable({
   transactions,
   categories,
-  isFetchingNextPage = false,
-  hasNextPage = false,
-  fetchNextPage = () => {},
-  isInfinite = false,
 }: TransactionsTableProps) {
   const [scrolled, setScrolled] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-
-  // Create a ref for the loader element that will trigger loading more data
-  const loaderRef = useRef<HTMLDivElement>(null);
-
-  // Intersection observer to detect when the loader is visible
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      const [entry] = entries;
-      if (
-        entry.isIntersecting &&
-        hasNextPage &&
-        !isFetchingNextPage &&
-        isInfinite
-      ) {
-        fetchNextPage();
-      }
-    },
-    [fetchNextPage, hasNextPage, isFetchingNextPage, isInfinite],
-  );
-
-  // Set up the intersection observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      root: null,
-      rootMargin: "0px",
-      threshold: 0.1,
-    });
-
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current);
-    }
-
-    return () => {
-      if (loaderRef.current) {
-        observer.unobserve(loaderRef.current);
-      }
-    };
-  }, [handleObserver]);
 
   // Sort transactions from most recent to oldest
   const sortedTransactions = [...transactions].sort(
@@ -205,38 +160,14 @@ export function TransactionsTable({
               <Table.Th />
             </Table.Tr>
           </Table.Thead>
-          <Table.Tbody>
-            {rows}
-            {isInfinite && (
-              <Table.Tr>
-                <Table.Td colSpan={5}>
-                  <div
-                    ref={loaderRef}
-                    style={{ height: "20px", margin: "10px 0" }}
-                  >
-                    {isFetchingNextPage && (
-                      <Center>
-                        <Loader size="sm" />
-                      </Center>
-                    )}
-                  </div>
-                </Table.Td>
-              </Table.Tr>
-            )}
-          </Table.Tbody>
+          <Table.Tbody>{rows}</Table.Tbody>
         </Table>
       </ScrollArea.Autosize>
 
       <Group justify="space-between" mt="xs">
         <Text size="sm" c="dimmed">
-          Showing {filteredTransactions.length} of {transactions.length}{" "}
-          transactions
+          Showing {transactions.length} transactions
         </Text>
-        {isInfinite && hasNextPage && !isFetchingNextPage && (
-          <Button variant="light" onClick={() => fetchNextPage()} size="xs">
-            Load More
-          </Button>
-        )}
       </Group>
     </div>
   );
