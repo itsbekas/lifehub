@@ -1,6 +1,7 @@
 import { TransactionsTable } from "~/components/TransactionsTable";
 import { BankBalances } from "~/components/BankBalances";
-import { BudgetCategories } from "~/components/finance/BudgetCategories";
+import { MonthlySummaryCard } from "~/components/finance/MonthlySummaryCard";
+import { BudgetCategoriesCard } from "~/components/finance/BudgetCategoriesCard";
 import { FinancialSummary } from "~/components/finance/FinancialSummary";
 import { Grid, Title, Skeleton, Center, Text, Card } from "@mantine/core";
 import { TimeRangeContext } from "~/context/finance";
@@ -54,13 +55,6 @@ export default function FinancePage() {
     return <QueryError error={banksQuery.error as Error} />;
   }
 
-  // Calculate total balance from bank balances
-  const totalBalance =
-    balancesQuery.data?.reduce(
-      (total, account) => total + account.balance,
-      0,
-    ) || 0;
-
   return (
     <TimeRangeContext
       value={{
@@ -74,14 +68,8 @@ export default function FinancePage() {
         </div>
 
         <Grid>
-          <Grid.Col span={4}>
-            <FinancialSummary
-              totalBalance={totalBalance}
-              monthlyBalance={0}
-              income={0}
-              expenses={0}
-            />
-
+          {/* <Grid.Col span={4}>
+            <FinancialSummary />
             <Card withBorder mb="md">
               <Title order={3} className={classes.sectionTitle}>
                 Bank Accounts
@@ -95,8 +83,11 @@ export default function FinancePage() {
                 />
               )}
             </Card>
+          </Grid.Col> */}
+          <Grid.Col span={{ base: 12, md: 4, lg: 4 }}>
+            <MonthlySummaryCard />
           </Grid.Col>
-          <Grid.Col span={5}>
+          <Grid.Col span={{ base: 12, md: 4, lg: 5 }}>
             <Card withBorder>
               <Title order={3} className={classes.sectionTitle}>
                 Recent Transactions
@@ -121,7 +112,7 @@ export default function FinancePage() {
             </Card>
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
-            <BudgetCategories />
+            <BudgetCategoriesCard />
           </Grid.Col>
         </Grid>
       </div>

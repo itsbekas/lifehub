@@ -3,7 +3,7 @@ import { useCategories } from "~/hooks/useFinanceQueries";
 import { Categories } from "~/components/Categories";
 import classes from "~/styles/FinanceDashboard.module.css";
 
-export function BudgetCategories() {
+export function BudgetCategoriesCard() {
   const categoriesQuery = useCategories();
 
   const calculateBudgetProgress = () => {
@@ -24,12 +24,11 @@ export function BudgetCategories() {
   const budgetProgress = calculateBudgetProgress();
 
   return (
-    <Card withBorder h="100%">
+    <Card withBorder>
       <Group justify="space-between" mb="md">
         <Title order={3} className={classes.sectionTitle}>
           Budget Categories
         </Title>
-        {/* <AddCategoryModal /> */}
         <Badge
           size="lg"
           color={
@@ -43,11 +42,7 @@ export function BudgetCategories() {
           {Math.round(budgetProgress)}% Used
         </Badge>
       </Group>
-      {categoriesQuery.isLoading ? (
-        <Skeleton height={400} />
-      ) : (
-        <Categories categories={categoriesQuery.data || []} summary={[]} />
-      )}
+      {categoriesQuery.isLoading ? <Skeleton height={400} /> : <Categories />}
     </Card>
   );
 }

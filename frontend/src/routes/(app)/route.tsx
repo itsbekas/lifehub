@@ -3,7 +3,6 @@ import { AppShell, Container } from "@mantine/core";
 import { isAuthenticated } from "~/lib/cookies";
 import { ErrorAlert } from "~/components/ErrorAlert";
 import { Sidebar } from "~/components/Sidebar";
-import classes from "~/styles/AppLayout.module.css";
 
 export const Route = createFileRoute("/(app)")({
   beforeLoad: () => {
@@ -35,8 +34,8 @@ function DashboardLayout() {
       <AppShell.Navbar>
         <Sidebar />
       </AppShell.Navbar>
-      <AppShell.Main className={classes.main}>
-        <Container fluid size="responsive">
+      <AppShell.Main mah="100vh">
+        <Container fluid>
           <ErrorAlert error={error} />
           <Outlet />
         </Container>

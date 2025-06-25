@@ -145,7 +145,7 @@ export function TransactionsTable({
       </Group>
 
       <ScrollArea.Autosize
-        h={400}
+        h="50vh"
         onScrollPositionChange={({ y }) => setScrolled(y !== 0)}
       >
         <Table className={classes.table}>
