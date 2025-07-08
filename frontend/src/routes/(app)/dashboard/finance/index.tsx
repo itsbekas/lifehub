@@ -29,10 +29,10 @@ function QueryError({ error }: { error: Error }) {
 }
 
 export default function FinancePage() {
+  const date = new Date();
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
   const [timeRange, setTimeRange] = useState({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-      .toISOString()
-      .split("T")[0],
+    startDate: `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-01`, // Start of the current month
     endDate: new Date().toISOString().split("T")[0],
   });
 

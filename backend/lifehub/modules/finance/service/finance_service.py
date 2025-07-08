@@ -217,10 +217,11 @@ class FinanceService(BaseUserService):
                 self._fetch_new_transactions(account)
 
         # request.start_date is YYYY-MM-DD
+        # beginning of the month if not provided
         start_date = (
             dt.datetime.fromisoformat(request.start_date)
             if request.start_date
-            else dt.datetime.now() - dt.timedelta(days=30)
+            else dt.datetime(dt.datetime.now().year, dt.datetime.now().month, 1)
         )
         end_date = (
             dt.datetime.fromisoformat(request.end_date)
