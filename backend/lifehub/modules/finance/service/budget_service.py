@@ -10,7 +10,7 @@ from lifehub.core.user.schema import User
 
 from ..models import BudgetCategoryResponse, BudgetSubCategoryResponse
 from ..repository import BudgetCategoryRepository, BudgetSubCategoryRepository
-from ..schema import BudgetCategory, BudgetSubCategory
+from ..schema import BudgetCategory, BudgetSubCategory, BudgetSubCategoryType
 
 
 class BudgetServiceException(ServiceException):
@@ -189,7 +189,7 @@ class BudgetService(BaseUserService):
         return subcategories
 
     def create_budget_subcategory(
-        self, category_id: uuid.UUID, name: str, amount: float
+        self, category_id: uuid.UUID, name: str, amount: float, type: BudgetSubCategoryType
     ) -> BudgetSubCategoryResponse:
         """
         Creates a new budget subcategory with the specified budgeted amount.
@@ -204,6 +204,7 @@ class BudgetService(BaseUserService):
             category_id=category.id,
             name=self.encryption_service.encrypt_data(name),
             amount=self.encryption_service.encrypt_data(str(Decimal(amount))),
+            type=type,
         )
         category.subcategories.append(subcategory)
         self.session.commit()

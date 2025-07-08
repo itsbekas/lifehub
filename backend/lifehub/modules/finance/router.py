@@ -175,7 +175,7 @@ async def create_budget_subcategory(
     data: CreateBudgetSubCategoryRequest,
 ) -> BudgetSubCategoryResponse:
     return budget_service.create_budget_subcategory(
-        uuid.UUID(category_id), data.name, data.amount
+        uuid.UUID(category_id), data.name, data.amount, data.type
     )
 
 

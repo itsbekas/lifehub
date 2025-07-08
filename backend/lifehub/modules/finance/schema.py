@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import enum
 import datetime as dt
 import uuid
 from typing import Optional
 
-from sqlalchemy import UUID, ForeignKey, String
+from sqlalchemy import UUID, ForeignKey, String, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from lifehub.core.common.base.db_model import BaseModel, UserBaseModel
@@ -152,7 +153,10 @@ class BudgetCategory(UserBaseModel):
         back_populates="category", cascade="all, delete-orphan"
     )
 
-
+class BudgetSubCategoryType(str, enum.Enum):
+    FIXED = "fixed"
+    ACCUMULATED = "accumulated"
+    
 class BudgetSubCategory(BaseModel):
     __tablename__ = "budget_subcategory"
 
@@ -164,11 +168,32 @@ class BudgetSubCategory(BaseModel):
     )
     name: Mapped[bytes] = mapped_column(EncryptedDataType(64))
     amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
-
+    type: Mapped[BudgetSubCategoryType] = mapped_column(
+        String(16), nullable=False
+    )
     category: Mapped[BudgetCategory] = relationship(
         back_populates="subcategories", single_parent=True
     )
 
+
+class BudgetAssignment(BaseModel):
+    __tablename__ = "budget_monthly_assignment"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    subcategory_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("budget_subcategory.id")
+    )
+    year: Mapped[int] = mapped_column(primary_key=True)
+    month: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True, default=None
+    )
+    week: Mapped[Optional[int]] = mapped_column(
+        Integer, nullable=True, default=None
+    )
+    amount: Mapped[bytes] = mapped_column(EncryptedDataType(64))  # float / Decimal
+    subcategory: Mapped[BudgetSubCategory] = relationship(single_parent=True)
 
 class BankTransactionFilter(BaseModel):
     __tablename__ = "bank_transaction_rule"

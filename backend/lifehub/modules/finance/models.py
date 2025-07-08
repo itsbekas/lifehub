@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 from typing import Optional
+from lifehub.modules.finance.schema import BudgetSubCategoryType
 
 from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
@@ -106,6 +107,7 @@ class BudgetCategoryResponse:
 class CreateBudgetSubCategoryRequest:
     name: str
     amount: float
+    type: BudgetSubCategoryType
 
 
 @dataclass
